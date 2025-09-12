@@ -1622,7 +1622,7 @@ export default function TradingSignalPage() {
   };
 
   return (
-    <div className="trading-signal-app flex flex-col min-h-screen bg-gray-900 text-white">
+    <div className="trading-app trading-signal-app flex flex-col">
       {/* عرض مكون خطأ الاتصال عندما يكون الاتصال غير متاح */}
       {!isOnline && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
