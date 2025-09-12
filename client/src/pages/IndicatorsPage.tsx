@@ -272,15 +272,15 @@ export default function IndicatorsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white pb-16">
-      <header className="sticky top-0 bg-gray-900/95 backdrop-blur-md border-b border-gray-700/50 z-40 p-3 flex justify-between items-center">
+    <div className="min-h-screen bg-background text-foreground pb-16">
+      <header className="sticky top-0 bg-background/95 backdrop-blur-md border-b border-border/50 z-40 p-3 flex justify-between items-center">
         <div className="flex items-center gap-3">
           <Link href="/">
-            <button className="p-1.5 rounded-full bg-gray-800/80 border border-gray-700/60">
+            <button className="p-1.5 rounded-full bg-card/80 border border-border/60 text-foreground hover:bg-card transition-colors">
               <ArrowLeft className="h-4 w-4" />
             </button>
           </Link>
-          <h1 className="font-bold text-xl text-yellow-400">{t('indicators')}</h1>
+          <h1 className="font-bold text-xl text-primary">{t('indicators')}</h1>
         </div>
 
         {localMarketStatus.isOpen && (
@@ -312,7 +312,7 @@ export default function IndicatorsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredIndicators.map((indicator) => (
-            <Card key={indicator.id} className="border-gray-700 bg-gray-800/50 backdrop-blur-lg">
+            <Card key={indicator.id} className="border-border bg-card/50 backdrop-blur-lg">
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-center">
                   <CardTitle className="text-base font-medium flex items-center gap-2">
@@ -326,7 +326,7 @@ export default function IndicatorsPage() {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col gap-3">
-                  <p className="text-sm text-gray-300">{indicator.description}</p>
+                  <p className="text-sm text-muted-foreground">{indicator.description}</p>
 
                   {indicator.chartData && (
                     <div className="h-28 w-full mt-2">
@@ -348,10 +348,10 @@ export default function IndicatorsPage() {
                           </defs>
                           <Tooltip 
                             contentStyle={{ 
-                              backgroundColor: '#1e293b', 
-                              border: '1px solid #475569',
+                              backgroundColor: 'hsl(var(--card))', 
+                              border: '1px solid hsl(var(--border))',
                               borderRadius: '6px',
-                              color: '#e2e8f0'
+                              color: 'hsl(var(--card-foreground))'
                             }} 
                           />
                           <Area 
@@ -361,7 +361,7 @@ export default function IndicatorsPage() {
                             fillOpacity={1} 
                             fill={`url(#chart-gradient-${indicator.id})`} 
                           />
-                          <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#9ca3af' }} />
+                          <XAxis dataKey="time" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
                         </AreaChart>
                       </ResponsiveContainer>
                     </div>
@@ -369,11 +369,11 @@ export default function IndicatorsPage() {
 
                   {indicator.strengthValue !== undefined && (
                     <div className="space-y-1.5">
-                      <div className="flex items-center justify-between text-xs text-gray-300">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>{t('signal_strength') || 'قوة الإشارة'}</span>
                         <span className="font-medium">{indicator.strengthValue}%</span>
                       </div>
-                      <div className="h-1.5 w-full bg-gray-700 rounded-full overflow-hidden">
+                      <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                         <div 
                           className={`h-full transition-all ${
                             indicator.signal === 'buy' 
@@ -388,7 +388,7 @@ export default function IndicatorsPage() {
                     </div>
                   )}
 
-                  <div className="flex justify-between items-center text-xs text-gray-400 mt-1">
+                  <div className="flex justify-between items-center text-xs text-muted-foreground mt-1">
                     <div className="flex items-center gap-1">
                       <span>{t('indicator_value') || 'قيمة المؤشر'}: </span>
                       <span className="font-semibold">{indicator.value}</span>
@@ -404,7 +404,7 @@ export default function IndicatorsPage() {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="text-xs w-full text-gray-400 hover:text-gray-200 hover:bg-gray-700/60"
+                  className="text-xs w-full text-muted-foreground hover:text-foreground hover:bg-muted/60"
                   onClick={() => {
                     toast({
                       title: t('updated') || 'تم التحديث',
@@ -420,38 +420,38 @@ export default function IndicatorsPage() {
         </div>
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 border-t border-gray-700/50 bg-gray-900/90 backdrop-blur-md z-50 pt-1.5 pb-2 mobile-navbar">
+      <footer className="fixed bottom-0 left-0 right-0 border-t border-border/50 bg-background/90 backdrop-blur-md z-50 pt-1.5 pb-2 mobile-navbar">
         <div className="flex justify-around items-center max-w-lg mx-auto">
           {user?.isAdmin ? (
-            <Link href="/admin" className="flex flex-col items-center text-gray-400 hover:text-yellow-400 mobile-nav-item">
+            <Link href="/admin" className="flex flex-col items-center text-muted-foreground hover:text-primary mobile-nav-item">
               <Users className="h-5 w-5" />
               <span className="text-[10px] mt-1 font-medium">{t('users')}</span>
             </Link>
           ) : (
-            <Link href="/bot-info" className="flex flex-col items-center text-gray-400 hover:text-yellow-400 mobile-nav-item">
+            <Link href="/bot-info" className="flex flex-col items-center text-muted-foreground hover:text-primary mobile-nav-item">
               <Bot className="h-5 w-5" />
               <span className="text-[10px] mt-1 font-medium">{t('bot_info')}</span>
             </Link>
           )}
 
-          <Link href="/indicators" className="flex flex-col items-center text-yellow-400 mobile-nav-item active">
+          <Link href="/indicators" className="flex flex-col items-center text-primary mobile-nav-item active">
             <BarChart className="h-5 w-5" />
             <span className="text-[10px] mt-1 font-medium">{t('indicators')}</span>
           </Link>
 
-          <Link href="/" className="flex flex-col items-center text-gray-400 hover:text-yellow-400 mobile-nav-item">
-            <div className="relative p-3 bg-yellow-400 text-black rounded-full -mt-5 shadow-lg border-4 border-gray-900/90">
+          <Link href="/" className="flex flex-col items-center text-muted-foreground hover:text-primary mobile-nav-item">
+            <div className="relative p-3 bg-primary text-primary-foreground rounded-full -mt-5 shadow-lg border-4 border-background/90">
               <DollarSign className="h-6 w-6" />
             </div>
             <span className="text-[10px] mt-1 font-medium">{t('signal')}</span>
           </Link>
 
-          <Link href="/group-chat" className="flex flex-col items-center text-gray-400 hover:text-yellow-400 mobile-nav-item">
+          <Link href="/group-chat" className="flex flex-col items-center text-muted-foreground hover:text-primary mobile-nav-item">
             <MessageCircle className="h-5 w-5" />
             <span className="text-[10px] mt-1 font-medium">{t('group_chats')}</span>
           </Link>
 
-          <Link href="/settings" className="flex flex-col items-center text-gray-400 hover:text-yellow-400 mobile-nav-item">
+          <Link href="/settings" className="flex flex-col items-center text-muted-foreground hover:text-primary mobile-nav-item">
             <Settings className="h-5 w-5" />
             <span className="text-[10px] mt-1 font-medium">{t('settings')}</span>
           </Link>
