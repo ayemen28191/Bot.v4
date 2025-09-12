@@ -905,9 +905,9 @@ export default function DeploymentPage() {
 
       {/* نافذة تأكيد الحذف */}
       <Dialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
-        <DialogContent className="bg-card text-foreground border-border max-w-md"
+        <DialogContent className="bg-card text-foreground border-border max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-center text-primary"
+            <DialogTitle className="text-center text-primary">
               تأكيد الحذف
             </DialogTitle>
           </DialogHeader>

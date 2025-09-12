@@ -361,7 +361,7 @@ export default function ApiKeysManagement() {
       );
     } else {
       return (
-        <Badge variant="outline" className="bg-gray-50 text-gray-600 hover:bg-gray-50">
+        <Badge variant="outline" className="bg-muted text-muted-foreground hover:bg-muted">
           غير مختبر
         </Badge>
       );
@@ -405,19 +405,19 @@ function ApiKeyCard({ apiKey, keyName, info, onTest, onEdit, testing, renderStat
   const description = apiKey?.description || info?.description || '';
 
   return (
-    <div className="border-2 rounded-lg p-3 bg-white shadow-sm border-blue-100">
+    <div className="border-2 rounded-lg p-3 bg-card shadow-sm border-border">
       <div className="mb-2">
-        <div className="font-semibold text-md flex items-center gap-2 text-blue-800">
-          <Key className="h-4 w-4 text-blue-600" />
+        <div className="font-semibold text-md flex items-center gap-2 text-foreground">
+          <Key className="h-4 w-4 text-primary" />
           {displayName}
           {apiKey && renderStatus(apiKey.key)}
           {info?.isRequired && (
-            <Badge variant="outline" className="ml-1 text-xs bg-red-50 text-red-600 font-bold">
+            <Badge variant="outline" className="ml-1 text-xs bg-destructive/10 text-destructive font-bold">
               مطلوب
             </Badge>
           )}
         </div>
-        <div className="text-xs text-gray-600 mt-1 mr-5">
+        <div className="text-xs text-muted-foreground mt-1 mr-5">
           {description}
         </div>
       </div>
@@ -425,18 +425,18 @@ function ApiKeyCard({ apiKey, keyName, info, onTest, onEdit, testing, renderStat
       <div className="space-y-3">
         {/* اسم المفتاح ثابت غير قابل للتعديل */}
         <div className="mb-1">
-          <div className="text-xs font-bold text-black mb-1">اسم المفتاح:</div>
-          <div className="px-2 py-1 bg-gray-50 border-2 border-gray-200 rounded-md text-sm font-mono text-gray-800 font-medium">
+          <div className="text-xs font-bold text-foreground mb-1">اسم المفتاح:</div>
+          <div className="px-2 py-1 bg-muted border-2 border-border rounded-md text-sm font-mono text-foreground font-medium">
             {key}
           </div>
         </div>
           
         {/* قيمة المفتاح - حقل قابل للتحديث */}
         <div className="flex flex-col">
-          <div className="text-xs font-bold text-black mb-1">قيمة المفتاح:</div>
+          <div className="text-xs font-bold text-foreground mb-1">قيمة المفتاح:</div>
           {apiKey ? (
             <div className="flex gap-2 items-center">
-              <div className="flex-1 bg-yellow-50 border border-yellow-200 rounded-md p-2 text-sm font-mono text-black overflow-x-auto">
+              <div className="flex-1 bg-accent border border-border rounded-md p-2 text-sm font-mono text-foreground overflow-x-auto">
                 {apiKey.value}
               </div>
               <Button 
@@ -444,7 +444,7 @@ function ApiKeyCard({ apiKey, keyName, info, onTest, onEdit, testing, renderStat
                 size="icon"
                 onClick={() => onEdit(apiKey)}
                 title="تحديث المفتاح"
-                className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-300"
+                className="bg-primary/10 hover:bg-primary/20 text-primary border-primary/30"
               >
                 <Save className="h-4 w-4" />
               </Button>
@@ -454,7 +454,7 @@ function ApiKeyCard({ apiKey, keyName, info, onTest, onEdit, testing, renderStat
                 onClick={() => onTest(apiKey.key)}
                 disabled={testing[apiKey.key]}
                 title="فحص المفتاح"
-                className="bg-green-50 hover:bg-green-100 text-green-700 border-green-300"
+                className="bg-green-500/10 hover:bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30"
               >
                 {testing[apiKey.key] ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -465,7 +465,7 @@ function ApiKeyCard({ apiKey, keyName, info, onTest, onEdit, testing, renderStat
             </div>
           ) : (
             <div className="flex gap-2 items-center">
-              <div className="flex-1 bg-gray-100 border border-gray-200 rounded-md p-2 text-sm font-mono text-gray-500">
+              <div className="flex-1 bg-muted border border-border rounded-md p-2 text-sm font-mono text-muted-foreground">
                 المفتاح غير مكون...
               </div>
               <Button 
@@ -482,7 +482,7 @@ function ApiKeyCard({ apiKey, keyName, info, onTest, onEdit, testing, renderStat
                   }
                 }}
                 title="إضافة المفتاح"
-                className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-300"
+                className="bg-primary/10 hover:bg-primary/20 text-primary border-primary/30"
               >
                 <Key className="h-4 w-4" />
               </Button>
@@ -529,7 +529,7 @@ function ApiKeyCard({ apiKey, keyName, info, onTest, onEdit, testing, renderStat
         <Card className="mb-6">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center">
-              <KeyRound className="h-5 w-5 mr-2 text-blue-500" />
+              <KeyRound className="h-5 w-5 mr-2 text-primary" />
               {form.getValues().key ? `تحديث المفتاح: ${form.getValues().key}` : "إضافة مفتاح جديد"}
             </CardTitle>
             <CardDescription>أدخل تفاصيل المفتاح لإضافته أو تحديثه</CardDescription>
@@ -618,7 +618,7 @@ function ApiKeyCard({ apiKey, keyName, info, onTest, onEdit, testing, renderStat
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold flex items-center">
-              <Database className="h-5 w-5 mr-2 text-blue-500" />
+              <Database className="h-5 w-5 mr-2 text-primary" />
               مفاتيح API المتوفرة
             </h2>
             <Button 
@@ -662,7 +662,7 @@ function ApiKeyCard({ apiKey, keyName, info, onTest, onEdit, testing, renderStat
 
           {loading ? (
             <div className="flex justify-center py-6">
-              <Loader2 className="animate-spin h-8 w-8 text-blue-500" />
+              <Loader2 className="animate-spin h-8 w-8 text-primary" />
             </div>
           ) : (
             <Tabs defaultValue="market">
@@ -788,7 +788,7 @@ function ApiKeyCard({ apiKey, keyName, info, onTest, onEdit, testing, renderStat
 
         {/* قسم المعلومات والمساعدة */}
         <div className="mt-6">
-          <Alert className="bg-blue-50 text-blue-700 border-blue-200">
+          <Alert className="bg-primary/5 text-foreground border-border">
             <HelpCircle className="h-5 w-5" />
             <AlertTitle className="font-bold">معلومات عن مفاتيح API</AlertTitle>
             <AlertDescription className="mt-2">
@@ -864,24 +864,24 @@ function ApiKeyCard({ apiKey, keyName, info, onTest, onEdit, testing, renderStat
       </div>
       
       {/* شريط التنقل السفلي */}
-      <footer className="fixed bottom-0 left-0 right-0 border-t border-gray-700/50 bg-gray-900/90 backdrop-blur-md z-50 pt-1.5 pb-2 mobile-navbar">
+      <footer className="fixed bottom-0 left-0 right-0 border-t border-border bg-background/90 backdrop-blur-md z-50 pt-1.5 pb-2 mobile-navbar">
         <div className="flex justify-around items-center max-w-lg mx-auto">
-          <Link href="/admin" className="flex flex-col items-center text-gray-400 hover:text-yellow-400 mobile-nav-item">
+          <Link href="/admin" className="flex flex-col items-center text-muted-foreground hover:text-primary mobile-nav-item">
             <DollarSign className="h-5 w-5" />
             <span className="text-[10px] mt-1 font-medium">{t('admin_panel')}</span>
           </Link>
 
-          <Link href="/admin/users" className="flex flex-col items-center text-gray-400 hover:text-yellow-400 mobile-nav-item">
+          <Link href="/admin/users" className="flex flex-col items-center text-muted-foreground hover:text-primary mobile-nav-item">
             <Users className="h-5 w-5" />
             <span className="text-[10px] mt-1 font-medium">{t('users')}</span>
           </Link>
 
-          <Link href="/admin/api-keys" className="flex flex-col items-center text-yellow-400 mobile-nav-item active">
+          <Link href="/admin/api-keys" className="flex flex-col items-center text-primary mobile-nav-item active">
             <KeyRound className="h-5 w-5" />
             <span className="text-[10px] mt-1 font-medium">مفاتيح API</span>
           </Link>
 
-          <Link href="/settings" className="flex flex-col items-center text-gray-400 hover:text-yellow-400 mobile-nav-item">
+          <Link href="/settings" className="flex flex-col items-center text-muted-foreground hover:text-primary mobile-nav-item">
             <Settings className="h-5 w-5" />
             <span className="text-[10px] mt-1 font-medium">{t('settings')}</span>
           </Link>

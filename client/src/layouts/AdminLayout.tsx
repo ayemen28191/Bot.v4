@@ -107,10 +107,10 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
       isActive: location.includes('/admin/api-keys')
     },
     {
-      href: "/admin/servers",
+      href: "/admin/deployment",
       icon: <Server size={18} />,
       label: "خوادم النشر",
-      isActive: location.includes('/admin/servers')
+      isActive: location.includes('/admin/deployment')
     },
     {
       href: "/settings",
