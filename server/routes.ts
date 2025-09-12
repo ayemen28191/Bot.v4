@@ -1,0 +1,282 @@
+import express, { type Express } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { insertUserSchema } from "@shared/schema";
+import { apiKeysRouter } from "./routes/api-keys";
+import { testRouter } from "./routes/test";
+import priceRouter from "./routes/price";
+import { updateRouter } from "./routes/update";
+import { deploymentRouter } from "./routes/deployment";
+import { heatmapRouter } from "./routes/heatmap";
+
+// التأكد من أن المستخدم هو مشرف
+function isAdmin(req: express.Request, res: express.Response, next: express.NextFunction) {
+  if (req.isAuthenticated() && req.user?.isAdmin) {
+    return next();
+  }
+  return res.status(403).json({ error: 'غير مصرح بالوصول. المسار مخصص للمشرفين فقط.' });
+}
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  console.log('Creating HTTP server...');
+  const httpServer = createServer(app);
+  
+  // تسجيل مسارات مفاتيح API
+  app.use('/api/config-keys', apiKeysRouter);
+  
+  // تسجيل مسارات الاختبار
+  app.use('/api/test', testRouter);
+  
+  // تسجيل مسارات السعر
+  app.use(priceRouter);
+  
+  // تسجيل مسارات التحديث
+  app.use('/api/update', updateRouter);
+  
+  // تسجيل مسارات النشر
+  app.use('/api/deployment', deploymentRouter);
+  
+  // تسجيل مسارات الخريطة الحرارية
+  app.use('/api/heatmap', heatmapRouter);
+
+  // المسارات الأساسية للمستخدمين
+  app.get('/api/users', isAdmin, async (req, res) => {
+    try {
+      console.log('Fetching all users...');
+      const users = await storage.getAllUsers();
+      // إزالة كلمات المرور من الاستجابة لأسباب أمنية
+      const safeUsers = users.map(user => ({
+        id: user.id,
+        username: user.username,
+        displayName: user.displayName,
+        email: user.email,
+        isAdmin: user.isAdmin,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      }));
+      res.json(safeUsers);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      res.status(500).json({ error: 'فشل في جلب قائمة المستخدمين' });
+    }
+  });
+
+  // إضافة مستخدم جديد - للمشرفين فقط
+  app.post('/api/users', isAdmin, async (req, res) => {
+    try {
+      const validatedUser = insertUserSchema.parse(req.body);
+      const newUser = await storage.createUser({
+        ...validatedUser,
+        // التأكد من صحة البيانات
+        username: validatedUser.username.trim(),
+        email: validatedUser.email.trim().toLowerCase(),
+      });
+      
+      // إزالة كلمة المرور من الاستجابة لأسباب أمنية
+      const { password, ...safeUser } = newUser;
+      res.status(201).json(safeUser);
+    } catch (error: any) {
+      console.error('Error creating user:', error);
+      
+      if (error.code === 'SQLITE_CONSTRAINT') {
+        return res.status(400).json({ error: 'اسم المستخدم أو البريد الإلكتروني مستخدم بالفعل' });
+      }
+      
+      res.status(400).json({ error: error.message || 'فشل في إنشاء المستخدم' });
+    }
+  });
+
+  // تحديث معلومات مستخدم - للمشرفين فقط
+  app.put('/api/users/:id', isAdmin, async (req, res) => {
+    const userId = parseInt(req.params.id);
+    
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: 'معرف المستخدم غير صالح' });
+    }
+    
+    try {
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'المستخدم غير موجود' });
+      }
+      
+      const result = await storage.updateUser(userId, req.body);
+      // إزالة كلمة المرور من الاستجابة لأسباب أمنية
+      const { password, ...safeResult } = result;
+      res.json(safeResult);
+    } catch (error: any) {
+      console.error('Error updating user:', error);
+      res.status(400).json({ error: error.message || 'فشل في تحديث المستخدم' });
+    }
+  });
+  
+  // تحديث معلومات مستخدم - طريقة PATCH (للدعم مع معظم متصفحات الإنترنت)
+  app.patch('/api/users/:id', isAdmin, async (req, res) => {
+    const userId = parseInt(req.params.id);
+    
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: 'معرف المستخدم غير صالح' });
+    }
+    
+    try {
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'المستخدم غير موجود' });
+      }
+      
+      // إذا كان هناك كلمة مرور في الطلب، قم بتشفيرها قبل التحديث
+      const requestData = {...req.body};
+      
+      if (requestData.password) {
+        try {
+          // استيراد وظيفة تشفير كلمة المرور
+          // استخدام وظيفة تشفير كلمة المرور من ملف auth.ts
+          const { hashPassword: hashPasswordInline } = await import('./auth');
+          
+          // تشفير كلمة المرور
+          requestData.password = await hashPasswordInline(requestData.password);
+          console.log('Password hashed successfully for update');
+        } catch (err) {
+          console.error('Error hashing password:', err);
+          return res.status(500).json({ error: 'حدث خطأ أثناء تشفير كلمة المرور' });
+        }
+      }
+      
+      // استخدام SQL مباشر لتحديث كلمة المرور إذا كانت موجودة
+      if (requestData.password) {
+        return new Promise((resolve, reject) => {
+          const sqliteDb = storage.getDatabase();
+          const now = new Date().toISOString();
+          sqliteDb.run(
+            'UPDATE users SET password = ?, updated_at = ? WHERE id = ?',
+            [requestData.password, now, userId],
+            (err: Error | null, result: any) => {
+              if (err) {
+                console.error('Error updating password:', err);
+                res.status(500).json({ error: 'حدث خطأ أثناء تحديث كلمة المرور' });
+              } else {
+                // يجب الحصول على عدد الصفوف المتأثرة
+                const db = storage.getDatabase();
+                db.get('SELECT changes() as changes', [], (err: Error | null, row: { changes?: number }) => {
+                  if (err) {
+                    console.error('Error getting changes count:', err);
+                    res.status(500).json({ error: 'حدث خطأ أثناء تحديث كلمة المرور' });
+                  } else if (row && row.changes && row.changes > 0) {
+                    console.log(`Password updated directly for user ID ${userId}`);
+                    res.json({ 
+                      success: true, 
+                      message: 'تم تحديث المستخدم بنجاح',
+                      id: userId
+                    });
+                  } else {
+                    res.status(500).json({ error: 'لم يتم تحديث كلمة المرور' });
+                  }
+                });
+              }
+            }
+          );
+        });
+      } else {
+        // تحديث باقي بيانات المستخدم إذا لم تكن هناك كلمة مرور
+        const result = await storage.updateUser(userId, requestData);
+        // إزالة كلمة المرور من الاستجابة لأسباب أمنية
+        const { password, ...safeResult } = result;
+        res.json(safeResult);
+      }
+    } catch (error: any) {
+      console.error('Error updating user:', error);
+      res.status(400).json({ error: error.message || 'فشل في تحديث المستخدم' });
+    }
+  });
+  
+  // إعادة تعيين كلمة مرور المسؤول
+  app.post('/api/admin/reset-password', isAdmin, async (req, res) => {
+    try {
+      const { password } = req.body;
+      
+      if (!password || password.length < 6) {
+        return res.status(400).json({ error: 'كلمة المرور يجب أن تكون أطول من 6 أحرف' });
+      }
+      
+      // استيراد وظيفة تشفير كلمة المرور
+      const auth = await import('./auth');
+      
+      // تشفير كلمة المرور
+      const hashedPassword = await auth.hashPassword(password);
+      
+      // تحديث كلمة المرور مباشرة في قاعدة البيانات
+      const sqliteDb = storage.getDatabase();
+      const now = new Date().toISOString();
+      
+      return new Promise((resolve, reject) => {
+        sqliteDb.run(
+          'UPDATE users SET password = ?, updated_at = ? WHERE username = ?',
+          [hashedPassword, now, 'admin'],
+          (err: Error | null, result: any) => {
+            if (err) {
+              console.error('Error resetting admin password:', err);
+              res.status(500).json({ error: 'حدث خطأ أثناء إعادة تعيين كلمة المرور' });
+            } else {
+              // يجب الحصول على عدد الصفوف المتأثرة
+              const db = storage.getDatabase();
+              db.get('SELECT changes() as changes', [], (err: Error | null, row: { changes?: number }) => {
+                if (err) {
+                  console.error('Error getting changes count:', err);
+                  res.status(500).json({ error: 'حدث خطأ أثناء تحديث كلمة المرور' });
+                } else if (row && row.changes && row.changes > 0) {
+                  console.log('Admin password has been reset');
+                  res.json({ 
+                    success: true, 
+                    message: 'تم إعادة تعيين كلمة مرور المسؤول بنجاح'
+                  });
+                } else {
+                  res.status(500).json({ error: 'لم يتم إعادة تعيين كلمة المرور' });
+                }
+              });
+            }
+          }
+        );
+      });
+    } catch (error: any) {
+      console.error('Error in admin password reset:', error);
+      res.status(500).json({ error: error.message || 'حدث خطأ غير متوقع' });
+    }
+  });
+
+  // حذف مستخدم - للمشرفين فقط
+  app.delete('/api/users/:id', isAdmin, async (req, res) => {
+    const userId = parseInt(req.params.id);
+    
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: 'معرف المستخدم غير صالح' });
+    }
+    
+    try {
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'المستخدم غير موجود' });
+      }
+      
+      // لا يمكن حذف المشرف الرئيسي (المستخدم رقم 1)
+      if (userId === 1) {
+        return res.status(403).json({ error: 'لا يمكن حذف المشرف الرئيسي' });
+      }
+      
+      await storage.deleteUser(userId);
+      res.status(204).send();
+    } catch (error: any) {
+      console.error('Error deleting user:', error);
+      res.status(500).json({ error: error.message || 'فشل في حذف المستخدم' });
+    }
+  });
+
+  // مسار للتحقق من حالة الخادم
+  app.get('/api/status', (_, res) => {
+    res.json({ 
+      status: 'ok',
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  return httpServer;
+}

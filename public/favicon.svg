@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- رأس الروبوت المصغر -->
+  <rect x="16" y="13" width="32" height="26" rx="5" ry="5" fill="#FFD700" stroke="#000" stroke-width="1.5"/>
+  
+  <!-- عيون الروبوت -->
+  <circle cx="25" cy="23" r="4" fill="#1E1E1E"/>
+  <circle cx="39" cy="23" r="4" fill="#1E1E1E"/>
+  
+  <!-- بريق العيون -->
+  <circle cx="24" cy="22" r="1.5" fill="#FFFFFF"/>
+  <circle cx="38" cy="22" r="1.5" fill="#FFFFFF"/>
+  
+  <!-- الفم -->
+  <rect x="22" y="30" width="20" height="4" rx="2" ry="2" fill="#1E1E1E"/>
+  
+  <!-- هوائيات -->
+  <line x1="22" y1="13" x2="18" y2="7" stroke="#000" stroke-width="1.5"/>
+  <line x1="42" y1="13" x2="46" y2="7" stroke="#000" stroke-width="1.5"/>
+  <circle cx="18" cy="7" r="2" fill="#FFD700" stroke="#000" stroke-width="1"/>
+  <circle cx="46" cy="7" r="2" fill="#FFD700" stroke="#000" stroke-width="1"/>
+  
+  <!-- جسم الروبوت -->
+  <rect x="19" y="39" width="26" height="16" rx="3" ry="3" fill="#FFD700" stroke="#000" stroke-width="1.5"/>
+  
+  <!-- أزرار التحكم -->
+  <circle cx="26" cy="44" r="2" fill="#1E1E1E"/>
+  <circle cx="32" cy="44" r="2" fill="#1E1E1E"/>
+  <circle cx="38" cy="44" r="2" fill="#1E1E1E"/>
+  
+  <!-- أرجل الروبوت -->
+  <rect x="23" y="55" width="4" height="6" rx="2" ry="2" fill="#FFD700" stroke="#000" stroke-width="1"/>
+  <rect x="37" y="55" width="4" height="6" rx="2" ry="2" fill="#FFD700" stroke="#000" stroke-width="1"/>
+</svg>

@@ -1,0 +1,15 @@
+run = "python -m http.server 8080"
+language = "html"
+
+[nix]
+channel = "stable-23_11"
+
+[env]
+PYTHON_VERSION = "3.11"
+
+[languages]
+[languages.html]
+pattern = "**/*.html"
+
+[ports]
+8080 = { handler = "static" }

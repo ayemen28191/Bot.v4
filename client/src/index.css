@@ -1,0 +1,427 @@
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* تأثيرات رسومية إضافية لشاشة التحميل */
+@keyframes wobble {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(1deg); }
+  75% { transform: rotate(-1deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.fade-out {
+  animation: fadeOut 0.3s ease-in-out forwards;
+}
+
+.robot-wobble {
+  animation: wobble 3s ease-in-out infinite;
+  transform-origin: center center;
+}
+
+/* تحسين سلاسة الانتقالات */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+@layer base {
+  :root[data-theme="light"] {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 98%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 47 95% 50%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 47 95% 50%;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 240 5.9% 10%;
+    --signal-icon: 240 10% 15%;
+  }
+
+  :root[data-theme="dark"] {
+    --background: 20 14.3% 4.1%;
+    --foreground: 0 0% 95%;
+    --card: 24 9.8% 10%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 47 95% 50%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 12 6.5% 15.1%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 85.7% 97.3%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 47 95% 50%;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 240 5.9% 10%;
+    --signal-icon: 0 0% 85%;
+  }
+
+  * {
+    @apply border-[hsl(var(--border))];
+  }
+
+  body {
+    @apply antialiased font-sans;
+    font-family: 'Tajawal', sans-serif;
+    direction: rtl;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    overscroll-behavior: none;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+
+  [data-theme="light"] .signal-card {
+    background-color: hsla(var(--card), 0.95);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+
+  [data-theme="light"] .mobile-navbar {
+    background-color: hsla(var(--background), 0.95);
+    border-color: hsla(var(--border), 0.5);
+  }
+
+  [data-theme="light"] .message-input {
+    background-color: hsla(var(--card), 0.95);
+    border-color: hsla(var(--border), 0.5);
+  }
+}
+
+/* جعل الوضع الفعلي يشبه تطبيقات الهاتف */
+html, body {
+  height: 100%;
+  overflow-x: hidden;
+  position: relative;
+}
+
+.trading-app {
+  background-color: hsl(var(--background));
+  background-image: linear-gradient(to bottom right, hsla(var(--foreground), 0.1), hsla(var(--foreground), 0.05));
+  min-height: 100vh;
+}
+
+[data-theme="dark"] .trading-app {
+  background-image: linear-gradient(to bottom right, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.8)), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="black" /><path d="M0 50 L100 50" stroke="%23333" stroke-width="0.5" /><path d="M50 0 L50 100" stroke="%23333" stroke-width="0.5" /></svg>');
+  background-size: cover;
+}
+
+[data-theme="light"] .trading-app {
+  background-image: linear-gradient(to bottom right, hsla(var(--muted), 0.8), hsla(var(--muted), 0.6)), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="white" /><path d="M0 50 L100 50" stroke="%23e5e5e5" stroke-width="0.5" /><path d="M50 0 L50 100" stroke="%23e5e5e5" stroke-width="0.5" /></svg>');
+  background-size: cover;
+}
+
+.signal-card {
+  background-color: hsla(var(--card), 0.8);
+  border-radius: 0.75rem;
+  backdrop-filter: blur(8px);
+  border: 1px solid hsla(var(--border), 0.5);
+}
+
+.signal-button {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-weight: bold;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+}
+
+.signal-button:hover {
+  background-color: hsl(var(--primary) / 0.9);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px hsla(var(--primary), 0.4);
+}
+
+.signal-icon {
+  background-color: hsl(var(--signal-icon));
+  border-radius: 0.75rem;
+}
+
+/* دعم اللغة العربية والتصميم المستجيب */
+.arabic-support {
+  font-family: 'Tajawal', sans-serif;
+  text-align: right;
+}
+
+.arabic-support input,
+.arabic-support textarea {
+  text-align: right;
+  direction: rtl;
+}
+
+/* دعم تغيير الاتجاه بناءً على اللغة */
+html[lang="ar"] {
+  direction: rtl;
+}
+
+html[lang="en"],
+html[lang="hi"] {
+  direction: ltr;
+}
+
+/* ضبط عناصر الواجهة حسب اتجاه اللغة */
+html[lang="ar"] .navbar-icon,
+html[lang="ar"] header svg, 
+html[lang="ar"] .mobile-navbar svg {
+  transform: scaleX(-1);
+}
+
+html[lang="ar"] .mobile-navbar {
+  flex-direction: row-reverse;
+}
+
+html[lang="ar"] .space-x-4 {
+  --tw-space-x-reverse: 1;
+}
+
+html[lang="ar"] header .flex {
+  flex-direction: row-reverse;
+}
+
+html[lang="ar"] header .gap-1\.5 {
+  flex-direction: row;
+}
+
+html[lang="ar"] .ml-1, 
+html[lang="ar"] .ml-2,
+html[lang="ar"] .ml-3,
+html[lang="ar"] .ml-4 {
+  margin-left: 0;
+  margin-right: 0.25rem;
+}
+
+html[lang="ar"] .mr-1, 
+html[lang="ar"] .mr-2,
+html[lang="ar"] .mr-3,
+html[lang="ar"] .mr-4 {
+  margin-right: 0;
+  margin-left: 0.25rem;
+}
+
+/* تصحيح وضع العناصر في الواجهة العربية */
+.rtl-flip {
+  transform: scaleX(-1);
+}
+
+.rtl-margin {
+  margin-right: 0 !important;
+  margin-left: 0.5rem !important;
+}
+
+/* تنسيق خاص لمؤشرات الإشارات */
+.signal-up {
+  color: hsl(var(--success));
+  background-color: hsla(var(--success), 0.1);
+  border: 1px solid hsla(var(--success), 0.3);
+}
+
+.signal-down {
+  color: hsl(var(--destructive));
+  background-color: hsla(var(--destructive), 0.1);
+  border: 1px solid hsla(var(--destructive), 0.3);
+}
+
+.signal-wait {
+  color: hsl(var(--warning));
+  background-color: hsla(var(--warning), 0.1);
+  border: 1px solid hsla(var(--warning), 0.3);
+}
+
+/* تحسين مظهر الشاشات الصغيرة */
+@media (max-width: 640px) {
+  .timeframe-buttons {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .timeframe-buttons button {
+    margin: 0.25rem;
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .signal-card {
+    padding: 0.75rem;
+  }
+
+  .mobile-navbar {
+    padding: 0.5rem 0.25rem;
+    height: 4rem; /* ارتفاع ثابت للشريط السفلي */
+  }
+
+  .mobile-nav-item {
+    padding: 0 0.25rem;
+  }
+
+  /* تعديل المحتوى لتناسب الشاشات الصغيرة بدون تمرير */
+  .trading-signal-app main,
+  .settings-page main {
+    padding: 0.75rem;
+    padding-top: 4.5rem; /* مساحة إضافية أسفل الشريط العلوي */
+    padding-bottom: 5.5rem; /* مساحة إضافية فوق الشريط السفلي */
+  }
+
+  /* تقليص مساحات العناصر الداخلية */
+  .signal-display, 
+  .platform-selector,
+  .trading-pair-selector,
+  .time-frame-selector {
+    margin-bottom: 0.75rem;
+  }
+
+  /* تحسين مظهر القوائم المنسدلة على الجوال */
+  .custom-dropdown button {
+    font-size: 0.875rem;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .dropdown-menu {
+    max-height: 60vh; /* تحديد ارتفاع أقصى للقوائم */
+    overflow-y: auto;
+  }
+
+  /* تصغير حجم الخط في بعض العناصر */
+  .market-status {
+    font-size: 0.65rem;
+  }
+
+  /* تحسين أزرار العمل */
+  .get-signal-button {
+    height: 2.75rem;
+    font-size: 0.95rem;
+  }
+
+  /* تحسين الهوامش بين العناصر */
+  label.block {
+    margin-bottom: 0.35rem;
+    font-size: 0.8rem;
+  }
+
+  /* تقليل المساحة الداخلية في مؤشر الإشارة */
+  .signal-display h3 {
+    margin-bottom: 0.25rem;
+  }
+}
+
+/* تنسيق عناصر تطبيق الجوال */
+.mobile-navbar {
+  box-shadow: 0 -8px 16px rgba(0, 0, 0, 0.5);
+  transition: transform 0.3s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* تأثيرات عند النقر على العناصر */
+.mobile-nav-item {
+  position: relative;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+}
+
+.mobile-nav-item:active {
+  transform: scale(0.92);
+}
+
+.mobile-nav-item.active {
+  position: relative;
+}
+
+/* تحسين مؤشر العنصر النشط في القائمة */
+.mobile-nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 3px;
+  background-color: hsl(var(--primary));
+  border-radius: 1.5px;
+  box-shadow: 0 0 8px hsla(var(--primary), 0.6);
+}
+
+/* تحسين أيقونات القائمة */
+.mobile-nav-item svg {
+  margin-bottom: 3px;
+  transition: all 0.2s ease;
+}
+
+.mobile-nav-item.active svg {
+  transform: scale(1.15);
+}
+
+/* تنسيق القوائم المنسدلة */
+.custom-dropdown {
+  position: relative;
+  z-index: 40;
+}
+
+.dropdown-menu {
+  border-radius: 1rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-item {
+  transition: all 0.15s ease;
+}
+
+.dropdown-item:active {
+  transform: scale(0.98);
+}

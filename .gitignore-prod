@@ -1,0 +1,48 @@
+# ملفات البيئة والتكوين
+.env
+.env.*
+!.env.example
+
+# ملفات البناء والتطوير
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+.pnpm-debug.log
+
+# ملفات المؤقتة
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.tmp
+*.bak
+
+# ملفات قاعدة البيانات
+data/sessions.sqlite
+data/*.log
+*.sqlite-journal
+*.sqlite3-journal
+
+# ملفات التطوير
+.vscode/
+.idea/
+.replit
+.replit.*
+.nix/
+.upm/
+.config/
+.cache/
+.npm/
+
+# الملفات والمجلدات غير الضرورية
+backups/
+attached_assets/
+data/update.log
+**/temp/
+**/tmp/
+**/.git/
+**/.github/
+
+# ملفات النشر المؤقتة
+.gitignore-deploy
