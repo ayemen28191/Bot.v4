@@ -58,7 +58,7 @@ type UserFormValues = z.infer<typeof userFormSchema>;
 type UserUpdateValues = z.infer<typeof userUpdateSchema>;
 
 // استيراد مكون التخطيط الإداري
-import { AdminLayout } from "@/components/AdminLayout";
+import { AdminLayout } from "@/layouts";
 
 export default function UserManagement() {
   const { user } = useAuth();

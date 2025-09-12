@@ -350,30 +350,30 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="chat-page flex flex-col min-h-screen bg-gray-900 text-white">
-      <header className="fixed top-0 left-0 right-0 flex justify-between items-center p-3 border-b border-gray-700/60 bg-gray-900/90 backdrop-blur-md z-50 shadow-md">
+    <div className="chat-page flex flex-col min-h-screen bg-background text-foreground trading-app">
+      <header className="fixed top-0 left-0 right-0 flex justify-between items-center p-3 border-b border-border/60 bg-background/90 backdrop-blur-md z-50 shadow-md">
         <div className="flex items-center gap-4">
           <Link href="/">
-            <button className="p-1.5 rounded-full bg-gray-800/80 border border-gray-700/60">
+            <button className="p-1.5 rounded-full bg-card/80 border border-border/60">
               <ArrowLeft className="h-4 w-4" />
             </button>
           </Link>
           <div className="font-bold text-lg flex items-baseline gap-3">
-            <span className="text-yellow-400">{t('group_chat')}</span>
+            <span className="text-primary">{t('group_chat')}</span>
             {isConnected && <span className="text-green-400 text-sm">({t('connected')})</span>}
           </div>
-          <div className="flex items-center gap-1 text-sm text-gray-400">
+          <div className="flex items-center gap-1 text-sm text-muted-foreground">
             <Users className="h-4 w-4" />
             <span>{onlineUsers.toLocaleString()} {t('online')}</span>
           </div>
         </div>
         <button
           onClick={() => setIsProfileDialogOpen(true)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 hover:bg-gray-700 transition-colors"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border border-border hover:bg-card/80 transition-colors"
         >
           <img src={userProfile.avatar} alt="avatar" className="w-6 h-6 rounded-full" />
           <span className="text-sm">{userProfile.name}</span>
-          <Settings className="h-4 w-4 text-gray-400" />
+          <Settings className="h-4 w-4 text-muted-foreground" />
         </button>
       </header>
 
