@@ -437,13 +437,13 @@ export default function DeploymentPage() {
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'success':
-        return 'text-green-400';
+        return 'text-green-600';
       case 'failed':
-        return 'text-red-400';
+        return 'text-destructive';
       case 'in_progress':
-        return 'text-yellow-400';
+        return 'text-primary';
       default:
-        return 'text-gray-400';
+        return 'text-muted-foreground';
     }
   };
 
@@ -457,16 +457,16 @@ export default function DeploymentPage() {
         {/* التبويبات الرئيسية */}
         <div className="mb-6">
           <Tabs defaultValue="servers" onValueChange={setActiveTab} className="w-full">
-            <TabsList className="bg-gray-800/60 border border-gray-700/60 grid w-full grid-cols-2 mb-4">
+            <TabsList className="bg-muted border border-border grid w-full grid-cols-2 mb-4">
               <TabsTrigger
                 value="servers"
-                className="data-[state=active]:bg-gray-700 data-[state=active]:text-yellow-400"
+                className="data-[state=active]:bg-background data-[state=active]:text-primary"
               >
                 <Server className="h-4 w-4 mr-2" /> إدارة الخوادم
               </TabsTrigger>
               <TabsTrigger
                 value="logs"
-                className="data-[state=active]:bg-gray-700 data-[state=active]:text-yellow-400"
+                className="data-[state=active]:bg-background data-[state=active]:text-primary"
               >
                 <Terminal className="h-4 w-4 mr-2" /> سجلات النشر
               </TabsTrigger>
@@ -474,12 +474,12 @@ export default function DeploymentPage() {
 
             {/* المحتوى - قسم الخوادم */}
             <TabsContent value="servers">
-              <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/60 rounded-xl p-4">
+              <div className="bg-card/50 backdrop-blur-sm border border-border rounded-xl p-4">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold text-yellow-400">إدارة خوادم النشر</h2>
+                  <h2 className="text-xl font-bold text-primary">إدارة خوادم النشر</h2>
                   <Button 
                     size="sm" 
-                    className="bg-yellow-500 hover:bg-yellow-600 text-black"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
                     onClick={openAddDialog}
                   >
                     <Plus className="h-4 w-4 mr-1" /> إضافة خادم
@@ -488,36 +488,36 @@ export default function DeploymentPage() {
                 
                 {loading ? (
                   <div className="flex justify-center items-center py-8">
-                    <Loader2 className="h-8 w-8 text-yellow-400 animate-spin" />
+                    <Loader2 className="h-8 w-8 text-primary animate-spin" />
                   </div>
                 ) : servers.length === 0 ? (
-                  <div className="text-center py-8 text-gray-400">
+                  <div className="text-center py-8 text-muted-foreground">
                     لا توجد خوادم مضافة حاليًا
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <Table className="w-full">
                       <TableHeader>
-                        <TableRow className="border-gray-700">
-                          <TableHead className="text-gray-300">الاسم</TableHead>
-                          <TableHead className="text-gray-300">المضيف</TableHead>
-                          <TableHead className="text-gray-300">المستخدم</TableHead>
-                          <TableHead className="text-gray-300">المنفذ</TableHead>
-                          <TableHead className="text-gray-300">مسار النشر</TableHead>
-                          <TableHead className="text-gray-300">الحالة</TableHead>
-                          <TableHead className="text-gray-300">الإجراءات</TableHead>
+                        <TableRow className="border-border">
+                          <TableHead className="text-muted-foreground">الاسم</TableHead>
+                          <TableHead className="text-muted-foreground">المضيف</TableHead>
+                          <TableHead className="text-muted-foreground">المستخدم</TableHead>
+                          <TableHead className="text-muted-foreground">المنفذ</TableHead>
+                          <TableHead className="text-muted-foreground">مسار النشر</TableHead>
+                          <TableHead className="text-muted-foreground">الحالة</TableHead>
+                          <TableHead className="text-muted-foreground">الإجراءات</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {servers.map((server) => (
-                          <TableRow key={server.id} className="border-gray-700/50">
+                          <TableRow key={server.id} className="border-border/50">
                             <TableCell className="font-medium">{server.name}</TableCell>
                             <TableCell className="flex items-center gap-1">
                               {server.host}
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-6 w-6 text-gray-400 hover:text-white"
+                                className="h-6 w-6 text-muted-foreground hover:text-foreground"
                                 onClick={() => copyToClipboard(server.host)}
                               >
                                 <Copy className="h-3 w-3" />
@@ -528,11 +528,11 @@ export default function DeploymentPage() {
                             <TableCell className="max-w-[150px] truncate">{server.deployPath}</TableCell>
                             <TableCell>
                               {server.isActive ? (
-                                <span className="px-2 py-1 rounded text-xs bg-green-500/20 text-green-300 border border-green-500/30">
+                                <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-700 border border-green-200">
                                   نشط
                                 </span>
                               ) : (
-                                <span className="px-2 py-1 rounded text-xs bg-gray-600/30 text-gray-300 border border-gray-600/30">
+                                <span className="px-2 py-1 rounded text-xs bg-muted text-muted-foreground border border-border">
                                   غير نشط
                                 </span>
                               )}
@@ -542,7 +542,7 @@ export default function DeploymentPage() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-7 w-7 text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
+                                  className="h-7 w-7 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                   onClick={() => testServerConnection(server.id)}
                                   disabled={testingServer === server.id}
                                 >
@@ -555,7 +555,7 @@ export default function DeploymentPage() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-7 w-7 text-green-400 hover:text-green-300 hover:bg-green-900/20"
+                                  className="h-7 w-7 text-green-600 hover:text-green-700 hover:bg-green-50"
                                   onClick={() => deployToServer(server.id)}
                                   disabled={isDeploying === server.id || !server.isActive}
                                 >
@@ -571,15 +571,15 @@ export default function DeploymentPage() {
                                       <MoreVertical className="h-4 w-4" />
                                     </Button>
                                   </DropdownMenuTrigger>
-                                  <DropdownMenuContent align={isRTL ? "start" : "end"} className="bg-gray-800 border-gray-700 text-white">
+                                  <DropdownMenuContent align={isRTL ? "start" : "end"} className="bg-card border-border text-foreground"
                                     <DropdownMenuItem 
-                                      className="cursor-pointer hover:bg-gray-700 focus:bg-gray-700"
+                                      className="cursor-pointer hover:bg-muted focus:bg-muted"
                                       onClick={() => openEditDialog(server)}
                                     >
                                       <Edit className="h-4 w-4 mr-2" /> تعديل
                                     </DropdownMenuItem>
                                     <DropdownMenuItem 
-                                      className="cursor-pointer text-red-400 hover:text-red-300 hover:bg-red-900/20 focus:bg-red-900/20"
+                                      className="cursor-pointer text-destructive hover:text-destructive hover:bg-destructive/10 focus:bg-destructive/10"
                                       onClick={() => openDeleteConfirm(server)}
                                     >
                                       <Trash className="h-4 w-4 mr-2" /> حذف
@@ -599,12 +599,12 @@ export default function DeploymentPage() {
 
             {/* المحتوى - سجلات النشر */}
             <TabsContent value="logs">
-              <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/60 rounded-xl p-4">
+              <div className="bg-card/50 backdrop-blur-sm border border-border rounded-xl p-4">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold text-yellow-400">سجلات النشر</h2>
+                  <h2 className="text-xl font-bold text-primary">سجلات النشر</h2>
                   <Button 
                     size="sm" 
-                    className="bg-gray-700 hover:bg-gray-600 text-white"
+                    className="bg-muted hover:bg-muted/80 text-foreground"
                     onClick={fetchDeploymentLogs}
                   >
                     <Loader2 className="h-4 w-4 mr-1" /> تحديث
@@ -612,7 +612,7 @@ export default function DeploymentPage() {
                 </div>
                 
                 {deploymentLogs.length === 0 ? (
-                  <div className="text-center py-8 text-gray-400">
+                  <div className="text-center py-8 text-muted-foreground">
                     لا توجد سجلات نشر حاليًا
                   </div>
                 ) : (
@@ -620,7 +620,7 @@ export default function DeploymentPage() {
                     {deploymentLogs.map((log) => {
                       const server = servers.find(s => s.id === log.serverId);
                       return (
-                        <div key={log.id} className="bg-gray-900/50 border border-gray-700/50 rounded-lg p-4">
+                        <div key={log.id} className="bg-card border border-border rounded-lg p-4">
                           <div className="flex justify-between items-center mb-2">
                             <div className="flex items-center gap-2">
                               <span className="font-semibold">{server?.name || `خادم #${log.serverId}`}</span>
@@ -628,12 +628,12 @@ export default function DeploymentPage() {
                                 {log.status === 'success' ? 'ناجح' : log.status === 'failed' ? 'فاشل' : 'قيد التنفيذ'}
                               </span>
                             </div>
-                            <span className="text-xs text-gray-400">{formatDate(log.startTime)}</span>
+                            <span className="text-xs text-muted-foreground">{formatDate(log.startTime)}</span>
                           </div>
-                          <p className="text-gray-300 text-sm mb-2">{log.message}</p>
+                          <p className="text-foreground text-sm mb-2">{log.message}</p>
                           {log.details && (
-                            <div className="bg-gray-950 border border-gray-800 rounded p-2 mt-2 text-xs font-mono overflow-x-auto">
-                              <pre className="whitespace-pre-wrap text-gray-400">{log.details}</pre>
+                            <div className="bg-muted border border-border rounded p-2 mt-2 text-xs font-mono overflow-x-auto">
+                              <pre className="whitespace-pre-wrap text-muted-foreground">{log.details}</pre>
                             </div>
                           )}
                         </div>
@@ -649,9 +649,9 @@ export default function DeploymentPage() {
 
       {/* نافذة إضافة/تحرير خادم */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="bg-gray-800 text-white border-gray-700">
+        <DialogContent className="bg-card text-foreground border-border">
           <DialogHeader>
-            <DialogTitle className="text-center text-yellow-400">
+            <DialogTitle className="text-center text-primary">
               {editingServer ? "تعديل الخادم" : "إضافة خادم"}
             </DialogTitle>
           </DialogHeader>
@@ -668,10 +668,10 @@ export default function DeploymentPage() {
                       <Input 
                         placeholder="أدخل اسم الخادم" 
                         {...field} 
-                        className="bg-gray-700 border-gray-600"
+                        className="bg-background border-input"
                       />
                     </FormControl>
-                    <FormMessage className="text-red-400" />
+                    <FormMessage className="text-destructive" />
                   </FormItem>
                 )}
               />
@@ -686,10 +686,10 @@ export default function DeploymentPage() {
                       <Input 
                         placeholder="أدخل عنوان المضيف" 
                         {...field} 
-                        className="bg-gray-700 border-gray-600"
+                        className="bg-background border-input"
                       />
                     </FormControl>
-                    <FormMessage className="text-red-400" />
+                    <FormMessage className="text-destructive" />
                   </FormItem>
                 )}
               />
@@ -705,10 +705,10 @@ export default function DeploymentPage() {
                         <Input 
                           placeholder="أدخل اسم المستخدم" 
                           {...field} 
-                          className="bg-gray-700 border-gray-600"
+                          className="bg-background border-input"
                         />
                       </FormControl>
-                      <FormMessage className="text-red-400" />
+                      <FormMessage className="text-destructive" />
                     </FormItem>
                   )}
                 />
@@ -724,10 +724,10 @@ export default function DeploymentPage() {
                           type="number" 
                           placeholder="أدخل رقم المنفذ" 
                           {...field} 
-                          className="bg-gray-700 border-gray-600"
+                          className="bg-background border-input"
                         />
                       </FormControl>
-                      <FormMessage className="text-red-400" />
+                      <FormMessage className="text-destructive" />
                     </FormItem>
                   )}
                 />
@@ -748,9 +748,9 @@ export default function DeploymentPage() {
                           value="password"
                           checked={field.value === "password"}
                           onChange={() => field.onChange("password")}
-                          className="h-4 w-4 text-yellow-500 bg-gray-700 border-gray-600 focus:ring-yellow-400"
+                          className="h-4 w-4 text-primary bg-background border-input focus:ring-primary"
                         />
-                        <label htmlFor="password-auth" className="text-sm font-medium text-gray-300 mr-2">
+                        <label htmlFor="password-auth" className="text-sm font-medium text-foreground mr-2">
                           كلمة المرور
                         </label>
                       </div>
@@ -761,14 +761,14 @@ export default function DeploymentPage() {
                           value="key"
                           checked={field.value === "key"}
                           onChange={() => field.onChange("key")}
-                          className="h-4 w-4 text-yellow-500 bg-gray-700 border-gray-600 focus:ring-yellow-400"
+                          className="h-4 w-4 text-primary bg-background border-input focus:ring-primary"
                         />
-                        <label htmlFor="key-auth" className="text-sm font-medium text-gray-300 mr-2">
+                        <label htmlFor="key-auth" className="text-sm font-medium text-foreground mr-2">
                           المفتاح الخاص (SSH)
                         </label>
                       </div>
                     </div>
-                    <FormMessage className="text-red-400" />
+                    <FormMessage className="text-destructive" />
                   </FormItem>
                 )}
               />
@@ -787,7 +787,7 @@ export default function DeploymentPage() {
                             type={showPassword ? "text" : "password"} 
                             placeholder="أدخل كلمة المرور" 
                             {...field} 
-                            className="bg-gray-700 border-gray-600 pr-10"
+                            className="bg-background border-input pr-10"
                           />
                         </FormControl>
                         <button 
@@ -796,13 +796,13 @@ export default function DeploymentPage() {
                           onClick={() => setShowPassword(!showPassword)}
                         >
                           {showPassword ? (
-                            <EyeOff className="h-4 w-4 text-gray-400" />
+                            <EyeOff className="h-4 w-4 text-muted-foreground" />
                           ) : (
-                            <Eye className="h-4 w-4 text-gray-400" />
+                            <Eye className="h-4 w-4 text-muted-foreground" />
                           )}
                         </button>
                       </div>
-                      <FormMessage className="text-red-400" />
+                      <FormMessage className="text-destructive" />
                     </FormItem>
                   )}
                 />
@@ -822,7 +822,7 @@ export default function DeploymentPage() {
                             placeholder="أدخل المفتاح الخاص" 
                             {...field} 
                             rows={3}
-                            className="bg-gray-700 border-gray-600 font-mono text-xs resize-none"
+                            className="bg-background border-input font-mono text-xs resize-none"
                           />
                         </FormControl>
                         <button 
@@ -831,13 +831,13 @@ export default function DeploymentPage() {
                           onClick={() => setShowPrivateKey(!showPrivateKey)}
                         >
                           {showPrivateKey ? (
-                            <EyeOff className="h-4 w-4 text-gray-400" />
+                            <EyeOff className="h-4 w-4 text-muted-foreground" />
                           ) : (
-                            <Eye className="h-4 w-4 text-gray-400" />
+                            <Eye className="h-4 w-4 text-muted-foreground" />
                           )}
                         </button>
                       </div>
-                      <FormMessage className="text-red-400" />
+                      <FormMessage className="text-destructive" />
                     </FormItem>
                   )}
                 />
@@ -853,10 +853,10 @@ export default function DeploymentPage() {
                       <Input 
                         placeholder="أدخل مسار النشر" 
                         {...field} 
-                        className="bg-gray-700 border-gray-600"
+                        className="bg-background border-input"
                       />
                     </FormControl>
-                    <FormMessage className="text-red-400" />
+                    <FormMessage className="text-destructive" />
                   </FormItem>
                 )}
               />
@@ -870,7 +870,7 @@ export default function DeploymentPage() {
                       <Checkbox
                         checked={field.value}
                         onCheckedChange={field.onChange}
-                        className="data-[state=checked]:bg-yellow-500 data-[state=checked]:border-yellow-500"
+                        className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                       />
                     </FormControl>
                     <FormLabel className="font-normal">
@@ -885,13 +885,13 @@ export default function DeploymentPage() {
                   type="button" 
                   variant="outline" 
                   onClick={() => setDialogOpen(false)}
-                  className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                  className="border-border text-muted-foreground hover:bg-muted"
                 >
                   إلغاء
                 </Button>
                 <Button 
                   type="submit" 
-                  className="bg-yellow-500 hover:bg-yellow-600 text-black"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
                   disabled={isSubmitting}
                 >
                   {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -905,18 +905,18 @@ export default function DeploymentPage() {
 
       {/* نافذة تأكيد الحذف */}
       <Dialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
-        <DialogContent className="bg-gray-800 text-white border-gray-700 max-w-md">
+        <DialogContent className="bg-card text-foreground border-border max-w-md"
           <DialogHeader>
-            <DialogTitle className="text-center text-yellow-400">
+            <DialogTitle className="text-center text-primary"
               تأكيد الحذف
             </DialogTitle>
           </DialogHeader>
           
           <div className="py-3">
-            <p className="text-gray-300 text-center mb-2">
+            <p className="text-foreground text-center mb-2">
               هل أنت متأكد من رغبتك في حذف هذا الخادم؟
             </p>
-            <p className="text-yellow-400 text-center font-semibold">
+            <p className="text-primary text-center font-semibold">
               {serverToDelete?.name}
             </p>
             <p className="text-red-400 text-center text-sm mt-4">
@@ -927,14 +927,14 @@ export default function DeploymentPage() {
           <DialogFooter className="flex justify-between">
             <Button 
               onClick={() => setConfirmDeleteOpen(false)}
-              className="border-gray-600 text-gray-300 hover:bg-gray-700 flex-1 mr-2"
+              className="border-border text-muted-foreground hover:bg-muted flex-1 mr-2"
             >
               <X className="h-4 w-4 mr-2" />
               إلغاء
             </Button>
             <Button 
               onClick={handleDeleteServer}
-              className="bg-red-600 hover:bg-red-700 text-white flex-1"
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground flex-1"
               disabled={isSubmitting}
             >
               {isSubmitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Trash className="h-4 w-4 mr-2" />}
