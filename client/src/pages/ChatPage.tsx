@@ -394,7 +394,7 @@ export default function ChatPage() {
               <img
                 src={message.avatar}
                 alt={message.sender}
-                className="w-8 h-8 rounded-full border-2 border-gray-700"
+                className="w-8 h-8 rounded-full border-2 border-border"
               />
               <div
                 className={`flex flex-col max-w-[80%] ${
@@ -402,10 +402,10 @@ export default function ChatPage() {
                 }`}
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-medium text-gray-300">
+                  <span className="text-sm font-medium text-muted-foreground">
                     {message.sender}
                   </span>
-                  <div className="flex items-center gap-1 text-[10px] text-gray-500">
+                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                     <Clock className="h-3 w-3" />
                     <span>{formatTime(message.timestamp)}</span>
                   </div>
@@ -414,12 +414,12 @@ export default function ChatPage() {
                   className={`p-3 rounded-xl ${
                     message.sender === userProfile.name
                       ? 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-black'
-                      : 'bg-gradient-to-r from-gray-800 to-gray-700 border border-gray-700'
+                      : 'bg-gradient-to-r from-card to-muted border border-border'
                   }`}
                 >
                   <p className="text-sm leading-relaxed">{message.text}</p>
                   {message.file && (
-                    <div className="mt-2 flex items-center gap-2 p-2 rounded-lg bg-black/20">
+                    <div className="mt-2 flex items-center gap-2 p-2 rounded-lg bg-muted/20">
                       <File className="h-4 w-4" />
                       <div className="flex-1">
                         <p className="text-xs font-medium">{message.file.name}</p>
@@ -432,7 +432,7 @@ export default function ChatPage() {
             </div>
           ))}
           {isTyping && (
-            <div className="flex items-center gap-2 text-sm text-gray-400">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <div className="animate-pulse">{t('typing')}...</div>
             </div>
           )}
@@ -441,9 +441,9 @@ export default function ChatPage() {
       </main>
 
       {/* شريط وضع الاتصال */}
-      <div className="fixed bottom-[120px] left-0 right-0 p-2 bg-gray-800/95 backdrop-blur-md border-t border-gray-700/60 z-40">
+      <div className="fixed bottom-[120px] left-0 right-0 p-2 bg-card/95 backdrop-blur-md border-t border-border/60 z-40">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-gray-300">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             {isOfflineMode ? (
               <>
                 <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
@@ -471,9 +471,9 @@ export default function ChatPage() {
 
       {/* شريط للتذكير بتفعيل الإشعارات إذا لم تكن مفعلة بعد */}
       {notificationsPermission !== 'granted' && (
-        <div className="fixed bottom-[80px] left-0 right-0 p-2 bg-gray-800/95 backdrop-blur-md border-t border-gray-700/60 z-40">
+        <div className="fixed bottom-[80px] left-0 right-0 p-2 bg-card/95 backdrop-blur-md border-t border-border/60 z-40">
           <div className="max-w-2xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm text-gray-300">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Bell className="h-4 w-4 text-yellow-400" />
               <span>{t('enable_notifications') || 'تمكين إشعارات الرسائل الجديدة؟'}</span>
             </div>
@@ -481,7 +481,7 @@ export default function ChatPage() {
               size="sm" 
               variant="outline"
               onClick={requestNotificationsPermission}
-              className="text-xs bg-gray-700 hover:bg-gray-600 border-gray-600 text-white"
+              className="text-xs bg-muted hover:bg-muted/80 border-border text-foreground"
             >
               {t('enable') || 'تمكين'}
             </Button>
@@ -489,7 +489,7 @@ export default function ChatPage() {
         </div>
       )}
 
-      <div className="fixed bottom-0 left-0 right-0 p-3 bg-gray-900/95 backdrop-blur-md border-t border-gray-700/60">
+      <div className="fixed bottom-0 left-0 right-0 p-3 bg-background/95 backdrop-blur-md border-t border-border/60">
         <div className="max-w-2xl mx-auto">
           <div className="relative">
             <input
@@ -498,7 +498,7 @@ export default function ChatPage() {
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
               placeholder={t('type_message')}
-              className="w-full bg-gray-800 border border-gray-700 rounded-xl py-3 px-4 text-white placeholder-gray-400 focus:outline-none focus:border-yellow-400"
+              className="w-full bg-card border border-border rounded-xl py-3 px-4 text-foreground placeholder-muted-foreground focus:outline-none focus:border-yellow-400"
             />
             <button
               onClick={handleSendMessage}
@@ -511,15 +511,15 @@ export default function ChatPage() {
       </div>
 
       {isProfileDialogOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 rounded-2xl p-4 w-full max-w-sm border border-gray-700">
+        <div className="fixed inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-card rounded-2xl p-4 w-full max-w-sm border border-border">
             <h3 className="text-lg font-bold text-yellow-400 mb-4">{t('profile')}</h3>
             <div className="flex flex-col items-center mb-4">
               <div className="relative mb-2">
                 <img
                   src={userProfile.avatar}
                   alt="avatar"
-                  className="w-20 h-20 rounded-full object-cover border-4 border-gray-700"
+                  className="w-20 h-20 rounded-full object-cover border-4 border-border"
                 />
                 <div className="absolute bottom-0 right-0 flex gap-2">
                   <label className="p-2 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-black cursor-pointer hover:from-yellow-500 hover:to-yellow-600 transition-all">
@@ -533,7 +533,7 @@ export default function ChatPage() {
                   </label>
                   <button
                     onClick={generateNewAvatar}
-                    className="p-2 rounded-full bg-gray-700 text-white hover:bg-gray-600 transition-colors"
+                    className="p-2 rounded-full bg-muted text-foreground hover:bg-muted/80 transition-colors"
                   >
                     <User className="h-4 w-4" />
                   </button>
@@ -543,7 +543,7 @@ export default function ChatPage() {
                 type="text"
                 value={tempName}
                 onChange={(e) => setTempName(e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg py-2 px-3 text-white text-center focus:outline-none focus:border-yellow-400"
+                className="w-full bg-muted border border-border rounded-lg py-2 px-3 text-foreground text-center focus:outline-none focus:border-yellow-400"
               />
               
               {/* أزرار تصدير واستيراد المحادثة */}
@@ -571,7 +571,7 @@ export default function ChatPage() {
             <div className="flex gap-2 mt-3">
               <button
                 onClick={() => setIsProfileDialogOpen(false)}
-                className="flex-1 py-2 rounded-lg bg-gray-700 text-white hover:bg-gray-600 transition-colors"
+                className="flex-1 py-2 rounded-lg bg-muted text-foreground hover:bg-muted/80 transition-colors"
               >
                 {t('cancel')}
               </button>
@@ -587,7 +587,7 @@ export default function ChatPage() {
       )}
       
       {/* شريط التنقل السفلي */}
-      <footer className="fixed bottom-16 left-0 right-0 border-t border-gray-700/50 bg-gray-900/90 backdrop-blur-md z-40 pt-1.5 pb-2 mobile-navbar">
+      <footer className="fixed bottom-16 left-0 right-0 border-t border-border/50 bg-background/90 backdrop-blur-md z-40 pt-1.5 pb-2 mobile-navbar">
         <div className="flex justify-around items-center max-w-lg mx-auto">
           {user?.isAdmin ? (
             <Link href="/admin" className="flex flex-col items-center text-gray-400 hover:text-yellow-400 mobile-nav-item">
@@ -607,7 +607,7 @@ export default function ChatPage() {
           </Link>
 
           <Link href="/" className="flex flex-col items-center text-gray-400 hover:text-yellow-400 mobile-nav-item">
-            <div className="relative p-3 bg-yellow-400 text-black rounded-full -mt-5 shadow-lg border-4 border-gray-900/90">
+            <div className="relative p-3 bg-yellow-400 text-black rounded-full -mt-5 shadow-lg border-4 border-background/90">
               <DollarSign className="h-6 w-6" />
             </div>
             <span className="text-[10px] mt-1 font-medium">{t('signal')}</span>

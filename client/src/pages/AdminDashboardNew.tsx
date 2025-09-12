@@ -286,7 +286,7 @@ export default function AdminDashboard() {
       <div className="space-y-6">
         {/* الإحصائيات وعرض البيانات العامة */}
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-yellow-400 mb-4">{t('dashboard')}</h2>
+          <h2 className="text-2xl font-bold text-primary mb-4">{t('dashboard')}</h2>
           <AdminDashboardStats 
             userCount={users.length}
             apiKeyCount={apiKeyCount}
@@ -298,22 +298,22 @@ export default function AdminDashboard() {
         {/* التبويبات الرئيسية */}
         <div className="mb-6">
           <Tabs defaultValue="users" onValueChange={setActiveTab} className="w-full">
-            <TabsList className="bg-gray-800/60 border border-gray-700/60 grid w-full grid-cols-3 mb-4">
+            <TabsList className="bg-card/60 border border-border/60 grid w-full grid-cols-3 mb-4">
               <TabsTrigger
                 value="users"
-                className="data-[state=active]:bg-gray-700 data-[state=active]:text-yellow-400"
+                className="data-[state=active]:bg-muted data-[state=active]:text-primary"
               >
                 <Users className="h-4 w-4 mr-2" /> {t('users')}
               </TabsTrigger>
               <TabsTrigger
                 value="system"
-                className="data-[state=active]:bg-gray-700 data-[state=active]:text-yellow-400"
+                className="data-[state=active]:bg-muted data-[state=active]:text-primary"
               >
                 <RefreshCw className="h-4 w-4 mr-2" /> تحديث النظام
               </TabsTrigger>
               <TabsTrigger
                 value="info"
-                className="data-[state=active]:bg-gray-700 data-[state=active]:text-yellow-400"
+                className="data-[state=active]:bg-muted data-[state=active]:text-primary"
               >
                 <AlertCircle className="h-4 w-4 mr-2" /> معلومات النظام
               </TabsTrigger>
@@ -321,12 +321,12 @@ export default function AdminDashboard() {
 
             {/* المحتوى - قسم المستخدمين */}
             <TabsContent value="users">
-              <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/60 rounded-xl p-4">
+              <div className="bg-card/50 backdrop-blur-sm border border-border/60 rounded-xl p-4">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold text-yellow-400">{t('user_management')}</h2>
+                  <h2 className="text-xl font-bold text-primary">{t('user_management')}</h2>
                   <Button 
                     size="sm" 
-                    className="bg-yellow-500 hover:bg-yellow-600 text-black"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
                     onClick={openAddDialog}
                   >
                     <Plus className="h-4 w-4 mr-1" /> {t('add_user')}
@@ -335,39 +335,39 @@ export default function AdminDashboard() {
                 
                 {loading ? (
                   <div className="flex justify-center items-center py-8">
-                    <Loader2 className="h-8 w-8 text-yellow-400 animate-spin" />
+                    <Loader2 className="h-8 w-8 text-primary animate-spin" />
                   </div>
                 ) : users.length === 0 ? (
-                  <div className="text-center py-8 text-gray-400">
+                  <div className="text-center py-8 text-muted-foreground">
                     {t('no_users_found')}
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <Table className="w-full">
                       <TableHeader>
-                        <TableRow className="border-gray-700">
-                          <TableHead className="text-gray-300">#</TableHead>
-                          <TableHead className="text-gray-300">{t('username')}</TableHead>
-                          <TableHead className="text-gray-300">{t('display_name')}</TableHead>
-                          <TableHead className="text-gray-300">{t('email')}</TableHead>
-                          <TableHead className="text-gray-300">{t('role')}</TableHead>
-                          <TableHead className="text-gray-300"></TableHead>
+                        <TableRow className="border-border">
+                          <TableHead className="text-muted-foreground">#</TableHead>
+                          <TableHead className="text-muted-foreground">{t('username')}</TableHead>
+                          <TableHead className="text-muted-foreground">{t('display_name')}</TableHead>
+                          <TableHead className="text-muted-foreground">{t('email')}</TableHead>
+                          <TableHead className="text-muted-foreground">{t('role')}</TableHead>
+                          <TableHead className="text-muted-foreground"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {users.map((user) => (
-                          <TableRow key={user.id} className="border-gray-700/50">
+                          <TableRow key={user.id} className="border-border/50">
                             <TableCell className="font-medium">{user.id}</TableCell>
                             <TableCell>{user.username}</TableCell>
                             <TableCell>{user.displayName}</TableCell>
                             <TableCell className="max-w-[150px] truncate">{user.email}</TableCell>
                             <TableCell>
                               {user.isAdmin ? (
-                                <span className="px-2 py-1 rounded text-xs bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
+                                <span className="px-2 py-1 rounded text-xs bg-yellow-500/20 text-yellow-700 border border-yellow-500/30">
                                   {t('admin')}
                                 </span>
                               ) : (
-                                <span className="px-2 py-1 rounded text-xs bg-gray-600/30 text-gray-300 border border-gray-600/30">
+                                <span className="px-2 py-1 rounded text-xs bg-muted text-muted-foreground border border-border">
                                   {t('user')}
                                 </span>
                               )}
@@ -379,15 +379,15 @@ export default function AdminDashboard() {
                                     <MoreVertical className="h-4 w-4" />
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align={isRTL ? "start" : "end"} className="bg-gray-800 border-gray-700 text-white">
+                                <DropdownMenuContent align={isRTL ? "start" : "end"} className="bg-card border-border text-foreground">
                                   <DropdownMenuItem 
-                                    className="cursor-pointer hover:bg-gray-700 focus:bg-gray-700"
+                                    className="cursor-pointer hover:bg-muted focus:bg-muted"
                                     onClick={() => openEditDialog(user)}
                                   >
                                     <Edit className="h-4 w-4 mr-2" /> {t('edit')}
                                   </DropdownMenuItem>
                                   <DropdownMenuItem 
-                                    className="cursor-pointer text-red-400 hover:text-red-300 hover:bg-red-900/20 focus:bg-red-900/20"
+                                    className="cursor-pointer text-red-600 hover:text-red-500 hover:bg-red-50 focus:bg-red-50"
                                     onClick={() => openDeleteConfirm(user)}
                                     disabled={user.id === 1} // لا يمكن حذف المشرف الرئيسي
                                   >
@@ -407,9 +407,9 @@ export default function AdminDashboard() {
 
             {/* المحتوى - تحديث النظام */}
             <TabsContent value="system">
-              <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/60 rounded-xl p-4">
+              <div className="bg-card/50 backdrop-blur-sm border border-border/60 rounded-xl p-4">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold text-yellow-400">إدارة التحديثات</h2>
+                  <h2 className="text-xl font-bold text-primary">إدارة التحديثات</h2>
                 </div>
                 
                 <SystemUpdater />
@@ -418,26 +418,26 @@ export default function AdminDashboard() {
 
             {/* المحتوى - معلومات النظام */}
             <TabsContent value="info">
-              <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/60 rounded-xl p-4">
+              <div className="bg-card/50 backdrop-blur-sm border border-border/60 rounded-xl p-4">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold text-yellow-400">معلومات النظام</h2>
+                  <h2 className="text-xl font-bold text-primary">معلومات النظام</h2>
                 </div>
                 
-                <Alert className="bg-gray-700/50 border-blue-500/50 mb-3">
+                <Alert className="bg-blue-50 border-blue-200 mb-3">
                   <AlertCircle className="h-4 w-4 text-blue-500" />
-                  <AlertTitle className="text-blue-400">معلومات التطبيق</AlertTitle>
-                  <AlertDescription className="text-gray-300">
+                  <AlertTitle className="text-blue-700">معلومات التطبيق</AlertTitle>
+                  <AlertDescription className="text-blue-600">
                     بينار جوين للتحليل - منصة تداول متكاملة مع دعم للعملات المشفرة والأسهم والفوركس.
                   </AlertDescription>
                 </Alert>
 
-                <div className="bg-gray-700/50 rounded-lg p-4 border border-gray-600/50 mb-4">
-                  <h3 className="text-lg font-medium text-yellow-400 mb-2">إدارة الحساب</h3>
-                  <p className="text-gray-300 mb-3">
+                <div className="bg-muted/50 rounded-lg p-4 border border-border mb-4">
+                  <h3 className="text-lg font-medium text-primary mb-2">إدارة الحساب</h3>
+                  <p className="text-muted-foreground mb-3">
                     يمكنك إدارة إعدادات الحساب من هنا، بما في ذلك إعادة تعيين كلمة المرور.
                   </p>
                   <Link href="/admin/reset-password">
-                    <Button className="bg-blue-600 hover:bg-blue-700">
+                    <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                       <Lock className="h-4 w-4 ml-2" />
                       إعادة تعيين كلمة مرور المسؤول
                     </Button>
@@ -451,9 +451,9 @@ export default function AdminDashboard() {
 
       {/* نافذة إضافة/تحرير مستخدم */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="bg-gray-800 text-white border-gray-700">
+        <DialogContent className="bg-card text-foreground border-border">
           <DialogHeader>
-            <DialogTitle className="text-center text-yellow-400">
+            <DialogTitle className="text-center text-primary">
               {editingUser ? t('edit_user') : t('add_user')}
             </DialogTitle>
           </DialogHeader>
@@ -471,10 +471,10 @@ export default function AdminDashboard() {
                         <Input 
                           placeholder={t('enter_username')} 
                           {...field} 
-                          className="bg-gray-700 border-gray-600"
+                          className="bg-background border-border"
                         />
                       </FormControl>
-                      <FormMessage className="text-red-400" />
+                      <FormMessage className="text-red-600" />
                     </FormItem>
                   )}
                 />
@@ -489,10 +489,10 @@ export default function AdminDashboard() {
                         <Input 
                           placeholder={t('enter_display_name')} 
                           {...field} 
-                          className="bg-gray-700 border-gray-600"
+                          className="bg-background border-border"
                         />
                       </FormControl>
-                      <FormMessage className="text-red-400" />
+                      <FormMessage className="text-red-600" />
                     </FormItem>
                   )}
                 />
@@ -508,10 +508,10 @@ export default function AdminDashboard() {
                           type="email" 
                           placeholder={t('enter_email')} 
                           {...field} 
-                          className="bg-gray-700 border-gray-600"
+                          className="bg-background border-border"
                         />
                       </FormControl>
-                      <FormMessage className="text-red-400" />
+                      <FormMessage className="text-red-600" />
                     </FormItem>
                   )}
                 />
@@ -526,7 +526,7 @@ export default function AdminDashboard() {
                           checked={field.value}
                           onCheckedChange={field.onChange}
                           disabled={editingUser?.id === 1} // لا يمكن تغيير صلاحيات المشرف الرئيسي
-                          className="data-[state=checked]:bg-yellow-500 data-[state=checked]:border-yellow-500"
+                          className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                         />
                       </FormControl>
                       <FormLabel className="font-normal">
@@ -541,13 +541,13 @@ export default function AdminDashboard() {
                     type="button" 
                     variant="outline" 
                     onClick={() => setDialogOpen(false)}
-                    className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                    className="border-border text-muted-foreground hover:bg-muted"
                   >
                     {t('cancel')}
                   </Button>
                   <Button 
                     type="submit" 
-                    className="bg-yellow-500 hover:bg-yellow-600 text-black"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
                     disabled={isSubmitting}
                   >
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -569,10 +569,10 @@ export default function AdminDashboard() {
                         <Input 
                           placeholder={t('enter_username')} 
                           {...field} 
-                          className="bg-gray-700 border-gray-600"
+                          className="bg-background border-border"
                         />
                       </FormControl>
-                      <FormMessage className="text-red-400" />
+                      <FormMessage className="text-red-600" />
                     </FormItem>
                   )}
                 />
@@ -587,10 +587,10 @@ export default function AdminDashboard() {
                         <Input 
                           placeholder={t('enter_display_name')} 
                           {...field} 
-                          className="bg-gray-700 border-gray-600"
+                          className="bg-background border-border"
                         />
                       </FormControl>
-                      <FormMessage className="text-red-400" />
+                      <FormMessage className="text-red-600" />
                     </FormItem>
                   )}
                 />
@@ -606,10 +606,10 @@ export default function AdminDashboard() {
                           type="email" 
                           placeholder={t('enter_email')} 
                           {...field} 
-                          className="bg-gray-700 border-gray-600"
+                          className="bg-background border-border"
                         />
                       </FormControl>
-                      <FormMessage className="text-red-400" />
+                      <FormMessage className="text-red-600" />
                     </FormItem>
                   )}
                 />
@@ -641,7 +641,7 @@ export default function AdminDashboard() {
                           )}
                         </button>
                       </div>
-                      <FormMessage className="text-red-400" />
+                      <FormMessage className="text-red-600" />
                     </FormItem>
                   )}
                 />
@@ -655,7 +655,7 @@ export default function AdminDashboard() {
                         <Checkbox
                           checked={field.value}
                           onCheckedChange={field.onChange}
-                          className="data-[state=checked]:bg-yellow-500 data-[state=checked]:border-yellow-500"
+                          className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                         />
                       </FormControl>
                       <FormLabel className="font-normal">
@@ -670,13 +670,13 @@ export default function AdminDashboard() {
                     type="button" 
                     variant="outline" 
                     onClick={() => setDialogOpen(false)}
-                    className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                    className="border-border text-muted-foreground hover:bg-muted"
                   >
                     {t('cancel')}
                   </Button>
                   <Button 
                     type="submit" 
-                    className="bg-yellow-500 hover:bg-yellow-600 text-black"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
                     disabled={isSubmitting}
                   >
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -691,9 +691,9 @@ export default function AdminDashboard() {
 
       {/* نافذة تأكيد الحذف */}
       <Dialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
-        <DialogContent className="bg-gray-800 text-white border-gray-700 max-w-md">
+        <DialogContent className="bg-card text-foreground border-border max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-center text-red-400">
+            <DialogTitle className="text-center text-red-600">
               {t('confirm_delete')}
             </DialogTitle>
           </DialogHeader>
@@ -701,11 +701,11 @@ export default function AdminDashboard() {
           <div className="py-4 text-center">
             <p className="mb-2">{t('confirm_delete_message')}</p>
             {userToDelete && (
-              <p className="font-bold text-lg mb-4 text-yellow-400">
+              <p className="font-bold text-lg mb-4 text-primary">
                 {userToDelete.displayName} ({userToDelete.username})
               </p>
             )}
-            <p className="text-sm text-red-300">{t('delete_irreversible')}</p>
+            <p className="text-sm text-red-600">{t('delete_irreversible')}</p>
           </div>
           
           <DialogFooter className="flex flex-col sm:flex-row justify-center gap-3">
@@ -713,7 +713,7 @@ export default function AdminDashboard() {
               type="button" 
               variant="outline" 
               onClick={() => setConfirmDeleteOpen(false)}
-              className="border-gray-600 text-gray-300 hover:bg-gray-700 flex-1"
+              className="border-border text-muted-foreground hover:bg-muted flex-1"
             >
               {t('cancel')}
             </Button>
