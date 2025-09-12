@@ -143,32 +143,32 @@ export default function TimeframeButtons({
       if (currentSignal) {
         switch (currentSignal) {
           case 'UP':
-            return 'bg-green-500/10 text-green-300 border-green-500/30 font-semibold shadow-lg ring-1 ring-green-400/30';
+            return 'bg-green-500/20 dark:bg-green-500/10 text-green-600 dark:text-green-300 border-green-500/50 dark:border-green-500/30 font-semibold shadow-lg ring-1 ring-green-500/30';
           case 'DOWN':
-            return 'bg-red-500/10 text-red-300 border-red-500/30 font-semibold shadow-lg ring-1 ring-red-400/30';
+            return 'bg-red-500/20 dark:bg-red-500/10 text-red-600 dark:text-red-300 border-red-500/50 dark:border-red-500/30 font-semibold shadow-lg ring-1 ring-red-500/30';
           default:
-            return 'bg-yellow-500/10 text-yellow-300 border-yellow-500/30 font-semibold shadow-lg ring-1 ring-yellow-400/30';
+            return 'bg-yellow-500/20 dark:bg-yellow-500/10 text-yellow-600 dark:text-yellow-300 border-yellow-500/50 dark:border-yellow-500/30 font-semibold shadow-lg ring-1 ring-yellow-500/30';
         }
       }
-      return 'bg-blue-500/10 text-blue-300 border-blue-500/30 font-semibold shadow-lg';
+      return 'bg-primary/20 text-primary border-primary/50 font-semibold shadow-lg ring-1 ring-primary/30';
     }
     
     // تنسيق الأزرار غير المحددة ولكن متاحة
     if (isAvailable) {
       // تعزيز العلاقة مع الإشارة الحالية للأزرار المتاحة
       if (currentSignal === 'UP' && timeframeAnalysis?.[timeframe]?.trend === 'bullish') {
-        return 'bg-gray-800 border-green-500/20 text-green-300/70 hover:bg-green-900/20 hover:border-green-500/30';
+        return 'bg-muted border-green-500/20 text-green-600 dark:text-green-300/70 hover:bg-green-500/10 hover:border-green-500/30';
       }
       
       if (currentSignal === 'DOWN' && timeframeAnalysis?.[timeframe]?.trend === 'bearish') {
-        return 'bg-gray-800 border-red-500/20 text-red-300/70 hover:bg-red-900/20 hover:border-red-500/30';
+        return 'bg-muted border-red-500/20 text-red-600 dark:text-red-300/70 hover:bg-red-500/10 hover:border-red-500/30';
       }
       
-      return 'bg-gray-800 border-gray-700 hover:bg-gray-700/80 hover:border-gray-600';
+      return 'bg-muted border-border text-foreground hover:bg-accent hover:border-accent-foreground/20';
     }
     
     // الأزرار غير المتاحة
-    return 'bg-gray-800/50 border-gray-700/50 text-gray-500 cursor-not-allowed opacity-60';
+    return 'bg-muted/50 border-border/50 text-muted-foreground cursor-not-allowed opacity-60';
   };
   
   // إضافة مؤشر لتأثير الإطار الزمني على الإشارة

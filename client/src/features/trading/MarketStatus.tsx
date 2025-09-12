@@ -39,8 +39,8 @@ const marketTypeInfo = {
     Icon: ArrowRightLeft,
     tradingHours: '24/5',
     weekendClosed: true,
-    color: 'text-blue-400',
-    primaryColor: 'blue',
+    color: 'text-primary',
+    primaryColor: 'primary',
     volatility: 'medium',
     bestHours: ['8:00-12:00', '14:00-17:00'], // London & NY overlap
     description: 'forex_market_hours_info_improved'
@@ -49,8 +49,8 @@ const marketTypeInfo = {
     Icon: BarChart2,
     tradingHours: '24/7',
     weekendClosed: false,
-    color: 'text-yellow-500',
-    primaryColor: 'yellow',
+    color: 'text-warning',
+    primaryColor: 'warning',
     volatility: 'high',
     bestHours: ['Always'],
     description: 'crypto_market_hours_info_improved'
@@ -59,8 +59,8 @@ const marketTypeInfo = {
     Icon: LineChart,
     tradingHours: '8/5',
     weekendClosed: true,
-    color: 'text-green-500',
-    primaryColor: 'green',
+    color: 'text-success',
+    primaryColor: 'success',
     volatility: 'low',
     bestHours: ['9:30-10:30', '15:00-16:00'], // Opening & closing hours
     description: 'stocks_market_hours_info_improved'
@@ -192,21 +192,21 @@ function MarketStatus(props: MarketStatusProps) {
       // ألوان حالة السوق المفتوح
       switch (status) {
         case 'very-soon': // على وشك الإغلاق
-          return 'bg-orange-900/40 text-orange-400 border-orange-800';
+          return 'bg-warning/40 text-warning border-warning/80';
         case 'soon': // سيغلق قريبًا
-          return 'bg-yellow-900/30 text-yellow-400 border-yellow-800';
+          return 'bg-warning/30 text-warning border-warning/80';
         default: // مفتوح عادي
-          return 'bg-green-900/30 text-green-400 border-green-800';
+          return 'bg-success/30 text-success border-success/80';
       }
     } else {
       // ألوان حالة السوق المغلق
       switch (status) {
         case 'very-soon': // على وشك الفتح
-          return 'bg-green-900/40 text-green-400 border-green-800';
+          return 'bg-success/40 text-success border-success/80';
         case 'soon': // سيفتح قريبًا
-          return 'bg-yellow-900/30 text-yellow-400 border-yellow-800';
+          return 'bg-warning/30 text-warning border-warning/80';
         default: // مغلق لفترة طويلة
-          return 'bg-red-900/30 text-red-400 border-red-800';
+          return 'bg-destructive/30 text-destructive border-destructive/80';
       }
     }
   };
@@ -259,13 +259,13 @@ function MarketStatus(props: MarketStatusProps) {
   // دالة مساعدة لتحديد لون شريط التقدم حسب حالة السوق
   const getProgressBarColor = () => {
     if (isOpen) {
-      if (status === 'very-soon') return 'from-orange-600/60 to-orange-400/60';
-      if (status === 'soon') return 'from-yellow-600/60 to-yellow-400/60';
-      return 'from-green-600/60 to-green-400/60';
+      if (status === 'very-soon') return 'from-warning/60 to-warning/40';
+      if (status === 'soon') return 'from-warning/60 to-warning/40';
+      return 'from-success/60 to-success/40';
     } else {
-      if (status === 'very-soon') return 'from-green-600/60 to-green-400/60';
-      if (status === 'soon') return 'from-yellow-600/60 to-yellow-400/60';
-      return 'from-red-600/60 to-red-400/60';
+      if (status === 'very-soon') return 'from-success/60 to-success/40';
+      if (status === 'soon') return 'from-warning/60 to-warning/40';
+      return 'from-destructive/60 to-destructive/40';
     }
   };
   
@@ -276,7 +276,7 @@ function MarketStatus(props: MarketStatusProps) {
       animate={{ opacity: 1, y: 0 }}
       className="w-full"
     >
-      <Card className="market-status-card border-gray-700/70 bg-gray-800/30 backdrop-blur-sm shadow-lg">
+      <Card className="market-status-card border-border bg-card/30 backdrop-blur-sm shadow-lg">
         <CardContent className="p-3">
           <div className="flex flex-col space-y-3">
             {/* القسم العلوي: معلومات الحالة الرئيسية */}
@@ -307,7 +307,7 @@ function MarketStatus(props: MarketStatusProps) {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className={`market-type text-gray-300 px-2.5 py-1.5 bg-gray-800/80 rounded-xl border border-gray-700/50 inline-flex items-center gap-1.5`}>
+                    <div className={`market-type text-foreground px-2.5 py-1.5 bg-card/80 rounded-xl border border-border inline-flex items-center gap-1.5`}>
                       <MarketIcon className={`h-3.5 w-3.5 ${color}`} />
                       <span>{`${marketTypeText}`}</span>
                     </div>
@@ -316,12 +316,12 @@ function MarketStatus(props: MarketStatusProps) {
                     <div className="space-y-1.5 text-xs p-1 max-w-xs">
                       <p className="font-semibold">{t('trading_hours')}: {tradingHours}</p>
                       {weekendClosed && (
-                        <p className="text-yellow-400 text-[10px] flex items-center">
+                        <p className="text-warning text-[10px] flex items-center">
                           <AlertCircle className="h-3 w-3 mr-1" />
                           {t('weekend_closed')}
                         </p>
                       )}
-                      <p className="text-[10px] text-gray-300">{t(description)}</p>
+                      <p className="text-[10px] text-muted-foreground">{t(description)}</p>
                     </div>
                   </TooltipContent>
                 </Tooltip>
@@ -332,14 +332,14 @@ function MarketStatus(props: MarketStatusProps) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="next-open text-gray-300 flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-800/80 rounded-xl border border-gray-700/50">
-                        <Calendar className="h-3.5 w-3.5 text-yellow-400" />
+                      <div className="next-open text-foreground flex items-center gap-1.5 px-2.5 py-1.5 bg-card/80 rounded-xl border border-border">
+                        <Calendar className="h-3.5 w-3.5 text-warning" />
                         <span>{t('next_open')}</span>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">
                       <div className="space-y-1 p-1">
-                        <p className="text-green-400">{nextOpenTime}</p>
+                        <p className="text-success">{nextOpenTime}</p>
                         {secondsLeft && (
                           <p className="text-[10px] text-gray-300">
                             ({formatTimeLeft(secondsLeft)} {t('remaining')})
@@ -355,14 +355,14 @@ function MarketStatus(props: MarketStatusProps) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="next-close text-gray-300 flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-800/80 rounded-xl border border-gray-700/50">
-                        <Timer className="h-3.5 w-3.5 text-red-400" />
+                      <div className="next-close text-foreground flex items-center gap-1.5 px-2.5 py-1.5 bg-card/80 rounded-xl border border-border">
+                        <Timer className="h-3.5 w-3.5 text-destructive" />
                         <span>{t('next_close')}</span>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">
                       <div className="space-y-1 p-1">
-                        <p className="text-red-400">{nextCloseTime}</p>
+                        <p className="text-destructive">{nextCloseTime}</p>
                         {secondsLeft && (
                           <p className="text-[10px] text-gray-300">
                             ({formatTimeLeft(secondsLeft)} {t('remaining')})
@@ -379,7 +379,7 @@ function MarketStatus(props: MarketStatusProps) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="current-time text-gray-300 flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-800/80 rounded-xl border border-gray-700/50">
+                      <div className="current-time text-foreground flex items-center gap-1.5 px-2.5 py-1.5 bg-card/80 rounded-xl border border-border">
                         <Clock className="h-3.5 w-3.5 opacity-70" />
                         {formatDate(currentTime)}
                       </div>
@@ -393,7 +393,7 @@ function MarketStatus(props: MarketStatusProps) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="timezone text-gray-400 flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-800/80 rounded-xl border border-gray-700/50 text-[10px]">
+                      <div className="timezone text-muted-foreground flex items-center gap-1.5 px-2.5 py-1.5 bg-card/80 rounded-xl border border-border text-[10px]">
                         <Globe className="h-3.5 w-3.5 opacity-60" />
                         <span>{timezone.getActualTimezone()}</span>
                       </div>

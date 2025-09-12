@@ -116,69 +116,69 @@ export default function SignalIndicator({
     case 'filled':
       // نمط ممتلئ بلون الإشارة
       containerClass += ` ${signal === 'UP' 
-        ? 'bg-green-500 text-white border-none' 
+        ? 'bg-success text-success-foreground border-none' 
         : signal === 'DOWN' 
-          ? 'bg-red-500 text-white border-none' 
-          : 'bg-gray-600 text-white border-none'}`;
+          ? 'bg-destructive text-destructive-foreground border-none' 
+          : 'bg-muted text-muted-foreground border-none'}`;
       break;
     
     case 'outline':
       // نمط الحدود فقط
       containerClass += ` bg-transparent ${signal === 'UP' 
-        ? 'border-2 border-green-500 text-green-400' 
+        ? 'border-2 border-success text-success' 
         : signal === 'DOWN' 
-          ? 'border-2 border-red-500 text-red-400' 
-          : 'border-2 border-gray-600 text-gray-400'}`;
+          ? 'border-2 border-destructive text-destructive' 
+          : 'border-2 border-muted text-muted-foreground'}`;
       break;
     
     case 'minimal':
       // نمط مبسط
       containerClass += ` bg-transparent border-none ${signal === 'UP' 
-        ? 'text-green-400' 
+        ? 'text-success' 
         : signal === 'DOWN' 
-          ? 'text-red-400' 
-          : 'text-gray-400'}`;
+          ? 'text-destructive' 
+          : 'text-muted-foreground'}`;
       pulseClass = ''; // إلغاء تأثير النبض
       break;
     
     case 'gradient':
       // نمط التدرج اللوني
       containerClass += ` border-none ${signal === 'UP' 
-        ? 'bg-gradient-to-r from-green-900/60 via-green-600/50 to-emerald-900/60 text-green-300' 
+        ? 'bg-gradient-to-r from-success/60 via-success/50 to-success/60 text-success-foreground' 
         : signal === 'DOWN' 
-          ? 'bg-gradient-to-r from-red-900/60 via-red-600/50 to-rose-900/60 text-red-300' 
-          : 'bg-gradient-to-r from-gray-800 to-gray-700 text-gray-300'}`;
+          ? 'bg-gradient-to-r from-destructive/60 via-destructive/50 to-destructive/60 text-destructive-foreground' 
+          : 'bg-gradient-to-r from-muted/80 to-muted/70 text-muted-foreground'}`;
       break;
     
     default:
       // النمط الافتراضي
       containerClass += ` border ${signal === 'UP' 
-        ? 'bg-green-500/10 border-green-500/30 text-green-400 shadow-lg shadow-green-500/10' 
+        ? 'bg-success/10 border-success/30 text-success shadow-lg shadow-success/10' 
         : signal === 'DOWN' 
-          ? 'bg-red-500/10 border-red-500/30 text-red-400 shadow-lg shadow-red-500/10' 
-          : 'bg-gray-700/50 border-gray-600/40 text-gray-400'}`;
+          ? 'bg-destructive/10 border-destructive/30 text-destructive shadow-lg shadow-destructive/10' 
+          : 'bg-muted/50 border-muted/40 text-muted-foreground'}`;
       break;
   }
   
   // تعيين نص الإشارة بناءً على نوع الإشارة
   switch (signal) {
     case 'UP':
-      pulseClass += ' bg-green-500/30 animate-ping';
-      glowClass += ' text-green-400';
-      barClass += ' bg-green-500/70';
+      pulseClass += ' bg-success/30 animate-ping';
+      glowClass += ' text-success';
+      barClass += ' bg-success/70';
       text = t('buy');
       break;
       
     case 'DOWN':
-      pulseClass += ' bg-red-500/30 animate-ping';
-      glowClass += ' text-red-400';
-      barClass += ' bg-red-500/70';
+      pulseClass += ' bg-destructive/30 animate-ping';
+      glowClass += ' text-destructive';
+      barClass += ' bg-destructive/70';
       text = t('sell');
       break;
       
     case 'WAIT':
       text = t('wait');
-      barClass += ' bg-gray-500/50';
+      barClass += ' bg-muted/50';
       break;
   }
   
@@ -220,9 +220,9 @@ export default function SignalIndicator({
             
             {/* إظهار الاحتمالية */}
             {probability !== undefined && (
-              <span className={`ml-1 text-xs bg-black/20 px-1.5 py-0.5 rounded ${
-                signal === 'UP' ? 'text-green-300' : 
-                signal === 'DOWN' ? 'text-red-300' : 'text-gray-400'
+              <span className={`ml-1 text-xs bg-background/20 px-1.5 py-0.5 rounded ${
+                signal === 'UP' ? 'text-success' : 
+                signal === 'DOWN' ? 'text-destructive' : 'text-muted-foreground'
               }`}>
                 {probabilityText}
               </span>

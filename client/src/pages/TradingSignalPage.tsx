@@ -112,10 +112,10 @@ const ProbabilityBar: React.FC<ProbabilityBarProps> = ({ signal, probability, ma
       <Progress
         value={probability}
         className={`h-2 ${
-          signal === 'UP' ? 'bg-green-500/20' : 'bg-red-500/20'
+          signal === 'UP' ? 'bg-success/20' : 'bg-destructive/20'
         }`}
         indicatorClassName={`${
-          signal === 'UP' ? 'bg-green-500' : 'bg-red-500'
+          signal === 'UP' ? 'bg-success' : 'bg-destructive'
         }`}
       />
       {marketAnalysis && (
@@ -402,7 +402,7 @@ export default function TradingSignalPage() {
       id: 'metatrader5',
       name: 'MetaTrader 5',
       arabicName: 'ميتاتريدر 5',
-      icon: <Globe className="text-yellow-400 h-5 w-5" />,
+      icon: <Globe className="text-warning h-5 w-5" />,
       supportedMarkets: ['forex', 'stocks', 'crypto'] as MarketType[],
       expiryTimes: {
         '1M': 60,
@@ -420,7 +420,7 @@ export default function TradingSignalPage() {
       id: 'metatrader4',
       name: 'MetaTrader 4',
       arabicName: 'ميتاتريدر 4',
-      icon: <Globe className="text-blue-400 h-5 w-5" />,
+      icon: <Globe className="text-primary h-5 w-5" />,
       supportedMarkets: ['forex', 'stocks'] as MarketType[],
       expiryTimes: {
         '1M': 60,
@@ -438,7 +438,7 @@ export default function TradingSignalPage() {
       id: 'eobroker',
       name: 'EO Broker',
       arabicName: 'إكسبرت أوبشن',
-      icon: <svg className="text-blue-500 h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+      icon: <svg className="text-primary h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
         <path d="M12 2L4 6.5v11L12 22l8-4.5v-11L12 2zm1 15h-2v-2h2v2zm-2-4V7h2v6h-2z" />
       </svg>,
       supportedMarkets: ['forex', 'crypto'] as MarketType[],
@@ -455,7 +455,7 @@ export default function TradingSignalPage() {
       id: 'binomo',
       name: 'Binomo',
       arabicName: 'بينومو',
-      icon: <BarChart className="text-purple-400 h-5 w-5" />,
+      icon: <BarChart className="text-accent-foreground h-5 w-5" />,
       supportedMarkets: ['forex', 'crypto'] as MarketType[],
       expiryTimes: {
         '1M': 60,
@@ -469,7 +469,7 @@ export default function TradingSignalPage() {
       id: 'iqoption',
       name: 'IQ Option',
       arabicName: 'آي كيو أوبشن',
-      icon: <BarChart className="text-teal-400 h-5 w-5" />,
+      icon: <BarChart className="text-primary h-5 w-5" />,
       supportedMarkets: ['forex', 'crypto', 'stocks'] as MarketType[],
       expiryTimes: {
         '1M': 60,
@@ -484,7 +484,7 @@ export default function TradingSignalPage() {
       id: 'binance',
       name: 'Binance',
       arabicName: 'بينانس',
-      icon: <Bitcoin className="text-yellow-500 h-5 w-5" />,
+      icon: <Bitcoin className="text-warning h-5 w-5" />,
       supportedMarkets: ['crypto'] as MarketType[],
       expiryTimes: {
         '1M': 60,
@@ -502,7 +502,7 @@ export default function TradingSignalPage() {
       id: 'pocketoption',
       name: 'Pocket Option',
       arabicName: 'بوكيت أوبشن',
-      icon: <LineChart className="text-orange-400 h-5 w-5" />,
+      icon: <LineChart className="text-warning h-5 w-5" />,
       supportedMarkets: ['forex', 'stocks'] as MarketType[],
       expiryTimes: {
         '1M': 60,
@@ -516,7 +516,7 @@ export default function TradingSignalPage() {
       id: 'olymptrade',
       name: 'Olymp Trade',
       arabicName: 'أوليمب تريد',
-      icon: <LineChart className="text-red-400 h-5 w-5" />,
+      icon: <LineChart className="text-destructive h-5 w-5" />,
       supportedMarkets: ['forex', 'stocks', 'crypto'] as MarketType[],
       expiryTimes: {
         '1M': 60,
@@ -531,7 +531,7 @@ export default function TradingSignalPage() {
       id: 'etoro',
       name: 'eToro',
       arabicName: 'إيتورو',
-      icon: <LineChart className="text-green-500 h-5 w-5" />,
+      icon: <LineChart className="text-success h-5 w-5" />,
       supportedMarkets: ['forex', 'stocks', 'crypto'] as MarketType[],
       expiryTimes: {
         '1D': 86400
@@ -544,7 +544,7 @@ export default function TradingSignalPage() {
       id: 'kucoin',
       name: 'KuCoin',
       arabicName: 'كوكوين',
-      icon: <Bitcoin className="text-green-400 h-5 w-5" />,
+      icon: <Bitcoin className="text-success h-5 w-5" />,
       supportedMarkets: ['crypto'] as MarketType[],
       expiryTimes: {
         '1M': 60,
@@ -562,7 +562,7 @@ export default function TradingSignalPage() {
       id: 'deriv',
       name: 'Deriv',
       arabicName: 'ديريف',
-      icon: <BarChart className="text-blue-500 h-5 w-5" />,
+      icon: <BarChart className="text-primary h-5 w-5" />,
       supportedMarkets: ['forex', 'crypto', 'stocks'] as MarketType[],
       expiryTimes: {
         '1M': 60,
