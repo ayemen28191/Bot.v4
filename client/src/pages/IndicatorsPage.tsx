@@ -336,12 +336,12 @@ export default function IndicatorsPage() {
                             <linearGradient id={`chart-gradient-${indicator.id}`} x1="0" y1="0" x2="0" y2="1">
                               <stop 
                                 offset="5%" 
-                                stopColor={indicator.signal === 'buy' ? '#22c55e' : (indicator.signal === 'sell' ? '#ef4444' : '#eab308')} 
+                                stopColor={indicator.signal === 'buy' ? 'hsl(var(--success))' : (indicator.signal === 'sell' ? 'hsl(var(--destructive))' : 'hsl(var(--warning))')} 
                                 stopOpacity={0.8}
                               />
                               <stop 
                                 offset="95%" 
-                                stopColor={indicator.signal === 'buy' ? '#22c55e' : (indicator.signal === 'sell' ? '#ef4444' : '#eab308')} 
+                                stopColor={indicator.signal === 'buy' ? 'hsl(var(--success))' : (indicator.signal === 'sell' ? 'hsl(var(--destructive))' : 'hsl(var(--warning))')} 
                                 stopOpacity={0}
                               />
                             </linearGradient>
@@ -357,7 +357,7 @@ export default function IndicatorsPage() {
                           <Area 
                             type="monotone" 
                             dataKey="value" 
-                            stroke={indicator.signal === 'buy' ? '#22c55e' : (indicator.signal === 'sell' ? '#ef4444' : '#eab308')} 
+                            stroke={indicator.signal === 'buy' ? 'hsl(var(--success))' : (indicator.signal === 'sell' ? 'hsl(var(--destructive))' : 'hsl(var(--warning))')} 
                             fillOpacity={1} 
                             fill={`url(#chart-gradient-${indicator.id})`} 
                           />

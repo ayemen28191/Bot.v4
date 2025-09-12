@@ -585,12 +585,12 @@ function MarketStatus(props: MarketStatusProps) {
         {isOpen && status === 'very-soon' && (
           <CardFooter className="pt-0 p-2 justify-center">
             <motion.div 
-              className="text-center flex items-center justify-center bg-orange-900/20 py-1.5 px-3 rounded-lg"
+              className="text-center flex items-center justify-center bg-warning/20 py-1.5 px-3 rounded-lg"
               animate={{ scale: [1, 1.03, 1] }}
               transition={{ repeat: Infinity, duration: 1.5 }}
             >
-              <Timer className="h-3.5 w-3.5 text-orange-400 mr-1.5" />
-              <span className="text-orange-400/90 text-[10px]">{t('market_closing_soon_notification')}</span>
+              <Timer className="h-3.5 w-3.5 text-warning mr-1.5" />
+              <span className="text-warning/90 text-[10px]">{t('market_closing_soon_notification')}</span>
             </motion.div>
           </CardFooter>
         )}

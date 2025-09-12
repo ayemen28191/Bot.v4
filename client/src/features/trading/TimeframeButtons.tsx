@@ -53,8 +53,7 @@ export default function TimeframeButtons({
 
   // التحقق فيما إذا كان الإطار الزمني متاحاً
   const isTimeframeAvailable = (timeframe: TimeFrame) => {
-    if (!availableTimeframes) return true; // إذا لم يتم توفير قائمة، فجميع الأطر متاحة
-    return availableTimeframes.includes(timeframe);
+    return true; // جميع الأطر الزمنية متاحة
   };
 
   // تعيين الإطار الزمني إذا كان متاحاً فقط
@@ -219,9 +218,6 @@ export default function TimeframeButtons({
                 <span>{timeframe.shortLabel}</span>
               </div>
               
-              {!isAvailable && (
-                <Lock className="absolute top-1 right-1 h-2.5 w-2.5 text-muted-foreground" />
-              )}
               
               {/* مؤشر تأثير الإطار الزمني على الإشارة */}
               {getSignalImpactIndicator(timeframe.value)}
@@ -255,9 +251,6 @@ export default function TimeframeButtons({
               <span>{timeframe.shortLabel}</span>
             </div>
             
-            {!isAvailable && (
-              <Lock className="absolute top-1 right-1 h-2.5 w-2.5 text-gray-400" />
-            )}
             
             {/* مؤشر تأثير الإطار الزمني على الإشارة */}
             {getSignalImpactIndicator(timeframe.value)}
