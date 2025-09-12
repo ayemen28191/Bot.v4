@@ -102,19 +102,19 @@ export const ProbabilityHeatmap: React.FC<ProbabilityHeatmapProps> = ({
     const { signal, probability } = cell;
     
     if (signal === 'WAIT' || probability < 50) {
-      return 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700';
+      return 'bg-muted/50 hover:bg-muted/70';
     }
     
     if (signal === 'UP') {
-      if (probability >= 80) return 'bg-green-500/20 hover:bg-green-500/30';
-      if (probability >= 70) return 'bg-green-400/20 hover:bg-green-400/30';
-      if (probability >= 60) return 'bg-green-300/20 hover:bg-green-300/30';
-      return 'bg-green-200/20 hover:bg-green-200/30';
+      if (probability >= 80) return 'bg-success/20 hover:bg-success/30';
+      if (probability >= 70) return 'bg-success/15 hover:bg-success/25';
+      if (probability >= 60) return 'bg-success/10 hover:bg-success/20';
+      return 'bg-success/5 hover:bg-success/15';
     } else {
-      if (probability >= 80) return 'bg-red-500/20 hover:bg-red-500/30';
-      if (probability >= 70) return 'bg-red-400/20 hover:bg-red-400/30';
-      if (probability >= 60) return 'bg-red-300/20 hover:bg-red-300/30';
-      return 'bg-red-200/20 hover:bg-red-200/30';
+      if (probability >= 80) return 'bg-destructive/20 hover:bg-destructive/30';
+      if (probability >= 70) return 'bg-destructive/15 hover:bg-destructive/25';
+      if (probability >= 60) return 'bg-destructive/10 hover:bg-destructive/20';
+      return 'bg-destructive/5 hover:bg-destructive/15';
     }
   };
 
@@ -155,7 +155,7 @@ export const ProbabilityHeatmap: React.FC<ProbabilityHeatmapProps> = ({
           {t('heatmap_description')}
         </p>
         {!data && !isLoading && (
-          <div className="mt-2 p-2 bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 rounded-md text-xs flex items-center">
+          <div className="mt-2 p-2 bg-warning/10 text-warning rounded-md text-xs flex items-center">
             <AlertCircle className="h-4 w-4 mr-1 flex-shrink-0" />
             <span>{t('heatmap_data_incomplete_warning')}</span>
           </div>
@@ -266,11 +266,11 @@ const RenderHeatmap: React.FC<RenderHeatmapProps> = ({ data, isLoading, getCellC
   if (!data || data.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-64">
-        <AlertCircle className="h-10 w-10 mb-2 text-amber-500" />
+        <AlertCircle className="h-10 w-10 mb-2 text-warning" />
         <p className="text-center text-muted-foreground mb-2">{t('no_data_available')}</p>
-        <div className="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-md max-w-md text-xs text-center">
-          <p className="mb-2 text-gray-600 dark:text-gray-300">{t('heatmap_data_retry_message')}</p>
-          <ol className="list-decimal text-left text-gray-500 dark:text-gray-400 pl-4 space-y-1">
+        <div className="px-4 py-2 bg-muted rounded-md max-w-md text-xs text-center">
+          <p className="mb-2 text-muted-foreground">{t('heatmap_data_retry_message')}</p>
+          <ol className="list-decimal text-left text-muted-foreground/80 pl-4 space-y-1">
             <li>{t('heatmap_retry_tip_1')}</li>
             <li>{t('heatmap_retry_tip_2')}</li>
             <li>{t('heatmap_retry_tip_3')}</li>
@@ -301,8 +301,8 @@ const RenderHeatmap: React.FC<RenderHeatmapProps> = ({ data, isLoading, getCellC
             <div className="text-xs text-muted-foreground flex justify-between">
               <span>{t('probability')}:</span>
               <span className={`font-medium ${
-                cell.signal === 'UP' ? 'text-green-600 dark:text-green-400' : 
-                cell.signal === 'DOWN' ? 'text-red-600 dark:text-red-400' : ''
+                cell.signal === 'UP' ? 'text-success' : 
+                cell.signal === 'DOWN' ? 'text-destructive' : ''
               }`}>
                 {Number(cell.probability).toFixed(2)}%
               </span>

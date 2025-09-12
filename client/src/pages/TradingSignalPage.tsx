@@ -359,7 +359,7 @@ export default function TradingSignalPage() {
     id: 'metatrader5',
     name: 'MetaTrader 5',
     arabicName: 'ميتاتريدر 5',
-    icon: <Globe className="text-yellow-400 h-5 w-5" />,
+    icon: <Globe className="text-warning h-5 w-5" />,
     supportedMarkets: ['forex', 'stocks', 'crypto'] as MarketType[]
   });
 
@@ -1447,7 +1447,7 @@ export default function TradingSignalPage() {
               <span className="text-sm text-muted-foreground">{t('target_price')}:</span>
             </div>
             <div className={`text-lg font-semibold tabular-nums ${
-              signal === 'UP' ? 'text-green-500' : 'text-red-500'
+              signal === 'UP' ? 'text-success' : 'text-destructive'
             }`}>
               {targetPrice.toFixed(getPricePrecision(selectedPair.symbol))}
             </div>
@@ -1458,7 +1458,7 @@ export default function TradingSignalPage() {
         {signal !== 'WAIT' && targetPrice && currentPrice && (
           <div className="mt-1 text-xs text-muted-foreground text-center">
             {t('expected_price_change')}: {' '}
-            <span className={signal === 'UP' ? 'text-green-500' : 'text-red-500'}>
+            <span className={signal === 'UP' ? 'text-success' : 'text-destructive'}>
               {Math.round((Math.abs(targetPrice - currentPrice) / currentPrice) * 100)}%
             </span>
           </div>
@@ -1481,7 +1481,7 @@ export default function TradingSignalPage() {
               <div className="flex justify-between items-center">
                 <span className="text-xs text-muted-foreground">{t('trend')}</span>
                 <span className={`text-xs font-medium ${
-                  marketAnalysis.trend === 'bullish' ? 'text-green-400' : 'text-red-400'
+                  marketAnalysis.trend === 'bullish' ? 'text-success' : 'text-destructive'
                 }`}>
                   {t(marketAnalysis.trend)}
                 </span>
@@ -1512,15 +1512,15 @@ export default function TradingSignalPage() {
                   <span className="text-xs text-muted-foreground">{key.toUpperCase()}</span>
                   <div className="flex items-center gap-2">
                     <span className={`text-xs font-medium ${
-                      data.signal === 'buy' ? 'text-green-400' :
-                        data.signal === 'sell' ? 'text-red-400' :
+                      data.signal === 'buy' ? 'text-success' :
+                        data.signal === 'sell' ? 'text-destructive' :
                           'text-muted-foreground'
                     }`}>
                       {Math.round(data.value)}
                     </span>
                     <span className={`text-[10px] px-1.5 py-0.5 rounded ${
-                      data.signal === 'buy' ? 'bg-green-400/10 text-green-400' :
-                        data.signal === 'sell' ? 'bg-red-400/10 text-red-400' :
+                      data.signal === 'buy' ? 'bg-success/10 text-success' :
+                        data.signal === 'sell' ? 'bg-destructive/10 text-destructive' :
                           'bg-muted text-muted-foreground'
                     }`}>
                       {t(data.signal)}
@@ -1580,8 +1580,8 @@ export default function TradingSignalPage() {
                 </div>
                 {prevSignal.analysis && (
                   <div className={`text-xs px-2 py-1 rounded ${
-                    prevSignal.analysis.trend === 'bullish' ? 'bg-green-400/10 text-green-400' :
-                      'bg-red-400/10 text-red-400'
+                    prevSignal.analysis.trend === 'bullish' ? 'bg-success/10 text-success' :
+                      'bg-destructive/10 text-destructive'
                   }`}>
                     {t(prevSignal.analysis.trend)}
                   </div>
@@ -1964,7 +1964,7 @@ export default function TradingSignalPage() {
               {/* شرح أهمية الإطار الزمني في التداول */}
               {signal !== 'WAIT' && (
                 <div className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                  signal === 'UP' ? 'bg-green-500/10 text-green-300' : 'bg-red-500/10 text-red-300'
+                  signal === 'UP' ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'
                 }`}>
                   {t('prediction_valid_for')} {selectedTimeFrame}
                 </div>
@@ -1999,14 +1999,14 @@ export default function TradingSignalPage() {
             {/* إضافة توضيح للعلاقة بين الإطار الزمني والسعر المتوقع */}
             {signal !== 'WAIT' && targetPrice && (
               <div className={`mt-1.5 text-[10px] px-2 py-1 rounded-md ${
-                signal === 'UP' ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'
+                signal === 'UP' ? 'bg-success/10 border border-success/20' : 'bg-destructive/10 border border-destructive/20'
               }`}>
                 <div className="flex justify-between items-center">
                   <span>
                     {t(signal === 'UP' ? 'expected_price_rise_in' : 'expected_price_drop_in')}
                     <span className="font-bold mx-1">{selectedTimeFrame}</span>
                   </span>
-                  <span className={`font-mono font-bold ${signal === 'UP' ? 'text-green-400' : 'text-red-400'}`}>
+                  <span className={`font-mono font-bold ${signal === 'UP' ? 'text-success' : 'text-destructive'}`}>
                     {targetPrice.toFixed(selectedPair.symbol.includes('JPY') ? 3 : selectedPair.type === 'crypto' ? 2 : 5)}
                   </span>
                 </div>

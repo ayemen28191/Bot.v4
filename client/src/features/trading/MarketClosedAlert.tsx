@@ -63,8 +63,8 @@ export default function MarketClosedAlert({ nextOpenTime, nextCloseTime, marketT
           // إضافة تأثير بصري قبل إعادة التحميل
           const alertElement = document.querySelector('.market-closed-alert');
           if (alertElement) {
-            alertElement.classList.add('animate-pulse', 'bg-green-900/20', 'border-green-500/50');
-            alertElement.classList.remove('bg-red-900/15', 'border-red-500/30');
+            alertElement.classList.add('animate-pulse', 'bg-success/20', 'border-success/50');
+            alertElement.classList.remove('bg-destructive/15', 'border-destructive/30');
           }
           
           // إظهار إشعار قبل إعادة التحميل
@@ -146,11 +146,11 @@ export default function MarketClosedAlert({ nextOpenTime, nextCloseTime, marketT
     const fourHours = 4 * oneHour;
     
     if (currentDiff < oneHour) {
-      return { label: t('opening_very_soon'), color: 'bg-green-500/20 text-green-300', icon: <Zap className="h-3 w-3" /> };
+      return { label: t('opening_very_soon'), color: 'bg-success/20 text-success', icon: <Zap className="h-3 w-3" /> };
     } else if (currentDiff < fourHours) {
-      return { label: t('opening_soon'), color: 'bg-yellow-500/20 text-yellow-300', icon: <Clock className="h-3 w-3" /> };
+      return { label: t('opening_soon'), color: 'bg-warning/20 text-warning', icon: <Clock className="h-3 w-3" /> };
     } else {
-      return { label: t('market_closed'), color: 'bg-red-500/20 text-red-300', icon: <AlertCircle className="h-3 w-3" /> };
+      return { label: t('market_closed'), color: 'bg-destructive/20 text-destructive', icon: <AlertCircle className="h-3 w-3" /> };
     }
   };
 
@@ -161,22 +161,22 @@ export default function MarketClosedAlert({ nextOpenTime, nextCloseTime, marketT
     return (
       <div className="grid grid-cols-3 gap-1 my-2">
         <div className="flex flex-col items-center">
-          <div className="bg-red-950/40 w-full py-2 rounded text-center">
-            <span className="text-xl font-bold text-red-300">{hours.toString().padStart(2, '0')}</span>
+          <div className="bg-destructive/40 w-full py-2 rounded text-center">
+            <span className="text-xl font-bold text-destructive">{hours.toString().padStart(2, '0')}</span>
           </div>
-          <span className="text-[9px] text-gray-400 mt-1">{t('hours')}</span>
+          <span className="text-[9px] text-muted-foreground mt-1">{t('hours')}</span>
         </div>
         <div className="flex flex-col items-center">
-          <div className="bg-red-950/40 w-full py-2 rounded text-center">
-            <span className="text-xl font-bold text-red-300">{minutes.toString().padStart(2, '0')}</span>
+          <div className="bg-destructive/40 w-full py-2 rounded text-center">
+            <span className="text-xl font-bold text-destructive">{minutes.toString().padStart(2, '0')}</span>
           </div>
-          <span className="text-[9px] text-gray-400 mt-1">{t('minutes')}</span>
+          <span className="text-[9px] text-muted-foreground mt-1">{t('minutes')}</span>
         </div>
         <div className="flex flex-col items-center">
-          <div className="bg-red-950/40 w-full py-2 rounded text-center">
-            <span className="text-xl font-bold text-red-300">{seconds.toString().padStart(2, '0')}</span>
+          <div className="bg-destructive/40 w-full py-2 rounded text-center">
+            <span className="text-xl font-bold text-destructive">{seconds.toString().padStart(2, '0')}</span>
           </div>
-          <span className="text-[9px] text-gray-400 mt-1">{t('seconds')}</span>
+          <span className="text-[9px] text-muted-foreground mt-1">{t('seconds')}</span>
         </div>
       </div>
     );
@@ -192,21 +192,21 @@ export default function MarketClosedAlert({ nextOpenTime, nextCloseTime, marketT
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="w-full max-w-sm mb-4 p-4 bg-red-900/15 backdrop-blur-sm rounded-xl border border-red-500/30 shadow-lg market-closed-alert"
+      className="w-full max-w-sm mb-4 p-4 bg-destructive/10 backdrop-blur-sm rounded-xl border border-destructive/30 shadow-lg market-closed-alert"
     >
       <div className="flex items-start">
         <div className="ml-3 flex-shrink-0">
           <motion.div 
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
-            className="w-8 h-8 bg-red-500/20 rounded-full flex items-center justify-center"
+            className="w-8 h-8 bg-destructive/20 rounded-full flex items-center justify-center"
           >
-            <AlertTriangle className="h-5 w-5 text-red-400" />
+            <AlertTriangle className="h-5 w-5 text-destructive" />
             {showNotificationBadge && (
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"
+                className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full"
               />
             )}
           </motion.div>
@@ -214,7 +214,7 @@ export default function MarketClosedAlert({ nextOpenTime, nextCloseTime, marketT
         <div className="flex-1">
           <div className="flex justify-between items-start mb-1">
             <div className="flex items-center gap-1.5">
-              <h3 className="text-sm font-medium text-red-400">
+              <h3 className="text-sm font-medium text-destructive">
                 {`${t('market_closed')}: ${marketTypeText}`}
               </h3>
               <Badge variant="outline" className={`text-[9px] py-0 px-1.5 ${marketStatus.color}`}>
@@ -227,14 +227,14 @@ export default function MarketClosedAlert({ nextOpenTime, nextCloseTime, marketT
             <div className="flex gap-1">
               <button 
                 onClick={toggleDisplayMode}
-                className="text-gray-400 hover:text-gray-300 transition-colors p-1"
+                className="text-muted-foreground hover:text-foreground transition-colors p-1"
                 title={displayMode === 'compact' ? t('show_details') : t('show_compact')}
               >
                 <TimerReset className="h-3.5 w-3.5" />
               </button>
               <button 
                 onClick={() => setIsVisible(false)}
-                className="text-gray-400 hover:text-gray-300 transition-colors p-1"
+                className="text-muted-foreground hover:text-foreground transition-colors p-1"
                 title={t('close')}
               >
                 <X className="h-3.5 w-3.5" />
@@ -243,7 +243,7 @@ export default function MarketClosedAlert({ nextOpenTime, nextCloseTime, marketT
           </div>
 
           <div className="mt-1">
-            <p className="text-[11px] text-gray-300 leading-relaxed">
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
               {t('market_closed_message_improved').replace('{time}', 
                 nextOpenTime && nextOpenTime.includes('||') 
                   ? nextOpenTime.split('||')[0] 
@@ -272,7 +272,7 @@ export default function MarketClosedAlert({ nextOpenTime, nextCloseTime, marketT
                 exit={{ opacity: 0 }}
                 className="mt-2 space-y-1.5"
               >
-                <div className="flex items-center justify-between text-[11px] text-gray-400">
+                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                   <div className="flex items-center">
                     <Clock className="h-3 w-3 ml-1" />
                     <span>{t('time_remaining')}</span>
@@ -282,7 +282,7 @@ export default function MarketClosedAlert({ nextOpenTime, nextCloseTime, marketT
                       backgroundColor: currentDiff < 60000 ? ['rgba(239,68,68,0.2)', 'rgba(239,68,68,0.4)'] : 'rgba(239,68,68,0.2)' 
                     }}
                     transition={{ duration: 1, repeat: currentDiff < 60000 ? Infinity : 0, repeatType: 'reverse' }}
-                    className="font-medium text-red-300 bg-red-500/10 py-0.5 px-1.5 rounded"
+                    className="font-medium text-destructive bg-destructive/10 py-0.5 px-1.5 rounded"
                   >
                     {timeLeft}
                   </motion.span>
@@ -290,14 +290,14 @@ export default function MarketClosedAlert({ nextOpenTime, nextCloseTime, marketT
                 
                 <Progress 
                   value={progress} 
-                  className="h-1.5 bg-red-950/30" 
-                  indicatorClassName="bg-gradient-to-r from-red-600/60 to-red-400/60" 
+                  className="h-1.5 bg-destructive/20" 
+                  indicatorClassName="bg-gradient-to-r from-destructive/60 to-destructive/40" 
                 />
               </motion.div>
             )}
           </AnimatePresence>
           
-          <div className="mt-3 flex items-center text-[11px] bg-red-500/10 py-1 px-2 rounded-lg inline-flex text-red-300/90">
+          <div className="mt-3 flex items-center text-[11px] bg-destructive/10 py-1 px-2 rounded-lg inline-flex text-destructive/90">
             <Calendar className="h-3.5 w-3.5 ml-1 animate-pulse" />
             <span>
               {t('market_opening')} {nextOpenTime && nextOpenTime.includes('||') 
@@ -307,7 +307,7 @@ export default function MarketClosedAlert({ nextOpenTime, nextCloseTime, marketT
           </div>
           
           {/* معلومات إضافية عن السوق */}
-          <div className="mt-2 flex items-start gap-1 text-[10px] text-gray-400">
+          <div className="mt-2 flex items-start gap-1 text-[10px] text-muted-foreground">
             <MapPin className="w-3 h-3 flex-shrink-0 mt-0.5" />
             <span className="opacity-75">{getMarketInfo(marketType)}</span>
           </div>
@@ -328,7 +328,7 @@ export default function MarketClosedAlert({ nextOpenTime, nextCloseTime, marketT
                 });
                 window.dispatchEvent(event);
               }} 
-              className="text-[10px] flex items-center mx-auto gap-1 text-yellow-300 hover:text-yellow-200 transition-colors py-1 px-2 rounded-full bg-yellow-900/20 hover:bg-yellow-900/30"
+              className="text-[10px] flex items-center mx-auto gap-1 text-warning hover:text-warning/80 transition-colors py-1 px-2 rounded-full bg-warning/10 hover:bg-warning/20"
             >
               <Bell className="w-3 h-3" />
               <span>{t('enable_market_notifications')}</span>

@@ -341,7 +341,7 @@ function MarketStatus(props: MarketStatusProps) {
                       <div className="space-y-1 p-1">
                         <p className="text-success">{nextOpenTime}</p>
                         {secondsLeft && (
-                          <p className="text-[10px] text-gray-300">
+                          <p className="text-[10px] text-muted-foreground">
                             ({formatTimeLeft(secondsLeft)} {t('remaining')})
                           </p>
                         )}
@@ -364,7 +364,7 @@ function MarketStatus(props: MarketStatusProps) {
                       <div className="space-y-1 p-1">
                         <p className="text-destructive">{nextCloseTime}</p>
                         {secondsLeft && (
-                          <p className="text-[10px] text-gray-300">
+                          <p className="text-[10px] text-muted-foreground">
                             ({formatTimeLeft(secondsLeft)} {t('remaining')})
                           </p>
                         )}
@@ -401,7 +401,7 @@ function MarketStatus(props: MarketStatusProps) {
                     <TooltipContent side="bottom">
                       <div className="space-y-1 p-1 max-w-xs">
                         <p className="text-xs">{t('timezone_info')}</p>
-                        <p className="text-[10px] text-gray-300">
+                        <p className="text-[10px] text-muted-foreground">
                           {t('timezone_description')}
                         </p>
                       </div>
@@ -414,9 +414,9 @@ function MarketStatus(props: MarketStatusProps) {
               <motion.button
                 onClick={() => setExpandedInfo(!expandedInfo)}
                 className={`
-                  text-gray-300 flex items-center gap-1.5 px-2 py-1.5 
-                  bg-gray-800/80 rounded-full border border-gray-700/50 
-                  hover:bg-gray-700/60 transition duration-200
+                  text-muted-foreground flex items-center gap-1.5 px-2 py-1.5 
+                  bg-muted/80 rounded-full border border-border/50 
+                  hover:bg-muted/60 transition duration-200
                 `}
                 whileTap={{ scale: 0.95 }}
               >
@@ -430,7 +430,7 @@ function MarketStatus(props: MarketStatusProps) {
             {/* شريط التقدم مع الوقت المتبقي */}
             {secondsLeft !== null && totalSeconds !== null && (
               <div className="w-full space-y-1">
-                <div className="flex justify-between items-center text-[9px] text-gray-400">
+                <div className="flex justify-between items-center text-[9px] text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Clock className="h-3 w-3 opacity-60" />
                     <span>{t('time_remaining')}</span>
@@ -444,7 +444,7 @@ function MarketStatus(props: MarketStatusProps) {
                 </div>
                 <Progress 
                   value={progress} 
-                  className="h-1.5 bg-gray-800/60" 
+                  className="h-1.5 bg-muted/60" 
                   indicatorClassName={`bg-gradient-to-r ${getProgressBarColor()}`} 
                 />
               </div>
@@ -460,15 +460,15 @@ function MarketStatus(props: MarketStatusProps) {
                   transition={{ duration: 0.3 }}
                   className="overflow-hidden"
                 >
-                  <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-700/30">
+                  <div className="flex flex-wrap gap-2 pt-2 border-t border-border/30">
                     {/* معلومات عن ساعات التداول المفضلة */}
-                    <div className="w-full flex items-start gap-1.5 text-gray-300 bg-gray-800/30 rounded-lg p-2 text-[10px]">
-                      <MapPin className="h-3.5 w-3.5 text-blue-400 flex-shrink-0 mt-0.5" />
+                    <div className="w-full flex items-start gap-1.5 text-muted-foreground bg-muted/30 rounded-lg p-2 text-[10px]">
+                      <MapPin className="h-3.5 w-3.5 text-primary flex-shrink-0 mt-0.5" />
                       <div className="space-y-1">
                         <p className="font-medium">{t('best_trading_hours')}:</p>
                         <div className="flex flex-wrap gap-1.5">
                           {bestHours.map((hour, index) => (
-                            <Badge key={index} variant="outline" className="text-[9px] bg-blue-900/20">
+                            <Badge key={index} variant="outline" className="text-[9px] bg-primary/20">
                               {hour}
                             </Badge>
                           ))}
@@ -478,14 +478,14 @@ function MarketStatus(props: MarketStatusProps) {
                     </div>
                     
                     {/* مؤشر نشاط السوق حسب الوقت (لعرض بصري فقط) */}
-                    <div className="w-full flex flex-col bg-gray-800/30 rounded-lg p-2 text-[10px]">
+                    <div className="w-full flex flex-col bg-muted/30 rounded-lg p-2 text-[10px]">
                       <div className="flex justify-between items-center mb-1">
-                        <span className="text-gray-300 font-medium">{t('market_activity')}</span>
+                        <span className="text-muted-foreground font-medium">{t('market_activity')}</span>
                         <Badge variant="outline" className="text-[9px]">
                           {isOpen ? t('active_now') : t('inactive_now')}
                         </Badge>
                       </div>
-                      <div className="flex items-center h-4 bg-gray-900/60 rounded-full overflow-hidden">
+                      <div className="flex items-center h-4 bg-muted/60 rounded-full overflow-hidden">
                         {/* This is a dummy activity indicator that shows the typical market activity throughout the day */}
                         <div className="flex h-full w-full">
                           {Array.from({ length: 24 }).map((_, hour) => {
@@ -513,9 +513,22 @@ function MarketStatus(props: MarketStatusProps) {
                             
                             // لون النشاط وارتفاعه
                             const height = `${Math.round(activityLevel * 100)}%`;
-                            let color = `bg-${primaryColor}-500/20`;
-                            if (activityLevel > 0.7) color = `bg-${primaryColor}-400/60`;
-                            else if (activityLevel > 0.4) color = `bg-${primaryColor}-500/40`;
+                            
+                            // استخدام ألوان الثيم بدلاً من الألوان الديناميكية
+                            let color = '';
+                            if (marketType === 'forex') {
+                              if (activityLevel > 0.7) color = 'bg-primary/60';
+                              else if (activityLevel > 0.4) color = 'bg-primary/40';
+                              else color = 'bg-primary/20';
+                            } else if (marketType === 'crypto') {
+                              if (activityLevel > 0.7) color = 'bg-warning/60';
+                              else if (activityLevel > 0.4) color = 'bg-warning/40';
+                              else color = 'bg-warning/20';
+                            } else if (marketType === 'stocks') {
+                              if (activityLevel > 0.7) color = 'bg-success/60';
+                              else if (activityLevel > 0.4) color = 'bg-success/40';
+                              else color = 'bg-success/20';
+                            }
                             
                             // تمييز الساعة الحالية
                             const currentHour = currentTime.getHours();
@@ -539,7 +552,7 @@ function MarketStatus(props: MarketStatusProps) {
                           })}
                         </div>
                       </div>
-                      <div className="flex justify-between mt-0.5 text-[8px] text-gray-400">
+                      <div className="flex justify-between mt-0.5 text-[8px] text-muted-foreground">
                         <span>00:00</span>
                         <span>06:00</span>
                         <span>12:00</span>
@@ -558,12 +571,12 @@ function MarketStatus(props: MarketStatusProps) {
         {!isOpen && status === 'very-soon' && (
           <CardFooter className="pt-0 p-2 justify-center">
             <motion.div 
-              className="text-center flex items-center justify-center bg-green-900/20 py-1.5 px-3 rounded-lg"
+              className="text-center flex items-center justify-center bg-success/20 py-1.5 px-3 rounded-lg"
               animate={{ scale: [1, 1.03, 1] }}
               transition={{ repeat: Infinity, duration: 1.5 }}
             >
-              <Zap className="h-3.5 w-3.5 text-green-400 mr-1.5" />
-              <span className="text-green-400/90 text-[10px]">{t('market_opening_soon_notification')}</span>
+              <Zap className="h-3.5 w-3.5 text-success mr-1.5" />
+              <span className="text-success/90 text-[10px]">{t('market_opening_soon_notification')}</span>
             </motion.div>
           </CardFooter>
         )}
@@ -585,9 +598,9 @@ function MarketStatus(props: MarketStatusProps) {
         {/* تنبيه عام إذا كان السوق مغلقًا ولن يفتح قريبًا */}
         {!isOpen && status === 'later' && (
           <CardFooter className="pt-0 p-2 justify-center">
-            <div className="text-center flex items-center justify-center bg-yellow-900/20 py-1.5 px-3 rounded-lg transition-all duration-300">
-              <Bell className="h-3.5 w-3.5 text-yellow-400 mr-1.5" />
-              <span className="text-yellow-400/90 text-[10px]">{t('market_closed_notification')}</span>
+            <div className="text-center flex items-center justify-center bg-warning/20 py-1.5 px-3 rounded-lg transition-all duration-300">
+              <Bell className="h-3.5 w-3.5 text-warning mr-1.5" />
+              <span className="text-warning/90 text-[10px]">{t('market_closed_notification')}</span>
             </div>
           </CardFooter>
         )}

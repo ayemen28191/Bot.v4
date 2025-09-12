@@ -77,14 +77,14 @@ export default function TimeframeButtons({
       return (
         <div 
           className={`absolute ${isSelected ? 'top-0 right-0 h-full w-full' : '-top-1 -right-1 h-3 w-3 rounded-full'} 
-          ${isSelected ? 'border-4 border-green-400/20 rounded-lg animate-pulse' : 'bg-green-500/20'} 
+          ${isSelected ? 'border-4 border-success/20 rounded-lg animate-pulse' : 'bg-success/20'} 
           flex items-center justify-center`}
           title={t('bullish_trend')}
         >
           {isSelected && currentSignal === 'UP' ? (
-            <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-green-400 to-transparent" />
+            <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-success to-transparent" />
           ) : (
-            <ArrowUp className="h-2 w-2 text-green-400" />
+            <ArrowUp className="h-2 w-2 text-success" />
           )}
         </div>
       );
@@ -92,14 +92,14 @@ export default function TimeframeButtons({
       return (
         <div 
           className={`absolute ${isSelected ? 'top-0 right-0 h-full w-full' : '-top-1 -right-1 h-3 w-3 rounded-full'} 
-          ${isSelected ? 'border-4 border-red-400/20 rounded-lg animate-pulse' : 'bg-red-500/20'} 
+          ${isSelected ? 'border-4 border-destructive/20 rounded-lg animate-pulse' : 'bg-destructive/20'} 
           flex items-center justify-center`}
           title={t('bearish_trend')}
         >
           {isSelected && currentSignal === 'DOWN' ? (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-red-400 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-destructive to-transparent" />
           ) : (
-            <ArrowDown className="h-2 w-2 text-red-400" />
+            <ArrowDown className="h-2 w-2 text-destructive" />
           )}
         </div>
       );
@@ -112,15 +112,15 @@ export default function TimeframeButtons({
   const getTimeframeIcon = (timeframe: TimeFrame) => {
     // إظهار أيقونات خاصة للأطر الزمنية المختلفة بناءً على نوع الإشارة
     if (currentSignal === 'UP' && selectedTimeframe === timeframe) {
-      return <Activity className="h-3.5 w-3.5 mr-1 text-green-400" />;
+      return <Activity className="h-3.5 w-3.5 mr-1 text-success" />;
     }
     
     if (currentSignal === 'DOWN' && selectedTimeframe === timeframe) {
-      return <Activity className="h-3.5 w-3.5 mr-1 text-red-400" />;
+      return <Activity className="h-3.5 w-3.5 mr-1 text-destructive" />;
     }
     
     if (currentSignal === 'WAIT' && selectedTimeframe === timeframe) {
-      return <AlertCircle className="h-3.5 w-3.5 mr-1 text-yellow-400" />;
+      return <AlertCircle className="h-3.5 w-3.5 mr-1 text-warning" />;
     }
     
     // الأيقونة العادية للأطر الزمنية المختلفة
@@ -143,11 +143,11 @@ export default function TimeframeButtons({
       if (currentSignal) {
         switch (currentSignal) {
           case 'UP':
-            return 'bg-green-500/20 dark:bg-green-500/10 text-green-600 dark:text-green-300 border-green-500/50 dark:border-green-500/30 font-semibold shadow-lg ring-1 ring-green-500/30';
+            return 'bg-success/20 text-success border-success/50 font-semibold shadow-lg ring-1 ring-success/30';
           case 'DOWN':
-            return 'bg-red-500/20 dark:bg-red-500/10 text-red-600 dark:text-red-300 border-red-500/50 dark:border-red-500/30 font-semibold shadow-lg ring-1 ring-red-500/30';
+            return 'bg-destructive/20 text-destructive border-destructive/50 font-semibold shadow-lg ring-1 ring-destructive/30';
           default:
-            return 'bg-yellow-500/20 dark:bg-yellow-500/10 text-yellow-600 dark:text-yellow-300 border-yellow-500/50 dark:border-yellow-500/30 font-semibold shadow-lg ring-1 ring-yellow-500/30';
+            return 'bg-warning/20 text-warning border-warning/50 font-semibold shadow-lg ring-1 ring-warning/30';
         }
       }
       return 'bg-primary/20 text-primary border-primary/50 font-semibold shadow-lg ring-1 ring-primary/30';
@@ -157,11 +157,11 @@ export default function TimeframeButtons({
     if (isAvailable) {
       // تعزيز العلاقة مع الإشارة الحالية للأزرار المتاحة
       if (currentSignal === 'UP' && timeframeAnalysis?.[timeframe]?.trend === 'bullish') {
-        return 'bg-muted border-green-500/20 text-green-600 dark:text-green-300/70 hover:bg-green-500/10 hover:border-green-500/30';
+        return 'bg-muted border-success/20 text-success hover:bg-success/10 hover:border-success/30';
       }
       
       if (currentSignal === 'DOWN' && timeframeAnalysis?.[timeframe]?.trend === 'bearish') {
-        return 'bg-muted border-red-500/20 text-red-600 dark:text-red-300/70 hover:bg-red-500/10 hover:border-red-500/30';
+        return 'bg-muted border-destructive/20 text-destructive hover:bg-destructive/10 hover:border-destructive/30';
       }
       
       return 'bg-muted border-border text-foreground hover:bg-accent hover:border-accent-foreground/20';
@@ -180,10 +180,10 @@ export default function TimeframeButtons({
     
     // تحديد لون المؤشر بناءً على نوع الإشارة
     if (currentSignal === 'UP') {
-      impactClass = 'text-green-400 bg-green-400/10 border-green-400/20';
+      impactClass = 'text-success bg-success/10 border-success/20';
       impactIcon = '▲';
     } else if (currentSignal === 'DOWN') {
-      impactClass = 'text-red-400 bg-red-400/10 border-red-400/20';
+      impactClass = 'text-destructive bg-destructive/10 border-destructive/20';
       impactIcon = '▼';
     }
     
@@ -220,7 +220,7 @@ export default function TimeframeButtons({
               </div>
               
               {!isAvailable && (
-                <Lock className="absolute top-1 right-1 h-2.5 w-2.5 text-gray-400" />
+                <Lock className="absolute top-1 right-1 h-2.5 w-2.5 text-muted-foreground" />
               )}
               
               {/* مؤشر تأثير الإطار الزمني على الإشارة */}
