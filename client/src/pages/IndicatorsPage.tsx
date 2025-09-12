@@ -92,7 +92,7 @@ export default function IndicatorsPage() {
         signal: 'buy',
         timeframe: '1H',
         lastUpdate: new Date().toISOString(),
-        icon: <TrendingUp className="h-6 w-6 text-green-500" />,
+        icon: <TrendingUp className="h-6 w-6 text-success" />,
         description: t('ma_description') || 'Simple Moving Average indicator shows upward trend in short term',
         chartData: generateChartData('buy'),
         strengthValue: 85
@@ -105,7 +105,7 @@ export default function IndicatorsPage() {
         signal: 'sell',
         timeframe: '4H',
         lastUpdate: new Date().toISOString(),
-        icon: <Activity className="h-6 w-6 text-red-500" />,
+        icon: <Activity className="h-6 w-6 text-destructive" />,
         description: t('rsi_description') || 'Relative Strength Index above 70, indicating overbought conditions',
         chartData: generateChartData('sell'),
         strengthValue: 78
@@ -118,7 +118,7 @@ export default function IndicatorsPage() {
         signal: 'buy',
         timeframe: '1D',
         lastUpdate: new Date().toISOString(),
-        icon: <ChevronsUp className="h-6 w-6 text-green-500" />,
+        icon: <ChevronsUp className="h-6 w-6 text-success" />,
         description: t('macd_description') || 'MACD positive crossover indicates bullish momentum',
         chartData: generateChartData('buy'),
         strengthValue: 92
@@ -131,7 +131,7 @@ export default function IndicatorsPage() {
         signal: 'neutral',
         timeframe: '1H',
         lastUpdate: new Date().toISOString(),
-        icon: <Activity className="h-6 w-6 text-yellow-500" />,
+        icon: <Activity className="h-6 w-6 text-warning" />,
         description: t('bb_description') || 'Price moving within middle Bollinger Bands range',
         chartData: generateChartData('neutral'),
         strengthValue: 55
@@ -157,7 +157,7 @@ export default function IndicatorsPage() {
         signal: 'buy',
         timeframe: '4H',
         lastUpdate: new Date().toISOString(),
-        icon: <ChevronsUp className="h-6 w-6 text-green-500" />,
+        icon: <ChevronsUp className="h-6 w-6 text-success" />,
         description: t('stoch_description') || 'Stochastic below 30 level, indicating oversold conditions',
         chartData: generateChartData('buy'),
         strengthValue: 82
@@ -170,7 +170,7 @@ export default function IndicatorsPage() {
         signal: 'sell',
         timeframe: '1H',
         lastUpdate: new Date().toISOString(),
-        icon: <ChevronsDown className="h-6 w-6 text-red-500" />,
+        icon: <ChevronsDown className="h-6 w-6 text-destructive" />,
         description: t('momentum_description') || 'Negative momentum indicates weakening uptrend strength',
         chartData: generateChartData('sell'),
         strengthValue: 65
@@ -183,7 +183,7 @@ export default function IndicatorsPage() {
         signal: 'neutral',
         timeframe: '1D',
         lastUpdate: new Date().toISOString(),
-        icon: <Activity className="h-6 w-6 text-yellow-500" />,
+        icon: <Activity className="h-6 w-6 text-warning" />,
         description: t('volatility_description') || 'Average increase in price volatility',
         chartData: generateChartData('neutral'),
         strengthValue: 50
@@ -257,9 +257,9 @@ export default function IndicatorsPage() {
 
   const getSignalColor = (signal: string) => {
     switch(signal) {
-      case 'buy': return 'text-green-500';
-      case 'sell': return 'text-red-500';
-      default: return 'text-yellow-500';
+      case 'buy': return 'text-success';
+      case 'sell': return 'text-destructive';
+      default: return 'text-warning';
     }
   };
 
@@ -285,15 +285,15 @@ export default function IndicatorsPage() {
 
         {localMarketStatus.isOpen && (
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-            <span className="text-sm text-green-400">{t('market_open')}</span>
+            <span className="w-2 h-2 rounded-full bg-success animate-pulse"></span>
+            <span className="text-sm text-success">{t('market_open')}</span>
           </div>
         )}
 
         {!localMarketStatus.isOpen && (
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-red-400"></span>
-            <span className="text-sm text-red-400">{t('market_closed')}</span>
+            <span className="w-2 h-2 rounded-full bg-destructive"></span>
+            <span className="text-sm text-destructive">{t('market_closed')}</span>
           </div>
         )}
       </header>

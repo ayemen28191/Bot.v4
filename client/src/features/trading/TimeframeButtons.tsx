@@ -120,7 +120,7 @@ export default function TimeframeButtons({
     }
     
     if (currentSignal === 'WAIT' && selectedTimeframe === timeframe) {
-      return <AlertCircle className="h-3.5 w-3.5 mr-1 text-warning" />;
+      return <AlertCircle className="h-3.5 w-3.5 mr-1 text-foreground" />;
     }
     
     // الأيقونة العادية للأطر الزمنية المختلفة
@@ -143,11 +143,11 @@ export default function TimeframeButtons({
       if (currentSignal) {
         switch (currentSignal) {
           case 'UP':
-            return 'bg-success/20 text-success border-success/50 font-semibold shadow-lg ring-1 ring-success/30';
+            return 'bg-success/20 text-foreground border-success/50 font-semibold shadow-lg ring-1 ring-success/30';
           case 'DOWN':
-            return 'bg-destructive/20 text-destructive border-destructive/50 font-semibold shadow-lg ring-1 ring-destructive/30';
+            return 'bg-destructive/20 text-destructive-foreground border-destructive/50 font-semibold shadow-lg ring-1 ring-destructive/30';
           default:
-            return 'bg-warning/20 text-warning border-warning/50 font-semibold shadow-lg ring-1 ring-warning/30';
+            return 'bg-warning/20 text-foreground border-warning/60 font-semibold shadow-lg ring-1 ring-warning/40';
         }
       }
       return 'bg-primary/20 text-primary border-primary/50 font-semibold shadow-lg ring-1 ring-primary/30';
@@ -157,11 +157,11 @@ export default function TimeframeButtons({
     if (isAvailable) {
       // تعزيز العلاقة مع الإشارة الحالية للأزرار المتاحة
       if (currentSignal === 'UP' && timeframeAnalysis?.[timeframe]?.trend === 'bullish') {
-        return 'bg-muted border-success/20 text-success hover:bg-success/10 hover:border-success/30';
+        return 'bg-muted border-success/20 text-foreground hover:bg-success/10 hover:border-success/30';
       }
       
       if (currentSignal === 'DOWN' && timeframeAnalysis?.[timeframe]?.trend === 'bearish') {
-        return 'bg-muted border-destructive/20 text-destructive hover:bg-destructive/10 hover:border-destructive/30';
+        return 'bg-muted border-destructive/20 text-foreground hover:bg-destructive/10 hover:border-destructive/30';
       }
       
       return 'bg-muted border-border text-foreground hover:bg-accent hover:border-accent-foreground/20';

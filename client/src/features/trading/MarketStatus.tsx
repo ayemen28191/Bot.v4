@@ -192,21 +192,21 @@ function MarketStatus(props: MarketStatusProps) {
       // ألوان حالة السوق المفتوح
       switch (status) {
         case 'very-soon': // على وشك الإغلاق
-          return 'bg-warning/40 text-warning border-warning/80';
+          return 'bg-warning/25 text-foreground border-warning/60';
         case 'soon': // سيغلق قريبًا
-          return 'bg-warning/30 text-warning border-warning/80';
+          return 'bg-warning/20 text-foreground border-warning/60';
         default: // مفتوح عادي
-          return 'bg-success/30 text-success border-success/80';
+          return 'bg-success/20 text-foreground border-success/60';
       }
     } else {
       // ألوان حالة السوق المغلق
       switch (status) {
         case 'very-soon': // على وشك الفتح
-          return 'bg-success/40 text-success border-success/80';
+          return 'bg-success/25 text-foreground border-success/60';
         case 'soon': // سيفتح قريبًا
-          return 'bg-warning/30 text-warning border-warning/80';
+          return 'bg-warning/20 text-foreground border-warning/60';
         default: // مغلق لفترة طويلة
-          return 'bg-destructive/30 text-destructive border-destructive/80';
+          return 'bg-destructive/20 text-destructive-foreground border-destructive/60';
       }
     }
   };
@@ -589,8 +589,8 @@ function MarketStatus(props: MarketStatusProps) {
               animate={{ scale: [1, 1.03, 1] }}
               transition={{ repeat: Infinity, duration: 1.5 }}
             >
-              <Timer className="h-3.5 w-3.5 text-warning mr-1.5" />
-              <span className="text-warning/90 text-[10px]">{t('market_closing_soon_notification')}</span>
+              <Timer className="h-3.5 w-3.5 text-foreground mr-1.5" />
+              <span className="text-foreground/90 text-[10px]">{t('market_closing_soon_notification')}</span>
             </motion.div>
           </CardFooter>
         )}
