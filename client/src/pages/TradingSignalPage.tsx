@@ -1472,14 +1472,14 @@ export default function TradingSignalPage() {
     if (!marketAnalysis || !indicatorResults) return null;
 
     return (
-      <div className="mb-4 bg-gray-800/70 rounded-lg p-4 border border-gray-700/40">
+      <div className="mb-4 bg-card/70 rounded-lg p-4 border border-border/40">
         <div className="grid grid-cols-2 gap-4">
           {/* تحليل السوق */}
           <div className="analysis-box">
-            <h4 className="text-sm font-medium text-gray-400 mb-2">{t('market_analysis')}</h4>
+            <h4 className="text-sm font-medium text-muted-foreground mb-2">{t('market_analysis')}</h4>
             <div className="grid gap-2">
               <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-400">{t('trend')}</span>
+                <span className="text-xs text-muted-foreground">{t('trend')}</span>
                 <span className={`text-xs font-medium ${
                   marketAnalysis.trend === 'bullish' ? 'text-green-400' : 'text-red-400'
                 }`}>
@@ -1487,14 +1487,14 @@ export default function TradingSignalPage() {
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-400">{t('strength')}</span>
+                <span className="text-xs text-muted-foreground">{t('strength')}</span>
                 <div className="flex items-center gap-2">
                   <Progress value={marketAnalysis.strength} className="w-16 h-2" />
                   <span className="text-xs font-medium">{Math.round(Number(marketAnalysis.strength))}%</span>
                 </div>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-400">{t('volatility')}</span>
+                <span className="text-xs text-muted-foreground">{t('volatility')}</span>
                 <div className="flex items-center gap-2">
                   <Progress value={marketAnalysis.volatility} className="w-16 h-2" />
                   <span className="text-xs font-medium">{Math.round(Number(marketAnalysis.volatility))}%</span>
@@ -1505,23 +1505,23 @@ export default function TradingSignalPage() {
 
           {/* المؤشرات الفنية */}
           <div className="indicators-box">
-            <h4 className="text-sm font-medium text-gray-400 mb-2">{t('technical_indicators')}</h4>
+            <h4 className="text-sm font-medium text-muted-foreground mb-2">{t('technical_indicators')}</h4>
             <div className="grid gap-2">
               {Object.entries(indicatorResults).map(([key, data]) => (
                 <div key={key} className="flex justify-between items-center">
-                  <span className="text-xs text-gray-400">{key.toUpperCase()}</span>
+                  <span className="text-xs text-muted-foreground">{key.toUpperCase()}</span>
                   <div className="flex items-center gap-2">
                     <span className={`text-xs font-medium ${
                       data.signal === 'buy' ? 'text-green-400' :
                         data.signal === 'sell' ? 'text-red-400' :
-                          'text-gray-400'
+                          'text-muted-foreground'
                     }`}>
                       {Math.round(data.value)}
                     </span>
                     <span className={`text-[10px] px-1.5 py-0.5 rounded ${
                       data.signal === 'buy' ? 'bg-green-400/10 text-green-400' :
                         data.signal === 'sell' ? 'bg-red-400/10 text-red-400' :
-                          'bg-gray-700 text-gray-400'
+                          'bg-muted text-muted-foreground'
                     }`}>
                       {t(data.signal)}
                     </span>
@@ -1542,10 +1542,10 @@ export default function TradingSignalPage() {
     return (
       <div className="mt-4">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-medium text-gray-400">{t('previous_signals')}</h3>
+          <h3 className="text-sm font-medium text-muted-foreground">{t('previous_signals')}</h3>
           <button
             onClick={() => setShowPreviousSignals(false)}
-            className="text-gray-400 hover:text-gray-300"
+            className="text-muted-foreground hover:text-foreground"
           >
             <X className="h-4 w-4" />
           </button>
@@ -1554,14 +1554,14 @@ export default function TradingSignalPage() {
           {previousSignals.map((prevSignal, index) => (
             <div
               key={prevSignal.timestamp}
-              className="bg-gray-800/50 rounded-lg p-3 border border-gray-700/30"
+              className="bg-card/50 rounded-lg p-3 border border-border/30"
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">{prevSignal.symbol}</span>
-                  <span className="text-xs text-gray-500">{prevSignal.timeframe}</span>
+                  <span className="text-xs text-muted-foreground">{prevSignal.timeframe}</span>
                 </div>
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-muted-foreground">
                   {new Date(prevSignal.timestamp).toLocaleTimeString()}
                 </span>
               </div>
@@ -1636,11 +1636,11 @@ export default function TradingSignalPage() {
       )}
       
       {/* شريط التنقل العلوي مع الشعار */}
-      <header className="fixed top-0 left-0 right-0 flex justify-between items-center p-3 border-b border-gray-700/60 bg-gray-900/90 backdrop-blur-md z-50 shadow-md">
+      <header className="fixed top-0 left-0 right-0 flex justify-between items-center p-3 border-b border-border backdrop-blur-md z-50 shadow-md bg-background/90">
         <div className="logo flex items-center">
           <div className="relative">
-            <div className="absolute inset-0 bg-yellow-400/10 rounded-full blur-sm -z-10 scale-150"></div>
-            <LineChart className="text-yellow-400 h-6 w-6 mr-2" />
+            <div className="absolute inset-0 bg-primary/10 rounded-full blur-sm -z-10 scale-150"></div>
+            <LineChart className="text-primary h-6 w-6 mr-2" />
           </div>
           <div className="font-bold text-lg flex items-baseline">
             <span className="hidden md:inline">{t('app_name')}</span>
@@ -1653,19 +1653,19 @@ export default function TradingSignalPage() {
             onClick={() => setShowHeatmap(!showHeatmap)} 
             className={`p-1.5 rounded-full border ${
               showHeatmap 
-              ? 'bg-yellow-400/20 border-yellow-500/60 text-yellow-400' 
-              : 'bg-gray-800/80 border-gray-700/60 text-gray-300'
+              ? 'bg-primary/20 border-primary/60 text-primary' 
+              : 'bg-muted/80 border-border text-muted-foreground'
             }`}
             title={t('heatmap_view')}
           >
             <Grid className="h-4 w-4" />
           </button>
-          <button className="p-1.5 rounded-full bg-gray-800/80 border border-gray-700/60">
-            <Globe className="text-gray-300 h-4 w-4" />
+          <button className="p-1.5 rounded-full bg-muted/80 border border-border">
+            <Globe className="text-muted-foreground h-4 w-4" />
           </button>
           <Link href="/settings">
-            <button className="p-1.5 rounded-full bg-gray-800/80 border border-gray-700/60">
-              <Settings className="text-yellow-400 h-4 w-4" />
+            <button className="p-1.5 rounded-full bg-muted/80 border border-border">
+              <Settings className="text-primary h-4 w-4" />
             </button>
           </Link>
         </div>
@@ -1703,21 +1703,21 @@ export default function TradingSignalPage() {
         {/* قسم الخريطة الحرارية للاحتمالية */}
         {showHeatmap && (
           <div className="w-full max-w-7xl mb-6 animate-in fade-in duration-500">
-            <div className="mb-2 flex items-center justify-between bg-gray-800/50 p-2 rounded-lg border border-gray-700/30">
+            <div className="mb-2 flex items-center justify-between bg-card/50 p-2 rounded-lg border border-border/30">
               <div className="flex items-center space-x-2">
-                <Grid className="h-5 w-5 ml-2 text-yellow-400" />
+                <Grid className="h-5 w-5 ml-2 text-primary" />
                 <h3 className="text-base font-medium">{t('probability_heatmap')}</h3>
               </div>
               <div className="flex items-center gap-2">
                 {heatmapLastUpdated && (
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-muted-foreground">
                     {t('last_updated')}: {new Date(heatmapLastUpdated).toLocaleTimeString()}
                   </span>
                 )}
                 <button 
                   onClick={refreshHeatmap}
                   disabled={heatmapLoading}
-                  className="p-1.5 rounded-md bg-gray-700 text-gray-200 hover:bg-gray-600 flex items-center text-xs"
+                  className="p-1.5 rounded-md bg-muted text-foreground hover:bg-muted/80 flex items-center text-xs"
                 >
                   {heatmapLoading ? (
                     <><RefreshCw className="h-3.5 w-3.5 mr-1 animate-spin" /> {t('loading')}</>
@@ -1727,7 +1727,7 @@ export default function TradingSignalPage() {
                 </button>
                 <button 
                   onClick={() => setShowHeatmap(false)}
-                  className="p-1.5 rounded-md bg-gray-700/50 text-gray-200 hover:bg-gray-600"
+                  className="p-1.5 rounded-md bg-muted/50 text-foreground hover:bg-muted"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -1766,11 +1766,11 @@ export default function TradingSignalPage() {
         </div>
 
         {/* طبقة القرارات التداولية */}
-        <div className="w-full max-w-sm mb-4 rounded-2xl border border-gray-700/60 bg-gray-800/50 backdrop-blur-sm overflow-hidden">
+        <div className="w-full max-w-sm mb-4 rounded-2xl border border-border bg-card/80 backdrop-blur-sm overflow-hidden">
           {/* اختيار المنصة التداولية (قائمة منسدلة) */}
-          <div className="platform-selector p-3 border-b border-gray-700/60">
-            <label className="block text-[13px] font-medium mb-1.5 text-gray-300 flex items-center">
-              <Globe className="h-3 w-3 ml-1 text-yellow-400" />
+          <div className="platform-selector p-3 border-b border-border">
+            <label className="block text-[13px] font-medium mb-1.5 text-foreground flex items-center">
+              <Globe className="h-3 w-3 ml-1 text-primary" />
               {t('select_trading_platform')}
             </label>
 
@@ -1778,21 +1778,21 @@ export default function TradingSignalPage() {
             <div className="relative">
               <button
                 onClick={() => setIsPlatformDropdownOpen(!isPlatformDropdownOpen)}
-                className="w-full p-2.5 rounded-lg bg-gray-800 border border-gray-700 text-white flex items-center justify-between text-left"
+                className="w-full p-2.5 rounded-lg bg-muted border border-border text-foreground flex items-center justify-between text-left"
               >
                 <div className="flex items-center">
                   <div className="mr-3 flex-shrink-0">{selectedPlatform.icon}</div>
                   <span>{t(`platform_${selectedPlatform.id}`)}</span>
                 </div>
                 <div className="flex items-center">
-                  <div className="text-gray-500 opacity-60 mr-2 flex-shrink-0">{selectedPlatform.icon}</div>
-                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${isPlatformDropdownOpen ? 'rotate-180' : ''}`} />
+                  <div className="text-muted-foreground opacity-60 mr-2 flex-shrink-0">{selectedPlatform.icon}</div>
+                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isPlatformDropdownOpen ? 'rotate-180' : ''}`} />
                 </div>
               </button>
 
               {/* قائمة الخيارات */}
               {isPlatformDropdownOpen && (
-                <div id="platform-dropdown" className="absolute mt-1 w-full z-50 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                <div id="platform-dropdown" className="absolute mt-1 w-full z-50 bg-card border border-border rounded-lg shadow-xl max-h-60 overflow-y-auto">
                   {tradingPlatforms.map((platform) => (
                     <button
                       key={platform.id}
@@ -1814,18 +1814,18 @@ export default function TradingSignalPage() {
                           handleChangePairType(newMarketType);
                         }
                       }}
-                      className={`w-full p-2 flex items-center justify-between hover:bg-gray-700 transition-colors ${
-                        selectedPlatform.id === platform.id ? 'bg-gray-700' : ''
+                      className={`w-full p-2 flex items-center justify-between hover:bg-muted transition-colors ${
+                        selectedPlatform.id === platform.id ? 'bg-muted' : ''
                       }`}
                     >
                       <div className="flex items-center">
                         <div className="flex-shrink-0 mr-3">{platform.icon}</div>
                         <div className="flex flex-col text-left">
-                          <span className="text-sm font-medium text-white">{t(`platform_${platform.id}`)}</span>
-                          <span className="text-xs text-gray-400">{platform.name}</span>
+                          <span className="text-sm font-medium text-foreground">{t(`platform_${platform.id}`)}</span>
+                          <span className="text-xs text-muted-foreground">{platform.name}</span>
                         </div>
                       </div>
-                      <div className="text-gray-500 opacity-60 mr-1 flex-shrink-0">{platform.icon}</div>
+                      <div className="text-muted-foreground opacity-60 mr-1 flex-shrink-0">{platform.icon}</div>
                     </button>
                   ))}
                 </div>
@@ -1833,28 +1833,28 @@ export default function TradingSignalPage() {
             </div>
 
             {/* عرض أيقونة المنصة المختارة */}
-            <div className="mt-2 flex items-center justify-between bg-gray-800/40 rounded-lg p-2 border border-gray-700/30">
+            <div className="mt-2 flex items-center justify-between bg-muted/40 rounded-lg p-2 border border-border/30">
               <div className="flex items-center">
                 <div className="flex-shrink-0 mr-3">{selectedPlatform.icon}</div>
                 <div className="flex flex-col">
-                  <span className="text-sm font-medium text-yellow-400">{t(`platform_${selectedPlatform.id}`)}</span>
-                  <span className="text-xs text-gray-400">{selectedPlatform.name}</span>
+                  <span className="text-sm font-medium text-primary">{t(`platform_${selectedPlatform.id}`)}</span>
+                  <span className="text-xs text-muted-foreground">{selectedPlatform.name}</span>
                 </div>
               </div>
-              <div className="text-yellow-400/60 flex-shrink-0">{selectedPlatform.icon}</div>
+              <div className="text-primary/60 flex-shrink-0">{selectedPlatform.icon}</div>
             </div>
 
             {/* عرض معلومات إضافية عن المنصة المختارة */}
-            <div className="mt-2 text-xs bg-gray-800/60 border border-gray-700/50 rounded-lg p-2 text-gray-300">
+            <div className="mt-2 text-xs bg-muted/60 border border-border/50 rounded-lg p-2 text-muted-foreground">
               <div className="flex items-center justify-between mb-1">
                 <span>{t('min_deposit')}</span>
-                <span className="font-medium text-white">{selectedPlatform.minAmount || '-'}</span>
+                <span className="font-medium text-foreground">{selectedPlatform.minAmount || '-'}</span>
               </div>
 
               {selectedPlatform.orderTypes && selectedPlatform.orderTypes.length > 0 && (
                 <div className="flex items-center justify-between mb-1">
                   <span>{t('order_types')}</span>
-                  <span className="font-medium text-white">
+                  <span className="font-medium text-foreground">
                     {selectedPlatform.orderTypes.map(type => t(type)).join(', ')}
                   </span>
                 </div>
@@ -1865,7 +1865,7 @@ export default function TradingSignalPage() {
                   {selectedPlatform.features.map((feature, index) => (
                     <span
                       key={index}
-                      className="inline-block px-1.5 py-0.5 bg-yellow-400/10 text-yellow-400 rounded text-[10px] border border-yellow-500/20"
+                      className="inline-block px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[10px] border border-primary/20"
                     >
                       {t(feature)}
                     </span>
@@ -1876,11 +1876,11 @@ export default function TradingSignalPage() {
           </div>
 
           {/* اختيار الزوج التداولي */}
-          <div className="trading-pair-selector p-3 border-b border-gray-700/60 bg-gray-800/30">
-            <label className="block text-[13px] font-medium mb-1.5 text-gray-300 flex items-center">
-              {selectedPair.type === 'forex' && <DollarSign className="h-3 w-3 ml-1 text-yellow-400" />}
-              {selectedPair.type === 'crypto' && <Bitcoin className="h-3 w-3 ml-1 text-yellow-400" />}
-              {selectedPair.type === 'stocks' && <LineChart className="h-3 w-3 ml-1 text-yellow-400" />}
+          <div className="trading-pair-selector p-3 border-b border-border bg-muted/30">
+            <label className="block text-[13px] font-medium mb-1.5 text-foreground flex items-center">
+              {selectedPair.type === 'forex' && <DollarSign className="h-3 w-3 ml-1 text-primary" />}
+              {selectedPair.type === 'crypto' && <Bitcoin className="h-3 w-3 ml-1 text-primary" />}
+              {selectedPair.type === 'stocks' && <LineChart className="h-3 w-3 ml-1 text-primary" />}
               {t('select_trading_pair')}
             </label>
 
@@ -1891,8 +1891,8 @@ export default function TradingSignalPage() {
                   onClick={() => handleChangePairType('forex')}
                   className={`flex-1 py-1 rounded-md text-xs border flex items-center justify-center ${
                     activePairType === 'forex'
-                      ? 'bg-yellow-400/10 border-yellow-500/20 text-yellow-400'
-                      : 'bg-gray-800 border-gray-700 text-white hover:bg-gray-700'
+                      ? 'bg-primary/10 border-primary/20 text-primary'
+                      : 'bg-muted border-border text-foreground hover:bg-muted/80'
                   }`}
                 >
                   <DollarSign className="h-3 w-3 ml-0.5" />
@@ -1905,8 +1905,8 @@ export default function TradingSignalPage() {
                   onClick={() => handleChangePairType('crypto')}
                   className={`flex-1 py-1 rounded-md text-xs border flex items-center justify-center ${
                     activePairType === 'crypto'
-                      ? 'bg-yellow-400/10 border-yellow-500/20 text-yellow-400'
-                      : 'bg-gray-800 border-gray-700 text-white hover:bg-gray-700'
+                      ? 'bg-primary/10 border-primary/20 text-primary'
+                      : 'bg-muted border-border text-foreground hover:bg-muted/80'
                   }`}
                 >
                   <Bitcoin className="h-3 w-3 ml-0.5" />
@@ -1919,8 +1919,8 @@ export default function TradingSignalPage() {
                   onClick={() => handleChangePairType('stocks')}
                   className={`flex-1 py-1 rounded-md text-xs border flex items-center justify-center ${
                     activePairType === 'stocks'
-                      ? 'bg-yellow-400/10 border-yellow-500/20 text-yellow-400'
-                      : 'bg-gray-800 border-gray-700 text-white hover:bg-gray-700'
+                      ? 'bg-primary/10 border-primary/20 text-primary'
+                      : 'bg-muted border-border text-foreground hover:bg-muted/80'
                   }`}
                 >
                   <LineChart className="h-3 w-3 ml-0.5" />
@@ -1937,12 +1937,12 @@ export default function TradingSignalPage() {
                   onClick={() => handlePairChange(pair)}
                   className={`py-2 px-2 text-sm rounded-lg border transition duration-150 flex flex-col items-center justify-center ${
                     selectedPair.symbol === pair.symbol
-                      ? 'bg-yellow-400/10 text-yellow-400 border-yellow-500/30 font-bold shadow-md'
-                      : 'bg-gray-800 border-gray-700 hover:bg-gray-700 text-white'
+                      ? 'bg-primary/10 text-primary border-primary/30 font-bold shadow-md'
+                      : 'bg-muted border-border hover:bg-muted/80 text-foreground'
                   }`}
                 >
                   <span className="text-sm font-medium">{pair.symbol}</span>
-                  <span className="text-[10px] text-gray-400">{pair.name}</span>
+                  <span className="text-[10px] text-muted-foreground">{pair.name}</span>
                 </button>
               ))}
             </div>
@@ -1951,11 +1951,11 @@ export default function TradingSignalPage() {
           {/* اختيار الإطار الزمني - مع إضافة علاقة الإطار الزمني بالسعر المتوقع */}
           <div className="time-frame-selector p-3">
             <div className="flex justify-between items-center mb-1.5">
-              <label className="block text-[13px] font-medium text-gray-300 flex items-center">
-                <Clock className="h-3 w-3 ml-1 text-yellow-400" />
+              <label className="block text-[13px] font-medium text-foreground flex items-center">
+                <Clock className="h-3 w-3 ml-1 text-primary" />
                 {t('select_timeframe')}
                 {selectedPlatform.expiryTimes && (
-                  <span className="mr-2 text-[10px] bg-gray-800 rounded px-1.5 py-0.5 border border-gray-700/50">
+                  <span className="mr-2 text-[10px] bg-muted rounded px-1.5 py-0.5 border border-border/50">
                     {t('available_timeframes_only')}
                   </span>
                 )}
@@ -2017,11 +2017,11 @@ export default function TradingSignalPage() {
 
         {/* منطقة عرض الإشارة */}
         <div className="signal-display w-full max-w-sm mb-4 overflow-hidden">
-          <div className="relative p-4 bg-gray-800/90 backdrop-blur-sm border border-gray-700/60 rounded-2xl shadow-xl">
+          <div className="relative p-4 bg-card/90 backdrop-blur-sm border border-border rounded-2xl shadow-xl">
             {/* عنوان المربع */}
             <div className="text-center mb-4">
-              <h3 className="text-sm font-medium text-yellow-400 mb-1">{t('current_signal')}</h3>
-              <div className="w-12 h-1 bg-yellow-400/20 mx-auto rounded-full"></div>
+              <h3 className="text-sm font-medium text-primary mb-1">{t('current_signal')}</h3>
+              <div className="w-12 h-1 bg-primary/20 mx-auto rounded-full"></div>
             </div>
 
             {/* عرض السعر الحالي والمتوقع */}
@@ -2032,8 +2032,8 @@ export default function TradingSignalPage() {
             {/* حالة الإشارة */}
             <div className="flex justify-center items-center mb-4">
               {signal === 'WAIT' ? (
-                <div className="text-gray-400 text-lg font-bold py-2 flex items-center">
-                  <Clock className="mr-1.5 h-4 w-4 animate-pulse text-yellow-400" />
+                <div className="text-muted-foreground text-lg font-bold py-2 flex items-center">
+                  <Clock className="mr-1.5 h-4 w-4 animate-pulse text-primary" />
                   <span className="animate-pulse">{t('waiting_for_signal')}</span>
                 </div>
               ) : (
@@ -2063,14 +2063,14 @@ export default function TradingSignalPage() {
             {signal !== 'WAIT' && (
               <>
                 {/* معلومات التحديث */}
-                <div className="flex items-center justify-center space-x-2 text-sm text-gray-300 pt-2 border-t border-gray-700/30">
+                <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground pt-2 border-t border-border/30">
                   <Clock className="h-4 w-4 ml-1.5 opacity-80" />
                   <div className="flex items-center gap-2 rtl">
-                    <span className="font-medium text-yellow-400">{selectedPair.symbol}</span>
-                    <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
+                    <span className="font-medium text-primary">{selectedPair.symbol}</span>
+                    <span className="w-1 h-1 bg-muted-foreground rounded-full"></span>
                     <span className="font-medium">{selectedTimeFrame}</span>
-                    <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
-                    <span className="text-gray-400">{new Date().toLocaleTimeString('ar-EG')}</span>
+                    <span className="w-1 h-1 bg-muted-foreground rounded-full"></span>
+                    <span className="text-muted-foreground">{new Date().toLocaleTimeString('ar-EG')}</span>
                   </div>
                 </div>
               </>
@@ -2083,10 +2083,10 @@ export default function TradingSignalPage() {
 
         {/* زر الحصول على إشارة */}
         <button
-          className={`get-signal-button w-full max-w-sm py-3 bg-yellow-400 hover:bg-yellow-500 text-black rounded-xl font-bold text-base shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 transform hover:translate-y-[-2px] active:translate-y-[1px] ${
+          className={`get-signal-button w-full max-w-sm py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold text-base shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 transform hover:translate-y-[-2px] active:translate-y-[1px] ${
             isCooldown
-              ? 'bg-gray-600 text-gray-200'
-              : 'bg-yellow-400 hover:bg-yellow-500 text-black'
+              ? 'bg-muted text-muted-foreground'
+              : 'bg-primary hover:bg-primary/90 text-primary-foreground'
           }`}
           onClick={getSignal}
           disabled={isLoading || !isMarketOpen || isCooldown}
@@ -2114,38 +2114,38 @@ export default function TradingSignalPage() {
       </main>
 
       {/* شريط التنقل السفلي */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-gray-900/90 backdrop-blur-md border-t border-gray-700/60 p-2">
+      <footer className="fixed bottom-0 left-0 right-0 bg-background/90 backdrop-blur-md border-t border-border p-2">
         <div className="max-w-lg mx-auto flex justify-around items-center">
           {user?.isAdmin ? (
-            <Link href="/admin" className="flex flex-col items-center min-w-[4rem] text-gray-400 hover:text-yellow-400">
+            <Link href="/admin" className="flex flex-col items-center min-w-[4rem] text-muted-foreground hover:text-primary">
               <Users className="h-5 w-5" />
               <span className="text-[10px] mt-1 font-medium">{t('users')}</span>
             </Link>
           ) : (
-            <Link href="/bot-info" className="flex flex-col items-center min-w-[4rem] text-gray-400 hover:text-yellow-400">
+            <Link href="/bot-info" className="flex flex-col items-center min-w-[4rem] text-muted-foreground hover:text-primary">
               <Bot className="h-5 w-5" />
               <span className="text-[10px] mt-1 font-medium">{t('bot_info')}</span>
             </Link>
           )}
 
-          <Link href="/indicators" className="flex flex-col items-center min-w-[4rem] text-gray-400 hover:text-yellow-400">
+          <Link href="/indicators" className="flex flex-col items-center min-w-[4rem] text-muted-foreground hover:text-primary">
             <BarChart2 className="h-5 w-5" />
             <span className="text-[10px] mt-1 font-medium">{t('indicators')}</span>
           </Link>
 
-          <Link href="/" className="flex flex-col items-center min-w-[4rem] text-yellow-400">
-            <div className="relative p-3 bg-yellow-400 text-black rounded-full -mt-5 shadow-lg border-4 border-gray-900/90">
+          <Link href="/" className="flex flex-col items-center min-w-[4rem] text-primary">
+            <div className="relative p-3 bg-primary text-primary-foreground rounded-full -mt-5 shadow-lg border-4 border-background/90">
               <DollarSign className="h-6 w-6" />
             </div>
             <span className="text-[10px] mt-1 font-medium">{t('signal')}</span>
           </Link>
 
-          <Link href="/group-chat" className="flex flex-col items-center min-w-[4rem] text-gray-400 hover:text-yellow-400">
+          <Link href="/group-chat" className="flex flex-col items-center min-w-[4rem] text-muted-foreground hover:text-primary">
             <MessageCircle className="h-5 w-5" />
             <span className="text-[10px] mt-1 font-medium">{t('chat')}</span>
           </Link>
 
-          <Link href="/settings" className="flex flex-col items-center min-w-[4rem] text-gray-400 hover:text-yellow-400">
+          <Link href="/settings" className="flex flex-col items-center min-w-[4rem] text-muted-foreground hover:text-primary">
             <Settings className="h-5 w-5" />
             <span className="text-[10px] mt-1 font-medium">{t('settings')}</span>
           </Link>

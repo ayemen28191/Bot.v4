@@ -571,7 +571,7 @@ export default function DeploymentPage() {
                                       <MoreVertical className="h-4 w-4" />
                                     </Button>
                                   </DropdownMenuTrigger>
-                                  <DropdownMenuContent align={isRTL ? "start" : "end"} className="bg-card border-border text-foreground"
+                                  <DropdownMenuContent align={isRTL ? "start" : "end"} className="bg-card border-border text-foreground">
                                     <DropdownMenuItem 
                                       className="cursor-pointer hover:bg-muted focus:bg-muted"
                                       onClick={() => openEditDialog(server)}
