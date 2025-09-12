@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'wouter';
 import { ArrowLeft, User, Camera, Send, Users, Settings, File, Clock, LineChart, BarChart, DollarSign, MessageCircle, Bell, ArrowDownToLine, ArrowUpFromLine, Bot } from 'lucide-react';
-import { useStore } from '../store/chatStore';
-import { t } from '../lib/i18n';
+import { useStore } from '@/store/chatStore';
+import { t } from '@/lib/i18n';
 import NotificationService from '@/lib/notifications';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';

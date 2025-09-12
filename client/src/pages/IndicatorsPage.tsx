@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { ArrowLeft, Settings, LineChart, BarChart, DollarSign, MessageCircle, TrendingUp, TrendingDown, ChevronsUp, ChevronsDown, Activity, RefreshCw, Users, Bot } from 'lucide-react';
-import { useTimezone } from '../hooks/use-timezone';
+import { useTimezone } from '@/hooks/use-timezone';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { apiRequest } from '../lib/queryClient';
-import { t } from '../lib/i18n';
+import { apiRequest } from '@/lib/queryClient';
+import { t } from '@/lib/i18n';
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";

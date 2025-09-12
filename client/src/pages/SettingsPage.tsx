@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { ArrowLeft, Bell, Clock, DollarSign, LineChart, Settings, MessageCircle, Globe, BarChart, Users, LogOut, Bot } from 'lucide-react';
-import { setLanguage, supportedLanguages, t, getCurrentLanguage } from '../lib/i18n';
+import { setLanguage, supportedLanguages, t, getCurrentLanguage } from '@/lib/i18n';
 import { useAuth } from '@/hooks/use-auth';
 
 export default function SettingsPage() {

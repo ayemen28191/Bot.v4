@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, Lock, Hourglass, TrendingUp, TrendingDown, ArrowUp, ArrowDown, AlertCircle, Activity } from 'lucide-react';
-import { t } from '../lib/i18n';
+import { t } from '@/lib/i18n';
 
 export type TimeFrame = '1M' | '5M' | '15M' | '1H' | '4H' | '1D';
 

@@ -4,7 +4,7 @@ import { AlertTriangle, RefreshCw, WifiOff, CloudOff, Check, Clock } from 'lucid
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import { useStore as useChatStore } from '../store/chatStore';
+import { useStore as useChatStore } from '@/store/chatStore';
 import { Progress } from './ui/progress';
 import { Separator } from './ui/separator';
 

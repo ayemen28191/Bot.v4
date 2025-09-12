@@ -16,9 +16,9 @@ import {
   RefreshCw,
   BarChart 
 } from 'lucide-react';
-import { useTimezone } from '../hooks/use-timezone';
+import { useTimezone } from '@/hooks/use-timezone';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { t } from '../lib/i18n';
+import { t } from '@/lib/i18n';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
