@@ -70,24 +70,24 @@
   }
 
   :root[data-theme="dark"] {
-    --background: 211 28% 13%;
+    --background: 213 33% 15%;
     --foreground: 0 0% 95%;
-    --card: 211 20% 18%;
+    --card: 213 25% 22%;
     --card-foreground: 0 0% 95%;
-    --popover: 211 28% 13%;
+    --popover: 213 33% 15%;
     --popover-foreground: 0 0% 95%;
     --primary: 48 96% 53%;
-    --primary-foreground: 211 28% 13%;
-    --secondary: 211 16% 24%;
+    --primary-foreground: 213 33% 15%;
+    --secondary: 213 20% 28%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 211 16% 20%;
+    --muted: 213 20% 25%;
     --muted-foreground: 0 0% 70%;
-    --accent: 211 16% 24%;
+    --accent: 213 20% 28%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 98%;
-    --border: 211 16% 24%;
-    --input: 211 16% 24%;
+    --border: 213 20% 28%;
+    --input: 213 20% 28%;
     --ring: 48 96% 53%;
     --success: 142 60% 45%;
     --success-foreground: 0 0% 100%;
