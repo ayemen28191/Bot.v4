@@ -3,7 +3,7 @@ import { t } from "@/lib/i18n";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { 
   AlertCircle, ArrowLeft, BarChart, Check, DollarSign, Edit, Eye, EyeOff, KeyRound,
@@ -363,7 +363,7 @@ export default function AdminDashboard() {
                             <TableCell className="max-w-[150px] truncate">{user.email}</TableCell>
                             <TableCell>
                               {user.isAdmin ? (
-                                <span className="px-2 py-1 rounded text-xs bg-yellow-500/20 text-yellow-700 border border-yellow-500/30">
+                                <span className="px-2 py-1 rounded text-xs bg-amber-500/20 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-500/30">
                                   {t('admin')}
                                 </span>
                               ) : (
@@ -456,6 +456,9 @@ export default function AdminDashboard() {
             <DialogTitle className="text-center text-primary">
               {editingUser ? t('edit_user') : t('add_user')}
             </DialogTitle>
+            <DialogDescription className="text-center text-muted-foreground">
+              {editingUser ? 'تحديث معلومات المستخدم في النظام' : 'إضافة مستخدم جديد إلى النظام'}
+            </DialogDescription>
           </DialogHeader>
           
           {editingUser ? (
@@ -626,7 +629,7 @@ export default function AdminDashboard() {
                             type={showPassword ? "text" : "password"} 
                             placeholder={t('enter_password')} 
                             {...field} 
-                            className="bg-gray-700 border-gray-600 pr-10"
+                            className="bg-background border-border pr-10"
                           />
                         </FormControl>
                         <button 
@@ -635,9 +638,9 @@ export default function AdminDashboard() {
                           onClick={() => setShowPassword(!showPassword)}
                         >
                           {showPassword ? (
-                            <EyeOff className="h-4 w-4 text-gray-400" />
+                            <EyeOff className="h-4 w-4 text-muted-foreground" />
                           ) : (
-                            <Eye className="h-4 w-4 text-gray-400" />
+                            <Eye className="h-4 w-4 text-muted-foreground" />
                           )}
                         </button>
                       </div>
@@ -696,6 +699,9 @@ export default function AdminDashboard() {
             <DialogTitle className="text-center text-red-600">
               {t('confirm_delete')}
             </DialogTitle>
+            <DialogDescription className="text-center text-muted-foreground">
+              تأكيد حذف المستخدم من النظام نهائياً
+            </DialogDescription>
           </DialogHeader>
           
           <div className="py-4 text-center">
