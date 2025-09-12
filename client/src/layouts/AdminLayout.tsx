@@ -53,8 +53,8 @@ const NavItem = ({
         className={cn(
           "w-full justify-start",
           isActive 
-            ? "bg-gray-800 text-yellow-400" 
-            : "text-gray-400 hover:bg-gray-800 hover:text-gray-100",
+            ? "bg-primary/20 text-primary" 
+            : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
           isSidebarCollapsed && "h-10 w-10"
         )}
       >
@@ -131,24 +131,24 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex">
+    <div className="min-h-screen bg-background text-foreground flex">
       {/* الشريط الجانبي للشاشات الكبيرة */}
       <aside
         className={cn(
           "hidden md:flex h-screen fixed z-10 flex-col transition-all duration-200 ease-in-out",
           sidebarCollapsed ? "w-16" : "w-64",
-          isRTL ? "right-0 border-l border-gray-700/50" : "left-0 border-r border-gray-700/50",
-          "bg-gray-900/95 backdrop-blur-sm"
+          isRTL ? "right-0 border-l border-border" : "left-0 border-r border-border",
+          "bg-background/95 backdrop-blur-sm"
         )}
       >
         <div className="flex items-center justify-between p-4 h-14">
           {!sidebarCollapsed && (
-            <div className="font-bold text-lg text-yellow-400">{t('admin_panel')}</div>
+            <div className="font-bold text-lg text-primary">{t('admin_panel')}</div>
           )}
           <Button
             variant="ghost"
             size="icon"
-            className="text-gray-400 hover:text-white"
+            className="text-muted-foreground hover:text-foreground"
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
             title={sidebarCollapsed ? t('expand') : t('collapse')}
           >
@@ -160,7 +160,7 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
           </Button>
         </div>
 
-        <Separator className="bg-gray-800/50" />
+        <Separator className="bg-border" />
 
         <div className="flex-1 overflow-auto py-4">
           <nav className="space-y-1 px-2">
@@ -190,7 +190,7 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
           </nav>
         </div>
 
-        <Separator className="bg-gray-800/50" />
+        <Separator className="bg-border" />
 
         <div className="p-4">
           <TooltipProvider delayDuration={400}>
@@ -203,7 +203,7 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
                     onClick={handleLogout}
                     className={cn(
                       sidebarCollapsed ? "h-10 w-10" : "w-full justify-start",
-                      "text-gray-400 hover:bg-gray-800 hover:text-red-400"
+                      "text-muted-foreground hover:bg-accent hover:text-destructive"
                     )}
                   >
                     {isRTL ? (
@@ -232,27 +232,27 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
 
       {/* القائمة المتنقلة للجوال */}
       <div className={cn(
-        "fixed inset-0 z-50 bg-black/80 md:hidden transition-opacity",
+        "fixed inset-0 z-50 bg-background/80 md:hidden transition-opacity",
         mobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
       )}>
         <div className={cn(
-          "fixed inset-y-0 w-3/4 max-w-sm bg-gray-900 z-50 transition-transform duration-300 ease-in-out border-gray-700/50",
+          "fixed inset-y-0 w-3/4 max-w-sm bg-background z-50 transition-transform duration-300 ease-in-out border-border",
           isRTL ? "right-0 border-l" : "left-0 border-r",
           mobileMenuOpen ? "translate-x-0" : isRTL ? "translate-x-full" : "-translate-x-full"
         )}>
           <div className="flex items-center justify-between p-4 h-14">
-            <div className="font-bold text-lg text-yellow-400">{t('admin_panel')}</div>
+            <div className="font-bold text-lg text-primary">{t('admin_panel')}</div>
             <Button
               variant="ghost"
               size="icon"
-              className="text-gray-400 hover:text-white"
+              className="text-muted-foreground hover:text-foreground"
               onClick={() => setMobileMenuOpen(false)}
             >
               <X size={18} />
             </Button>
           </div>
 
-          <Separator className="bg-gray-800/50" />
+          <Separator className="bg-border" />
 
           <div className="flex-1 overflow-auto py-4">
             <nav className="space-y-1 px-2">
@@ -270,12 +270,12 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
             </nav>
           </div>
 
-          <Separator className="bg-gray-800/50" />
+          <Separator className="bg-border" />
 
           <div className="p-4">
             <Button
               variant="ghost"
-              className="w-full justify-start text-gray-400 hover:bg-gray-800 hover:text-red-400"
+              className="w-full justify-start text-muted-foreground hover:bg-accent hover:text-destructive"
               onClick={handleLogout}
             >
               {isRTL ? (
@@ -303,23 +303,23 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
           : sidebarCollapsed ? "md:pl-16" : "md:pl-64"
       )}>
         {/* شريط العنوان */}
-        <header className="sticky top-0 z-20 flex items-center justify-between h-14 px-4 border-b border-gray-800/75 bg-gray-900/75 backdrop-blur-sm">
+        <header className="sticky top-0 z-20 flex items-center justify-between h-14 px-4 border-b border-border bg-background/75 backdrop-blur-sm">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden text-gray-400 hover:text-white"
+              className="md:hidden text-muted-foreground hover:text-foreground"
               onClick={() => setMobileMenuOpen(true)}
             >
               <Menu size={18} />
             </Button>
-            <h1 className="text-lg font-semibold text-white">{t('admin_panel')}</h1>
+            <h1 className="text-lg font-semibold text-foreground">{t('admin_panel')}</h1>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-300 hidden sm:inline-block">
+            <span className="text-sm text-foreground hidden sm:inline-block">
               {user.displayName} 
-              <span className="text-xs text-gray-500 ml-1">({user.username})</span>
+              <span className="text-xs text-muted-foreground ml-1">({user.username})</span>
             </span>
           </div>
         </header>

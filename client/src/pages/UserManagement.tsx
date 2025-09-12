@@ -51,7 +51,7 @@ const userUpdateSchema = z.object({
   email: z.string().email(t('email_validation')),
   isAdmin: z.boolean().default(false),
   password: z.string().min(6, t('password_validation')).optional(),
-  changePassword: z.boolean().default(false),
+  changePassword: z.boolean().default(false).optional(),
 });
 
 type UserFormValues = z.infer<typeof userFormSchema>;
@@ -287,10 +287,10 @@ export default function UserManagement() {
   return (
     <AdminLayout title={t('user_management')}>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-yellow-400">{t('user_management')}</h2>
+        <h2 className="text-xl font-bold text-primary">{t('user_management')}</h2>
         <Button 
           size="sm" 
-          className="bg-yellow-500 hover:bg-yellow-600 text-black"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground"
           onClick={() => {
             setEditingUser(null);
             form.reset();
@@ -306,11 +306,11 @@ export default function UserManagement() {
           {/* أدوات البحث والتصفية */}
           <div className="flex flex-col sm:flex-row gap-3 mb-6">
             <div className="relative flex-grow">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 type="text"
                 placeholder={t('search_users')}
-                className="pl-10 bg-gray-800 border-gray-700 w-full"
+                className="pl-10 bg-background border-border w-full"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -321,7 +321,7 @@ export default function UserManagement() {
                 id="show-admins"
                 checked={showAdminsOnly}
                 onCheckedChange={() => setShowAdminsOnly(!showAdminsOnly)}
-                className="data-[state=checked]:bg-yellow-500 data-[state=checked]:border-yellow-500"
+                className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               />
               <label htmlFor="show-admins" className="cursor-pointer">
                 {t('admins_only')}
@@ -330,20 +330,20 @@ export default function UserManagement() {
           </div>
           
           {/* قائمة المستخدمين */}
-          <div className="bg-gray-800 rounded-lg overflow-hidden border border-gray-700">
+          <div className="bg-card rounded-lg overflow-hidden border border-border">
             {loading ? (
               <div className="flex justify-center items-center py-20">
-                <Loader2 className="h-8 w-8 animate-spin text-yellow-400" />
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : filteredUsers.length === 0 ? (
-              <div className="text-center py-12 text-gray-400">
+              <div className="text-center py-12 text-muted-foreground">
                 <Users className="h-12 w-12 mx-auto mb-3 opacity-20" />
                 <p>{searchTerm ? t('no_users_found') : t('no_users')}</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-700/50">
+                  <thead className="bg-muted/50">
                     <tr>
                       <th className="px-4 py-3 text-right font-medium">{t('username')}</th>
                       <th className="px-4 py-3 text-right font-medium">{t('display_name')}</th>
@@ -352,19 +352,19 @@ export default function UserManagement() {
                       <th className="px-4 py-3 text-right font-medium">{t('actions')}</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-700">
+                  <tbody className="divide-y divide-border">
                     {filteredUsers.map(user => (
-                      <tr key={user.id} className="hover:bg-gray-700/30">
+                      <tr key={user.id} className="hover:bg-muted/30">
                         <td className="px-4 py-3">{user.username}</td>
                         <td className="px-4 py-3">{user.displayName}</td>
-                        <td className="px-4 py-3 text-gray-300">{user.email}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{user.email}</td>
                         <td className="px-4 py-3">
                           {user.isAdmin ? (
-                            <Badge className="bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30">
+                            <Badge className="bg-primary/20 text-primary hover:bg-primary/30">
                               {t('admin')}
                             </Badge>
                           ) : (
-                            <Badge className="bg-blue-500/20 text-blue-400 hover:bg-blue-500/30">
+                            <Badge className="bg-secondary/20 text-secondary-foreground hover:bg-secondary/30">
                               {t('user')}
                             </Badge>
                           )}
@@ -372,13 +372,13 @@ export default function UserManagement() {
                         <td className="px-4 py-3">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="outline" size="sm" className="h-8 border-gray-600">
+                              <Button variant="outline" size="sm" className="h-8 border-border">
                                 <Filter className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent className="bg-gray-800 border-gray-700">
+                            <DropdownMenuContent className="bg-popover border-border">
                               <DropdownMenuItem
-                                className="cursor-pointer text-gray-200 focus:bg-gray-700 focus:text-gray-200"
+                                className="cursor-pointer text-foreground focus:bg-accent focus:text-accent-foreground"
                                 onClick={() => openEditDialog(user)}
                               >
                                 <Edit className="mr-2 h-4 w-4" />
@@ -387,7 +387,7 @@ export default function UserManagement() {
                               
                               {user.id !== 1 && ( // لا تسمح بحذف المشرف الرئيسي
                                 <DropdownMenuItem
-                                  className="cursor-pointer text-red-400 focus:bg-red-900/20 focus:text-red-400"
+                                  className="cursor-pointer text-destructive focus:bg-destructive/20 focus:text-destructive"
                                   onClick={() => openDeleteConfirm(user)}
                                 >
                                   <Trash className="mr-2 h-4 w-4" />
@@ -408,9 +408,9 @@ export default function UserManagement() {
 
       {/* نافذة إضافة/تحرير مستخدم */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="bg-gray-800 text-white border-gray-700">
+        <DialogContent className="bg-card text-card-foreground border-border">
           <DialogHeader>
-            <DialogTitle className="text-center text-yellow-400">
+            <DialogTitle className="text-center text-primary">
               {editingUser ? t('edit_user') : t('add_user')}
             </DialogTitle>
           </DialogHeader>
@@ -428,10 +428,10 @@ export default function UserManagement() {
                         <Input 
                           placeholder={t('enter_username')} 
                           {...field} 
-                          className="bg-gray-700 border-gray-600"
+                          className="bg-input border-border"
                         />
                       </FormControl>
-                      <FormMessage className="text-red-400" />
+                      <FormMessage className="text-destructive" />
                     </FormItem>
                   )}
                 />
@@ -446,10 +446,10 @@ export default function UserManagement() {
                         <Input 
                           placeholder={t('enter_display_name')} 
                           {...field} 
-                          className="bg-gray-700 border-gray-600"
+                          className="bg-input border-border"
                         />
                       </FormControl>
-                      <FormMessage className="text-red-400" />
+                      <FormMessage className="text-destructive" />
                     </FormItem>
                   )}
                 />
@@ -465,10 +465,10 @@ export default function UserManagement() {
                           type="email" 
                           placeholder={t('enter_email')} 
                           {...field} 
-                          className="bg-gray-700 border-gray-600"
+                          className="bg-input border-border"
                         />
                       </FormControl>
-                      <FormMessage className="text-red-400" />
+                      <FormMessage className="text-destructive" />
                     </FormItem>
                   )}
                 />
@@ -483,7 +483,7 @@ export default function UserManagement() {
                           checked={field.value}
                           onCheckedChange={field.onChange}
                           disabled={editingUser?.id === 1} // لا يمكن تغيير صلاحيات المشرف الرئيسي
-                          className="data-[state=checked]:bg-yellow-500 data-[state=checked]:border-yellow-500"
+                          className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                         />
                       </FormControl>
                       <FormLabel className="font-normal">
@@ -509,7 +509,7 @@ export default function UserManagement() {
                               updateForm.setValue("password", "");
                             }
                           }}
-                          className="data-[state=checked]:bg-yellow-500 data-[state=checked]:border-yellow-500"
+                          className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                         />
                       </FormControl>
                       <FormLabel className="font-normal">
@@ -533,11 +533,11 @@ export default function UserManagement() {
                               type={showPassword ? "text" : "password"} 
                               placeholder={t('enter_password')} 
                               {...field} 
-                              className="bg-gray-700 border-gray-600 pr-10"
+                              className="bg-input border-border pr-10"
                             />
                             <button 
                               type="button"
-                              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-300"
+                              className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
                               onClick={() => setShowPassword(!showPassword)}
                               tabIndex={-1}
                             >
@@ -549,7 +549,7 @@ export default function UserManagement() {
                             </button>
                           </div>
                         </FormControl>
-                        <FormMessage className="text-red-400" />
+                        <FormMessage className="text-destructive" />
                       </FormItem>
                     )}
                   />
@@ -560,13 +560,13 @@ export default function UserManagement() {
                     type="button" 
                     variant="outline" 
                     onClick={() => setDialogOpen(false)}
-                    className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                    className="border-border text-muted-foreground hover:bg-muted"
                   >
                     {t('cancel')}
                   </Button>
                   <Button 
                     type="submit" 
-                    className="bg-yellow-500 hover:bg-yellow-600 text-black"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
                     disabled={isSubmitting}
                   >
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -588,10 +588,10 @@ export default function UserManagement() {
                         <Input 
                           placeholder={t('enter_username')} 
                           {...field} 
-                          className="bg-gray-700 border-gray-600"
+                          className="bg-input border-border"
                         />
                       </FormControl>
-                      <FormMessage className="text-red-400" />
+                      <FormMessage className="text-destructive" />
                     </FormItem>
                   )}
                 />
@@ -606,10 +606,10 @@ export default function UserManagement() {
                         <Input 
                           placeholder={t('enter_display_name')} 
                           {...field} 
-                          className="bg-gray-700 border-gray-600"
+                          className="bg-input border-border"
                         />
                       </FormControl>
-                      <FormMessage className="text-red-400" />
+                      <FormMessage className="text-destructive" />
                     </FormItem>
                   )}
                 />
@@ -625,10 +625,10 @@ export default function UserManagement() {
                           type="email" 
                           placeholder={t('enter_email')} 
                           {...field} 
-                          className="bg-gray-700 border-gray-600"
+                          className="bg-input border-border"
                         />
                       </FormControl>
-                      <FormMessage className="text-red-400" />
+                      <FormMessage className="text-destructive" />
                     </FormItem>
                   )}
                 />
@@ -645,22 +645,22 @@ export default function UserManagement() {
                             type={showPassword ? "text" : "password"} 
                             placeholder={t('enter_password')} 
                             {...field} 
-                            className="bg-gray-700 border-gray-600 pr-10"
+                            className="bg-input border-border pr-10"
                           />
                         </FormControl>
                         <button 
                           type="button"
-                          className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground"
                           onClick={() => setShowPassword(!showPassword)}
                         >
                           {showPassword ? (
-                            <EyeOff className="h-4 w-4 text-gray-400" />
+                            <EyeOff className="h-4 w-4 text-muted-foreground" />
                           ) : (
-                            <Eye className="h-4 w-4 text-gray-400" />
+                            <Eye className="h-4 w-4 text-muted-foreground" />
                           )}
                         </button>
                       </div>
-                      <FormMessage className="text-red-400" />
+                      <FormMessage className="text-destructive" />
                     </FormItem>
                   )}
                 />
@@ -674,7 +674,7 @@ export default function UserManagement() {
                         <Checkbox
                           checked={field.value}
                           onCheckedChange={field.onChange}
-                          className="data-[state=checked]:bg-yellow-500 data-[state=checked]:border-yellow-500"
+                          className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                         />
                       </FormControl>
                       <FormLabel className="font-normal">
@@ -689,13 +689,13 @@ export default function UserManagement() {
                     type="button" 
                     variant="outline" 
                     onClick={() => setDialogOpen(false)}
-                    className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                    className="border-border text-muted-foreground hover:bg-muted"
                   >
                     {t('cancel')}
                   </Button>
                   <Button 
                     type="submit" 
-                    className="bg-yellow-500 hover:bg-yellow-600 text-black"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
                     disabled={isSubmitting}
                   >
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -710,21 +710,21 @@ export default function UserManagement() {
 
       {/* نافذة تأكيد الحذف */}
       <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
-        <AlertDialogContent className="bg-gray-800 text-white border-gray-700">
+        <AlertDialogContent className="bg-card text-card-foreground border-border">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-center text-yellow-400">{t('confirm_delete')}</AlertDialogTitle>
-            <AlertDialogDescription className="text-center text-gray-300">
+            <AlertDialogTitle className="text-center text-primary">{t('confirm_delete')}</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-muted-foreground">
               {t('confirm_delete_user_message')} <strong className="text-white">{userToDelete?.username}</strong>؟
-              <div className="text-red-400 text-sm mt-2">{t('this_action_cannot_be_undone')}</div>
+              <div className="text-destructive text-sm mt-2">{t('this_action_cannot_be_undone')}</div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex sm:justify-between">
-            <AlertDialogCancel className="border-gray-600 text-gray-300 hover:bg-gray-700 flex-1 mr-2">
+            <AlertDialogCancel className="border-border text-muted-foreground hover:bg-muted flex-1 mr-2">
               <X className="h-4 w-4 mr-2" /> {t('cancel')}
             </AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleDeleteUser}
-              className="bg-red-600 hover:bg-red-700 text-white flex-1"
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground flex-1"
               disabled={isSubmitting}
             >
               {isSubmitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Trash className="h-4 w-4 mr-2" />}
