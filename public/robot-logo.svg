@@ -1,0 +1,27 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="currentColor">
+  <!-- رأس الروبوت -->
+  <rect x="25" y="15" width="50" height="40" rx="8" fill="#FFD700" stroke="#333" stroke-width="2"/>
+  
+  <!-- العيون -->
+  <circle cx="35" cy="28" r="3" fill="#333"/>
+  <circle cx="65" cy="28" r="3" fill="#333"/>
+  
+  <!-- الفم -->
+  <rect x="40" y="38" width="20" height="3" rx="1.5" fill="#333"/>
+  
+  <!-- الجسم -->
+  <rect x="30" y="55" width="40" height="30" rx="5" fill="#4CAF50" stroke="#333" stroke-width="2"/>
+  
+  <!-- الأذرع -->
+  <circle cx="18" cy="65" r="6" fill="#FFD700" stroke="#333" stroke-width="2"/>
+  <circle cx="82" cy="65" r="6" fill="#FFD700" stroke="#333" stroke-width="2"/>
+  
+  <!-- الأرجل -->
+  <rect x="38" y="85" width="8" height="12" rx="4" fill="#333"/>
+  <rect x="54" y="85" width="8" height="12" rx="4" fill="#333"/>
+  
+  <!-- الهوائي -->
+  <line x1="50" y1="15" x2="50" y2="5" stroke="#333" stroke-width="2"/>
+  <circle cx="50" cy="5" r="2" fill="#FF4444"/>
+</svg>
