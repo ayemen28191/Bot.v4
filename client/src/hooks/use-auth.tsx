@@ -8,6 +8,7 @@ import { User as SelectUser, InsertUser } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { initializeLanguageSystem, clearLanguageOnLogout } from "@/lib/i18n";
+import { initializeThemeSystem, clearThemeOnLogout } from "@/lib/themeSystem";
 
 type AuthContextType = {
   user: SelectUser | null;
@@ -33,10 +34,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
-  // Initialize language system when user data changes
+  // Initialize language and theme systems when user data changes
   useEffect(() => {
     if (user) {
       initializeLanguageSystem(user);
+      initializeThemeSystem(user);
     }
   }, [user]);
 
@@ -50,6 +52,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Initialize language system immediately with user data
       console.log('Login successful, initializing language system with user:', user);
       initializeLanguageSystem(user);
+      // Initialize theme system immediately with user data
+      console.log('Login successful, initializing theme system with user:', user);
+      initializeThemeSystem(user);
       toast({
         title: "تم تسجيل الدخول بنجاح",
         description: `مرحباً ${user.displayName}`,
@@ -74,6 +79,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Initialize language system immediately with user data
       console.log('Registration successful, initializing language system with user:', user);
       initializeLanguageSystem(user);
+      // Initialize theme system immediately with user data
+      console.log('Registration successful, initializing theme system with user:', user);
+      initializeThemeSystem(user);
       toast({
         title: "تم إنشاء الحساب بنجاح",
         description: `مرحباً ${user.displayName}`,
@@ -97,6 +105,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Clear language data and reset to English on logout
       console.log('Logout successful, clearing language data and resetting to English');
       clearLanguageOnLogout();
+      // Clear theme data and reset to system on logout
+      console.log('Logout successful, clearing theme data and resetting to system');
+      clearThemeOnLogout();
       toast({
         title: "تم تسجيل الخروج بنجاح",
       });

@@ -65,6 +65,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   isAdmin: true,
   preferredLanguage: true,
+  preferredTheme: true,
 });
 
 export const insertConfigKeySchema = createInsertSchema(configKeys).pick({

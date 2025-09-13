@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { ArrowLeft, Bell, Clock, DollarSign, LineChart, Settings, MessageCircle, Globe, BarChart, Users, LogOut, Bot } from 'lucide-react';
 import { setLanguage, supportedLanguages, t, getCurrentLanguage, initializeLanguageSystem } from '@/lib/i18n';
+import { changeTheme, getCurrentTheme, supportedThemes, type Theme } from '@/lib/themeSystem';
 import { useAuth } from '@/hooks/use-auth';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -50,29 +51,13 @@ export default function SettingsPage() {
   });
 
   const [theme, setTheme] = useState(() => {
-    try {
-      const savedSettings = localStorage.getItem('settings');
-      if (savedSettings) {
-        const settings = JSON.parse(savedSettings);
-        return settings.theme || 'light';
-      }
-    } catch (e) {
-      console.error('خطأ في تحميل إعدادات السمة:', e);
-    }
-    return 'light'; 
+    return getCurrentTheme(user);
   });
 
   useEffect(() => {
-    const applyTheme = (selectedTheme: string) => {
-      if (selectedTheme === 'system') {
-        const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
-      } else {
-        document.documentElement.setAttribute('data-theme', selectedTheme);
-      }
-    };
-
-    applyTheme(theme);
+    // تحديث السمة عند تغيير المستخدم
+    const userTheme = getCurrentTheme(user);
+    setTheme(userTheme);
 
     if (theme === 'system') {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -161,7 +146,24 @@ export default function SettingsPage() {
     
     // Save to database if user is logged in
     if (user) {
-      saveUserSettingsMutation.mutate(newLang);
+      saveUserSettingsMutation.mutate({ preferredLanguage: newLang });
+    } else {
+      // For non-logged users, just show success locally
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+      }, 3000);
+    }
+  };
+
+  const handleThemeChange = (newTheme: Theme) => {
+    setTheme(newTheme);
+    // Apply theme immediately using the new system
+    changeTheme(newTheme, false);
+    
+    // Save to database if user is logged in
+    if (user) {
+      saveUserSettingsMutation.mutate({ preferredTheme: newTheme });
     } else {
       // For non-logged users, just show success locally
       setShowSuccess(true);
@@ -178,35 +180,17 @@ export default function SettingsPage() {
   ];
 
   const saveSettings = () => {
-    // Save to localStorage first for immediate UI response
+    // Save general settings to localStorage (notifications, timezone)
     localStorage.setItem('settings', JSON.stringify({
       notifications,
       timezone,
-      language,
-      theme,
     }));
-
-    // Apply theme immediately
-    if (theme === 'system') {
-      const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
-    } else {
-      document.documentElement.setAttribute('data-theme', theme);
-    }
-
-    // Apply language immediately
-    setLanguage(language, false);
     
-    // Save language to database if user is logged in
-    if (user && user.preferredLanguage !== language) {
-      saveUserSettingsMutation.mutate(language);
-    } else {
-      // Show success for non-authenticated users or if no change needed
-      setShowSuccess(true);
-      setTimeout(() => {
-        setShowSuccess(false);
-      }, 3000);
-    }
+    // Language and theme are now saved automatically when changed
+    setShowSuccess(true);
+    setTimeout(() => {
+      setShowSuccess(false);
+    }, 3000);
     
     window.dispatchEvent(new Event('storage'));
   };
@@ -382,7 +366,7 @@ export default function SettingsPage() {
                           ? 'bg-yellow-400 text-black border-yellow-500 font-bold shadow-md'
                           : 'bg-gray-700 border-gray-600 hover:bg-gray-650'
                       }`}
-                      onClick={() => setTheme(t.id)}
+                      onClick={() => handleThemeChange(t.id as Theme)}
                     >
                       {t.name}
                     </button>

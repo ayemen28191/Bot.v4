@@ -61,7 +61,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // إرجاع إعدادات المستخدم (بدون معلومات حساسة)
       res.json({
-        preferredLanguage: user.preferredLanguage || 'en'
+        preferredLanguage: user.preferredLanguage || 'en',
+        preferredTheme: user.preferredTheme || 'system'
       });
     } catch (error) {
       console.error('Error fetching user settings:', error);
@@ -73,30 +74,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/user/settings', isAuthenticated, async (req, res) => {
     try {
       const userId = req.user!.id;
-      const { preferredLanguage } = req.body;
+      const { preferredLanguage, preferredTheme } = req.body;
+      
+      // إعداد كائن التحديث
+      const updateData: any = {};
       
       // التحقق من صحة اللغة المطلوبة
-      if (!preferredLanguage || typeof preferredLanguage !== 'string') {
-        return res.status(400).json({ error: 'لغة المفضلة مطلوبة ويجب أن تكون نص' });
+      if (preferredLanguage) {
+        if (typeof preferredLanguage !== 'string') {
+          return res.status(400).json({ error: 'اللغة المفضلة يجب أن تكون نص' });
+        }
+        
+        // قائمة باللغات المدعومة (متطابقة مع الواجهة الأمامية)
+        const supportedLanguages = ['ar', 'en', 'hi'];
+        if (!supportedLanguages.includes(preferredLanguage)) {
+          return res.status(400).json({ 
+            error: 'اللغة غير مدعومة',
+            supportedLanguages 
+          });
+        }
+        
+        updateData.preferredLanguage = preferredLanguage.trim().toLowerCase();
       }
       
-      // قائمة باللغات المدعومة (متطابقة مع الواجهة الأمامية)
-      const supportedLanguages = ['ar', 'en', 'hi'];
-      if (!supportedLanguages.includes(preferredLanguage)) {
-        return res.status(400).json({ 
-          error: 'اللغة غير مدعومة',
-          supportedLanguages 
-        });
+      // التحقق من صحة السمة المطلوبة
+      if (preferredTheme) {
+        if (typeof preferredTheme !== 'string') {
+          return res.status(400).json({ error: 'السمة المفضلة يجب أن تكون نص' });
+        }
+        
+        // قائمة بالسمات المدعومة
+        const supportedThemes = ['light', 'dark', 'system'];
+        if (!supportedThemes.includes(preferredTheme)) {
+          return res.status(400).json({ 
+            error: 'السمة غير مدعومة',
+            supportedThemes 
+          });
+        }
+        
+        updateData.preferredTheme = preferredTheme.trim().toLowerCase();
+      }
+      
+      // التحقق من وجود بيانات للتحديث
+      if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({ error: 'لا توجد إعدادات للتحديث' });
       }
       
       // تحديث إعدادات المستخدم
-      const updatedUser = await storage.updateUser(userId, { 
-        preferredLanguage: preferredLanguage.trim().toLowerCase() 
-      });
+      const updatedUser = await storage.updateUser(userId, updateData);
       
       // إرجاع الإعدادات المحدثة
       res.json({
         preferredLanguage: updatedUser.preferredLanguage,
+        preferredTheme: updatedUser.preferredTheme,
         message: 'تم حفظ إعدادات المستخدم بنجاح'
       });
     } catch (error: any) {
@@ -112,7 +142,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Fetching all users...');
       const users = await storage.getAllUsers();
-      // إزالة كلمات المرور من الاستجابة لأسباب أمنية وإضافة preferredLanguage
+      // إزالة كلمات المرور من الاستجابة لأسباب أمنية وإضافة preferredLanguage وpreferredTheme
       const safeUsers = users.map(user => ({
         id: user.id,
         username: user.username,
@@ -120,6 +150,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: user.email,
         isAdmin: user.isAdmin,
         preferredLanguage: user.preferredLanguage || 'en',
+        preferredTheme: user.preferredTheme || 'system',
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
       }));
