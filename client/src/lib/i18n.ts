@@ -1276,29 +1276,34 @@ const translations: Translations = {
 // تخزين مؤقت للترجمات المستخدمة حالياً
 let translationCache: { [key: string]: string } = {};
 
-// دالة للحصول على لغة المتصفح - العربية دائماً افتراضية
+// Function to detect browser language with English as default
 export function getBrowserLanguage(): string {
   if (typeof window !== 'undefined') {
-    // التحقق من اللغة المحفوظة أولاً
+    // Check saved language first
     const savedLang = localStorage.getItem('language');
     if (savedLang && ['ar', 'en', 'hi'].includes(savedLang)) {
       return savedLang;
     }
+    // Try to detect browser language
+    const browserLang = navigator.language.split('-')[0];
+    if (['ar', 'en', 'hi'].includes(browserLang)) {
+      return browserLang;
+    }
   }
-  // الإنجليزية كافتراضي دائماً
+  // English as default
   return 'en';
 }
 
-// تهيئة اللغة الحالية
-let currentLanguage = 'en'; // اللغة الافتراضية الإنجليزية
+// Initialize current language
+let currentLanguage = 'en'; // English as default language
 
-// دالة تغيير اللغة
-export const setLanguage = (lang: string) => {
+// Function to change language with optional database save
+export const setLanguage = (lang: string, saveToDatabase: boolean = false) => {
   if (translations[lang]) {
     currentLanguage = lang;
     localStorage.setItem('language', lang);
 
-    // تحديث الإعدادات
+    // Update settings in localStorage
     try {
       const settings = JSON.parse(localStorage.getItem('settings') || '{}');
       settings.language = lang;
@@ -1307,11 +1312,11 @@ export const setLanguage = (lang: string) => {
       console.error('Error saving language to settings:', e);
     }
 
-    // تحديث سمة lang و dir في HTML
+    // Update HTML attributes
     document.documentElement.setAttribute('lang', lang);
     document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
 
-    // إضافة css class للغة العربية
+    // Add css class for Arabic language
     if (lang === 'ar') {
       document.documentElement.classList.add('ar');
       document.body.classList.add('font-arabic');
@@ -1320,56 +1325,64 @@ export const setLanguage = (lang: string) => {
       document.body.classList.remove('font-arabic');
     }
 
-    // مسح التخزين المؤقت
+    // Clear translation cache
     translationCache = {};
 
-    // إطلاق حدث تغيير اللغة
-    window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: lang } }));
+    // Dispatch language change event with database save flag
+    window.dispatchEvent(new CustomEvent('languageChanged', { 
+      detail: { language: lang, saveToDatabase } 
+    }));
+
+    console.log('Language changed to:', lang, 'Save to DB:', saveToDatabase);
   }
 };
 
-// دالة الترجمة المحسنة
-export const t = (key: string): string => {
-  // الحصول على اللغة الحالية
-  const lang = getCurrentLanguage();
+// Enhanced translation function with user context support
+export const t = (key: string, user?: any): string => {
+  // Get current language with user context
+  const lang = getCurrentLanguage(user);
 
-  // التحقق من وجود الترجمة في التخزين المؤقت
+  // Check if translation exists in cache
   const cacheKey = `${lang}:${key}`;
   if (translationCache[cacheKey]) {
     return translationCache[cacheKey];
   }
 
-  // التأكد من أن اللغة مدعومة، الافتراضية العربية
-  const validLang = translations[lang] ? lang : 'ar';
+  // Ensure language is supported, fallback to English
+  const validLang = translations[lang] ? lang : 'en';
 
-  // حفظ الترجمة في التخزين المؤقت
+  // Save translation in cache
   const translation = translations[validLang]?.[key] || key;
   translationCache[cacheKey] = translation;
 
   return translation;
 };
 
-// دالة للحصول على اللغة الحالية
-export const getCurrentLanguage = (): string => {
+// Function to get current language with user context support
+export const getCurrentLanguage = (user?: any): string => {
+  // Priority 1: User is logged in and has preferred language in database
+  if (user && user.preferredLanguage && translations[user.preferredLanguage]) {
+    return user.preferredLanguage;
+  }
+  
   try {
-    // أولاً: التحقق من الإعدادات المحفوظة
+    // Priority 2: check saved settings in localStorage
     const settings = JSON.parse(localStorage.getItem('settings') || '{}');
-    if (settings.language) {
+    if (settings.language && translations[settings.language]) {
       return settings.language;
     }
 
-    // ثانياً: التحقق من localStorage القديم
+    // Priority 3: check old localStorage
     const storedLang = localStorage.getItem('language');
-    if (storedLang) {
+    if (storedLang && translations[storedLang]) {
       return storedLang;
     }
-
-    // ثالثاً: استخدام اللغة الافتراضية (العربية)
-    return 'ar';
-  } catch {
-    const storedLang = localStorage.getItem('language');
-    return storedLang || 'ar';
+  } catch (error) {
+    console.error('Error reading language from localStorage:', error);
   }
+
+  // Priority 4: browser language detection
+  return getBrowserLanguage();
 };
 
 // قائمة اللغات المدعومة
@@ -1379,57 +1392,93 @@ export const supportedLanguages = [
   { id: 'hi', name: 'हिन्दी' },
 ];
 
-// تهيئة اللغة عند بدء التطبيق
-if (typeof window !== 'undefined') {
-  // التحقق إذا لم تكن هناك إعدادات محفوظة، تعيين العربية كافتراضية
-  try {
-    const settings = JSON.parse(localStorage.getItem('settings') || '{}');
-    if (!settings.language) {
-      settings.language = 'ar';
-      localStorage.setItem('settings', JSON.stringify(settings));
+// Function to initialize language system with user context
+export const initializeLanguageSystem = (user?: any) => {
+  if (typeof window !== 'undefined') {
+    // Get language using proper fallback order
+    const lang = getCurrentLanguage(user);
+    
+    // Save to localStorage if not already saved
+    try {
+      const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+      if (!settings.language || (user && user.preferredLanguage !== settings.language)) {
+        settings.language = lang;
+        localStorage.setItem('settings', JSON.stringify(settings));
+      }
+    } catch {
+      localStorage.setItem('settings', JSON.stringify({ language: lang }));
     }
-  } catch {
-    // في حالة وجود خطأ، إنشاء إعدادات جديدة
-    localStorage.setItem('settings', JSON.stringify({ language: 'ar' }));
-  }
 
+    // Apply language settings to document
+    document.documentElement.setAttribute('lang', lang);
+    document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+    currentLanguage = lang;
+
+    // Add Arabic-specific classes if needed
+    if (lang === 'ar') {
+      document.documentElement.classList.add('ar');
+      document.body.classList.add('font-arabic');
+    } else {
+      document.documentElement.classList.remove('ar');
+      document.body.classList.remove('font-arabic');
+    }
+
+    console.log('Language system initialized with:', lang, user ? '(from user data)' : '(from fallback)');
+  }
+};
+
+// Initialize on module load for non-authenticated users
+if (typeof window !== 'undefined') {
+  // Basic initialization without user context
   const lang = getCurrentLanguage();
   document.documentElement.setAttribute('lang', lang);
+  document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
   currentLanguage = lang;
 
-  // إضافة مستمع لتغييرات اللغة
-  window.addEventListener('languageChanged', () => {
-    const newLang = getCurrentLanguage();
+  // Add listener for language changes
+  window.addEventListener('languageChanged', (event: any) => {
+    const detail = event.detail;
+    const newLang = detail.language;
     document.documentElement.setAttribute('lang', newLang);
+    document.documentElement.setAttribute('dir', newLang === 'ar' ? 'rtl' : 'ltr');
     currentLanguage = newLang;
+    
+    // Apply Arabic-specific styling
+    if (newLang === 'ar') {
+      document.documentElement.classList.add('ar');
+      document.body.classList.add('font-arabic');
+    } else {
+      document.documentElement.classList.remove('ar');
+      document.body.classList.remove('font-arabic');
+    }
   });
 }
 
-// دالة لإعادة تعيين اللغة إلى العربية (إصلاح المشاكل القديمة)
-export const resetToArabic = () => {
-  if (typeof window !== 'undefined') {
+// Function to set user's preferred language from database
+export const setUserLanguage = (userPreferredLang: string | null) => {
+  if (typeof window !== 'undefined' && userPreferredLang) {
     try {
-      // تحديث الإعدادات
+      // Update settings with user's preferred language
       const settings = JSON.parse(localStorage.getItem('settings') || '{}');
-      settings.language = 'ar';
+      settings.language = userPreferredLang;
       localStorage.setItem('settings', JSON.stringify(settings));
-      localStorage.setItem('language', 'ar');
+      localStorage.setItem('language', userPreferredLang);
       
-      // تحديث اللغة الحالية
-      currentLanguage = 'ar';
-      document.documentElement.setAttribute('lang', 'ar');
-      document.documentElement.setAttribute('dir', 'rtl');
+      // Update current language
+      currentLanguage = userPreferredLang;
+      document.documentElement.setAttribute('lang', userPreferredLang);
+      document.documentElement.setAttribute('dir', userPreferredLang === 'ar' ? 'rtl' : 'ltr');
       
-      // مسح التخزين المؤقت
+      // Clear translation cache
       translationCache = {};
       
-      // إطلاق حدث تغيير اللغة
-      window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: 'ar' } }));
+      // Dispatch language change event
+      window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: userPreferredLang } }));
       
-      console.log('تم إعادة تعيين اللغة إلى العربية');
+      console.log('User preferred language set to:', userPreferredLang);
       return true;
     } catch (error) {
-      console.error('خطأ في إعادة تعيين اللغة:', error);
+      console.error('Error setting user preferred language:', error);
       return false;
     }
   }
@@ -1473,11 +1522,30 @@ export const getTextClasses = (hasNumbers: boolean = false): string => {
   return classes;
 };
 
-// تشغيل إعادة تعيين اللغة تلقائياً عند بدء التطبيق
-if (typeof window !== 'undefined') {
-  // التحقق من الإعدادات الحالية
-  const currentLang = getCurrentLanguage();
-  if (currentLang !== 'ar') {
-    resetToArabic();
+// Function to get user's preferred language with fallback order
+export const getUserPreferredLanguage = (userPreferredLang?: string | null): string => {
+  // Priority 1: User is logged in and has preferred language in database
+  if (userPreferredLang && translations[userPreferredLang]) {
+    return userPreferredLang;
   }
-}
+  
+  // Priority 2: Saved in localStorage
+  if (typeof window !== 'undefined') {
+    try {
+      const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+      if (settings.language && translations[settings.language]) {
+        return settings.language;
+      }
+      
+      const storedLang = localStorage.getItem('language');
+      if (storedLang && translations[storedLang]) {
+        return storedLang;
+      }
+    } catch (error) {
+      console.error('Error reading language from localStorage:', error);
+    }
+  }
+  
+  // Priority 3: Browser language
+  return getBrowserLanguage();
+};

@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { ArrowLeft, Bell, Clock, DollarSign, LineChart, Settings, MessageCircle, Globe, BarChart, Users, LogOut, Bot } from 'lucide-react';
-import { setLanguage, supportedLanguages, t, getCurrentLanguage } from '@/lib/i18n';
+import { setLanguage, supportedLanguages, t, getCurrentLanguage, initializeLanguageSystem } from '@/lib/i18n';
 import { useAuth } from '@/hooks/use-auth';
+import { useMutation } from '@tanstack/react-query';
+import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 
 export default function SettingsPage() {
   const { user, logoutMutation } = useAuth();
+  const { toast } = useToast();
   const [notifications, setNotifications] = useState(() => {
     try {
       const savedSettings = localStorage.getItem('settings');
@@ -18,6 +22,8 @@ export default function SettingsPage() {
     }
     return true; 
   });
+
+  const [marketAlerts, setMarketAlerts] = useState(true);
 
   const [timezone, setTimezone] = useState(() => {
     try {
@@ -40,7 +46,7 @@ export default function SettingsPage() {
   };
 
   const [language, setLanguageState] = useState(() => {
-    return getCurrentLanguage();
+    return getCurrentLanguage(user);
   });
 
   const [theme, setTheme] = useState(() => {
@@ -110,12 +116,59 @@ export default function SettingsPage() {
     };
   }, []);
 
+  // Initialize language system with user context on mount and user change
+  useEffect(() => {
+    if (user) {
+      initializeLanguageSystem(user);
+      const userLang = getCurrentLanguage(user);
+      if (userLang !== language) {
+        setLanguageState(userLang);
+      }
+    }
+  }, [user]);
+
+  // Mutation to save user settings to database
+  const saveUserSettingsMutation = useMutation({
+    mutationFn: async (preferredLanguage: string) => {
+      const response = await apiRequest('PUT', '/api/user/settings', {
+        preferredLanguage
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      // Update the user data in cache
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      toast({
+        title: "Settings saved successfully",
+        description: "Your language preference has been saved.",
+      });
+      console.log('Language settings saved to database:', data);
+    },
+    onError: (error: Error) => {
+      console.error('Error saving language settings:', error);
+      toast({
+        title: "Error saving settings",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleLanguageChange = (newLang: string) => {
-    setLanguage(newLang);
-    setShowSuccess(true);
-    setTimeout(() => {
-      setShowSuccess(false);
-    }, 3000);
+    setLanguageState(newLang);
+    // Save to localStorage immediately for responsive UI
+    setLanguage(newLang, false);
+    
+    // Save to database if user is logged in
+    if (user) {
+      saveUserSettingsMutation.mutate(newLang);
+    } else {
+      // For non-logged users, just show success locally
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+      }, 3000);
+    }
   };
 
   const themes = [
@@ -125,6 +178,7 @@ export default function SettingsPage() {
   ];
 
   const saveSettings = () => {
+    // Save to localStorage first for immediate UI response
     localStorage.setItem('settings', JSON.stringify({
       notifications,
       timezone,
@@ -132,6 +186,7 @@ export default function SettingsPage() {
       theme,
     }));
 
+    // Apply theme immediately
     if (theme === 'system') {
       const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
       document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
@@ -139,12 +194,21 @@ export default function SettingsPage() {
       document.documentElement.setAttribute('data-theme', theme);
     }
 
-    setLanguage(language);
-    setShowSuccess(true);
+    // Apply language immediately
+    setLanguage(language, false);
+    
+    // Save language to database if user is logged in
+    if (user && user.preferredLanguage !== language) {
+      saveUserSettingsMutation.mutate(language);
+    } else {
+      // Show success for non-authenticated users or if no change needed
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+      }, 3000);
+    }
+    
     window.dispatchEvent(new Event('storage'));
-    setTimeout(() => {
-      setShowSuccess(false);
-    }, 3000);
   };
 
   const handleLogout = async () => {
@@ -218,7 +282,8 @@ export default function SettingsPage() {
                     <input
                       type="checkbox"
                       className="sr-only peer"
-                      checked={true}
+                      checked={marketAlerts}
+                      onChange={() => setMarketAlerts(!marketAlerts)}
                     />
                     <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-400"></div>
                   </label>
@@ -348,10 +413,16 @@ export default function SettingsPage() {
           </div>
 
           <button
-            className="w-full py-3 bg-yellow-400 hover:bg-yellow-500 text-black rounded-xl font-bold text-base shadow-lg transition duration-150 transform hover:translate-y-[-2px] active:translate-y-[1px]"
+            className={`w-full py-3 rounded-xl font-bold text-base shadow-lg transition duration-150 transform hover:translate-y-[-2px] active:translate-y-[1px] ${
+              saveUserSettingsMutation.isPending
+                ? 'bg-gray-600 cursor-not-allowed'
+                : 'bg-yellow-400 hover:bg-yellow-500 text-black'
+            }`}
             onClick={saveSettings}
+            disabled={saveUserSettingsMutation.isPending}
+            data-testid="button-save-settings"
           >
-            {t('save_settings')}
+            {saveUserSettingsMutation.isPending ? 'Saving...' : t('save_settings')}
           </button>
 
           {showSuccess && (
