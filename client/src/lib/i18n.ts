@@ -142,6 +142,8 @@ const translations: Translations = {
     confirm_delete: 'تأكيد الحذف',
     confirm_delete_user_message: 'هل أنت متأكد من حذف المستخدم',
     this_action_cannot_be_undone: 'هذا الإجراء لا يمكن التراجع عنه',
+    search_users: 'البحث عن المستخدمين',
+    admins_only: 'المشرفين فقط',
     // إضافة الترجمات الجديدة تنتهي هنا
 
     // الترجمات الموجودة مسبقاً
@@ -256,6 +258,7 @@ const translations: Translations = {
     market_order: 'سوق',
     limit_order: 'محدد',
     stop_order: 'إيقاف',
+    stop_limit: 'حد الإيقاف',
     stop_limit_order: 'إيقاف حد',
     binary_options: 'خيارات ثنائية',
     turbo: 'توربو',
@@ -843,6 +846,8 @@ const translations: Translations = {
     confirm_delete: 'Confirm Delete',
     confirm_delete_user_message: 'Are you sure you want to delete user',
     this_action_cannot_be_undone: 'This action cannot be undone',
+    search_users: 'Search users',
+    admins_only: 'Admins only',
 
     // Settings and general success/error messages
     settings_saved_successfully: 'Settings saved successfully',
@@ -1011,6 +1016,7 @@ const translations: Translations = {
     market_order: 'Market',
     limit_order: 'Limit',
     stop_order: 'Stop',
+    stop_limit: 'Stop Limit',
     stop_limit_order: 'Stop Limit',
     binary_options: 'Binary Options',
     turbo: 'Turbo',
