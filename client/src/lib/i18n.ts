@@ -2202,18 +2202,29 @@ export const setLanguage = (lang: string, saveToDatabase: boolean = false) => {
       console.error('Error saving language to settings:', e);
     }
 
-    // Update HTML attributes
+    // Update HTML attributes - Enhanced Direction Support
+    const isRTL = lang === 'ar';
     document.documentElement.setAttribute('lang', lang);
-    document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+    document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
 
-    // Add css class for Arabic language
-    if (lang === 'ar') {
-      document.documentElement.classList.add('ar');
+    console.log(`Direction updated: ${isRTL ? 'RTL' : 'LTR'} for language: ${lang}`);
+    console.log('HTML dir attribute set to:', document.documentElement.getAttribute('dir'));
+
+    // Add/remove CSS classes for language-specific styling
+    if (isRTL) {
+      document.documentElement.classList.add('ar', 'rtl');
+      document.documentElement.classList.remove('ltr');
       document.body.classList.add('font-arabic');
     } else {
-      document.documentElement.classList.remove('ar');
+      document.documentElement.classList.remove('ar', 'rtl');
+      document.documentElement.classList.add('ltr');
       document.body.classList.remove('font-arabic');
     }
+
+    console.log('CSS classes applied:', {
+      html: document.documentElement.className,
+      body: document.body.className
+    });
 
     // Clear translation cache
     translationCache = {};
