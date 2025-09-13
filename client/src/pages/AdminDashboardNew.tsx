@@ -29,10 +29,10 @@ import { AdminLayout } from "@/layouts/AdminLayout";
 
 // نموذج Zod للتحقق من بيانات المستخدم
 const userFormSchema = z.object({
-  username: z.string().min(3, { message: "اسم المستخدم يجب أن يكون 3 أحرف على الأقل" }),
-  displayName: z.string().min(2, { message: "الاسم الظاهر يجب أن يكون حرفين على الأقل" }),
-  email: z.string().email({ message: "يرجى إدخال بريد إلكتروني صالح" }),
-  password: z.string().min(6, { message: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" }),
+  username: z.string().min(3, { message: "Username must be at least 3 characters" }),
+  displayName: z.string().min(2, { message: "Display name must be at least 2 characters" }),
+  email: z.string().email({ message: "Please enter a valid email" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
   isAdmin: z.boolean().default(false)
 });
 
@@ -94,8 +94,8 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error("Error fetching users:", error);
       toast({
-        title: "خطأ",
-        description: "فشل في جلب قائمة المستخدمين",
+        title: t('error'),
+        description: t('failed_to_fetch_users'),
         variant: "destructive"
       });
     } finally {
@@ -118,8 +118,8 @@ export default function AdminDashboard() {
       console.log("Added user:", newUser);
 
       toast({
-        title: "تم بنجاح",
-        description: "تم إضافة المستخدم بنجاح",
+        title: t('success'),
+        description: t('user_added_successfully'),
       });
 
       // تحديث قائمة المستخدمين
@@ -130,8 +130,8 @@ export default function AdminDashboard() {
     } catch (error: any) {
       console.error("Error adding user:", error);
       toast({
-        title: "خطأ",
-        description: error.message || "فشل في إضافة المستخدم",
+        title: t('error'),
+        description: error.message || t('failed_to_add_user'),
         variant: "destructive"
       });
     } finally {
@@ -156,8 +156,8 @@ export default function AdminDashboard() {
       console.log("Updated user:", updatedUser);
 
       toast({
-        title: "تم بنجاح",
-        description: "تم تحديث معلومات المستخدم بنجاح",
+        title: t('success'),
+        description: t('user_updated_successfully'),
       });
 
       // تحديث قائمة المستخدمين
@@ -169,8 +169,8 @@ export default function AdminDashboard() {
     } catch (error: any) {
       console.error("Error updating user:", error);
       toast({
-        title: "خطأ",
-        description: error.message || "فشل في تحديث معلومات المستخدم",
+        title: t('error'),
+        description: error.message || t('failed_to_update_user'),
         variant: "destructive"
       });
     } finally {
@@ -191,8 +191,8 @@ export default function AdminDashboard() {
       );
 
       toast({
-        title: "تم بنجاح",
-        description: "تم حذف المستخدم بنجاح",
+        title: t('success'),
+        description: t('user_deleted_successfully'),
       });
 
       // تحديث قائمة المستخدمين
@@ -203,8 +203,8 @@ export default function AdminDashboard() {
     } catch (error: any) {
       console.error("Error deleting user:", error);
       toast({
-        title: "خطأ",
-        description: error.message || "فشل في حذف المستخدم",
+        title: t('error'),
+        description: error.message || t('failed_to_delete_user'),
         variant: "destructive"
       });
     } finally {

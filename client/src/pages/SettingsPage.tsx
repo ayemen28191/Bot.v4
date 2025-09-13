@@ -115,15 +115,15 @@ export default function SettingsPage() {
       // Update the user data in cache
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
       toast({
-        title: "Settings saved successfully",
-        description: "Your language preference has been saved.",
+        title: t('settings_saved_successfully'),
+        description: t('language_preference_saved'),
       });
       console.log('Language settings saved to database:', data);
     },
     onError: (error: Error) => {
       console.error('Error saving language settings:', error);
       toast({
-        title: "Error saving settings",
+        title: t('error_saving_settings'),
         description: error.message,
         variant: "destructive",
       });
