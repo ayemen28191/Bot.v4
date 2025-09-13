@@ -14,17 +14,17 @@ import { useToast } from '@/hooks/use-toast';
 import { t } from '@/lib/i18n';
 
 // التحميل المتأخر للصفحات
-const TradingSignalPage = lazy(() => import('@/pages/TradingSignalPage'));
-const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
-const GroupChatPage = lazy(() => import('@/pages/ChatPage')); 
-const IndicatorsPage = lazy(() => import('@/pages/IndicatorsPage'));
-const AdminDashboard = lazy(() => import('@/pages/AdminDashboardNew'));
-const UserManagement = lazy(() => import('@/pages/UserManagement'));
-const ApiKeysManagement = lazy(() => import('@/pages/ApiKeysManagement'));
-const DeploymentPage = lazy(() => import('@/pages/DeploymentPage'));
-const BotInfoPage = lazy(() => import('@/pages/BotInfoPage'));
-const AdminResetPassword = lazy(() => import('@/pages/AdminResetPassword'));
-const AuthPage = lazy(() => import('@/pages/auth-page'));
+const TradingSignalPage = lazy(() => import('./pages/TradingSignalPage'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const GroupChatPage = lazy(() => import('./pages/ChatPage')); 
+const IndicatorsPage = lazy(() => import('./pages/IndicatorsPage'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboardNew'));
+const UserManagement = lazy(() => import('./pages/UserManagement'));
+const ApiKeysManagement = lazy(() => import('./pages/ApiKeysManagement'));
+const DeploymentPage = lazy(() => import('./pages/DeploymentPage'));
+const BotInfoPage = lazy(() => import('./pages/BotInfoPage'));
+const AdminResetPassword = lazy(() => import('./pages/AdminResetPassword'));
+const AuthPage = lazy(() => import('./pages/auth-page'));
 const NotFound = lazy(() => import('@/pages/not-found'));
 
 // مكون للتعامل مع وضع HTTPS في Replit

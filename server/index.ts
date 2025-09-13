@@ -106,7 +106,7 @@ async function killProcessOnPort(port: number) {
     const port = 5000;
     await new Promise((resolve, reject) => {
       server.listen(port, "0.0.0.0", () => {
-        console.log(`Server is running on port ${port}`);
+        console.log(`Server is running on http://0.0.0.0:${port}`);
         resolve(true);
       }).on('error', (error: any) => {
         if (error.code === 'EADDRINUSE') {
