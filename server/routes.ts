@@ -9,6 +9,14 @@ import { updateRouter } from "./routes/update";
 import { deploymentRouter } from "./routes/deployment";
 import { heatmapRouter } from "./routes/heatmap";
 
+// التأكد من أن المستخدم مُسجل الدخول
+function isAuthenticated(req: express.Request, res: express.Response, next: express.NextFunction) {
+  if (req.isAuthenticated() && req.user) {
+    return next();
+  }
+  return res.status(401).json({ error: 'يجب تسجيل الدخول للوصول إلى هذا المسار.' });
+}
+
 // التأكد من أن المستخدم هو مشرف
 function isAdmin(req: express.Request, res: express.Response, next: express.NextFunction) {
   if (req.isAuthenticated() && req.user?.isAdmin) {
@@ -38,6 +46,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // تسجيل مسارات الخريطة الحرارية
   app.use('/api/heatmap', heatmapRouter);
+
+  // ===== مسارات إعدادات المستخدم =====
+  
+  // جلب إعدادات المستخدم الحالي
+  app.get('/api/user/settings', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ error: 'المستخدم غير موجود' });
+      }
+      
+      // إرجاع إعدادات المستخدم (بدون معلومات حساسة)
+      res.json({
+        preferredLanguage: user.preferredLanguage || 'en'
+      });
+    } catch (error) {
+      console.error('Error fetching user settings:', error);
+      res.status(500).json({ error: 'فشل في جلب إعدادات المستخدم' });
+    }
+  });
+
+  // حفظ إعدادات المستخدم الحالي
+  app.put('/api/user/settings', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const { preferredLanguage } = req.body;
+      
+      // التحقق من صحة اللغة المطلوبة
+      if (!preferredLanguage || typeof preferredLanguage !== 'string') {
+        return res.status(400).json({ error: 'لغة المفضلة مطلوبة ويجب أن تكون نص' });
+      }
+      
+      // قائمة باللغات المدعومة (يمكن توسيعها حسب الحاجة)
+      const supportedLanguages = ['en', 'ar', 'fr', 'es', 'de'];
+      if (!supportedLanguages.includes(preferredLanguage)) {
+        return res.status(400).json({ 
+          error: 'اللغة غير مدعومة',
+          supportedLanguages 
+        });
+      }
+      
+      // تحديث إعدادات المستخدم
+      const updatedUser = await storage.updateUser(userId, { 
+        preferredLanguage: preferredLanguage.trim().toLowerCase() 
+      });
+      
+      // إرجاع الإعدادات المحدثة
+      res.json({
+        preferredLanguage: updatedUser.preferredLanguage,
+        message: 'تم حفظ إعدادات المستخدم بنجاح'
+      });
+    } catch (error: any) {
+      console.error('Error saving user settings:', error);
+      res.status(500).json({ 
+        error: error.message || 'فشل في حفظ إعدادات المستخدم' 
+      });
+    }
+  });
 
   // المسارات الأساسية للمستخدمين
   app.get('/api/users', isAdmin, async (req, res) => {

@@ -9,6 +9,7 @@ export const users = sqliteTable("users", {
   displayName: text("display_name").notNull(),
   email: text("email").notNull().unique(),
   isAdmin: integer("is_admin", { mode: "boolean" }).default(false),
+  preferredLanguage: text("preferred_language").notNull().default("en"),
   createdAt: text("created_at").notNull().default(new Date().toISOString()),
   updatedAt: text("updated_at").notNull().default(new Date().toISOString()),
 });
@@ -62,6 +63,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   displayName: true,
   email: true,
   isAdmin: true,
+  preferredLanguage: true,
 });
 
 export const insertConfigKeySchema = createInsertSchema(configKeys).pick({
