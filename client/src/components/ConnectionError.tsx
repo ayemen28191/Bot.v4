@@ -7,6 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { useStore as useChatStore } from '@/store/chatStore';
 import { Progress } from './ui/progress';
 import { Separator } from './ui/separator';
+import { t } from '@/lib/i18n';
 
 interface ConnectionErrorProps {
   message?: string;
@@ -19,7 +20,7 @@ interface ConnectionErrorProps {
 }
 
 const ConnectionError: React.FC<ConnectionErrorProps> = ({
-  message = 'تحديث بيانات التحليل جارٍ. يمكنك الانتظار قليلاً أو استخدام وضع التحليل المحلي للاستمرار.',
+  message = t('data_analysis_update_message'),
   onRetry,
   autoRetry = true,
   retryInterval = 30,
@@ -75,14 +76,14 @@ const ConnectionError: React.FC<ConnectionErrorProps> = ({
       }
       
       toast({
-        title: "تم إعادة الاتصال بنجاح",
-        description: "تم استعادة الاتصال بنجاح وتحديث البيانات",
+        title: t('reconnection_successful'),
+        description: t('connection_restored_data_updated'),
         variant: "default",
       });
     } catch (error) {
       toast({
-        title: "تحديث البيانات مستمر",
-        description: "نحن نعمل على جلب أحدث البيانات. سنحاول مرة أخرى تلقائيًا",
+        title: t('data_update_in_progress'),
+        description: t('fetching_latest_data_auto_retry'),
         variant: "default",
       });
       
@@ -122,15 +123,15 @@ const ConnectionError: React.FC<ConnectionErrorProps> = ({
       }
       
       toast({
-        title: "تم تفعيل وضع عدم الاتصال",
-        description: "يمكنك الآن استخدام التطبيق بدون اتصال بالإنترنت. ستتم مزامنة البيانات عند عودة الاتصال.",
+        title: t('offline_mode_enabled_success'),
+        description: t('offline_mode_enabled_description'),
         variant: "default",
       });
     } catch (error) {
       console.error('فشل في تفعيل وضع عدم الاتصال:', error);
       toast({
-        title: "تعذر تفعيل وضع عدم الاتصال",
-        description: "حدث خطأ أثناء محاولة تفعيل وضع عدم الاتصال. يرجى المحاولة مرة أخرى.",
+        title: t('offline_mode_enable_failed'),
+        description: t('offline_mode_enable_error'),
         variant: "destructive",
       });
     }
@@ -141,14 +142,14 @@ const ConnectionError: React.FC<ConnectionErrorProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-destructive">
           <WifiOff className="h-5 w-5" />
-          تحديث البيانات
+{t('data_update_title')}
         </CardTitle>
       </CardHeader>
       
       <CardContent>
         <Alert variant="destructive" className="mb-4">
           <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>تحديث البيانات جارٍ</AlertTitle>
+          <AlertTitle>{t('data_update_in_progress')}</AlertTitle>
           <AlertDescription>{message}</AlertDescription>
         </Alert>
         
@@ -161,8 +162,8 @@ const ConnectionError: React.FC<ConnectionErrorProps> = ({
             />
             <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
               <Clock className="h-3 w-3" />
-              إعادة المحاولة خلال{" "}
-              <span className="font-bold">{countdown}</span> ثانية
+              {t('retry_attempt')}{" "}
+              <span className="font-bold">{countdown}</span> {t('seconds')}
               {countdown !== 1 && ""}...
             </div>
           </>
@@ -174,12 +175,12 @@ const ConnectionError: React.FC<ConnectionErrorProps> = ({
             <Separator className="my-3" />
             <div className="mt-3 space-y-2">
               <p className="text-sm">
-                إذا استمرت مشكلة الاتصال، يمكنك تفعيل <strong>وضع عدم الاتصال</strong> للاستمرار في استخدام التطبيق.
+                {t('offline_mode_connection_issue')}
               </p>
               <div className="flex items-center gap-2 bg-muted p-2 rounded-md text-xs">
                 <CloudOff className="h-4 w-4 text-yellow-500" />
                 <span>
-                  في وضع عدم الاتصال، سيتم تخزين بياناتك محلياً ومزامنتها عند عودة الاتصال.
+                  {t('offline_mode_data_storage')}
                 </span>
               </div>
             </div>
@@ -190,7 +191,7 @@ const ConnectionError: React.FC<ConnectionErrorProps> = ({
       <CardFooter className="flex flex-col gap-2">
         <div className="flex justify-between w-full items-center">
           <p className="text-xs text-muted-foreground">
-            {retryCount > 0 && `عدد المحاولات: ${retryCount}`}
+            {retryCount > 0 && `${t('retry_count')} ${retryCount}`}
           </p>
           
           <Button
@@ -201,7 +202,7 @@ const ConnectionError: React.FC<ConnectionErrorProps> = ({
             className="gap-1"
           >
             <RefreshCw className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
-            {isRetrying ? "جاري المحاولة..." : "إعادة المحاولة"}
+            {isRetrying ? t('retrying_attempt') : t('retry_attempt')}
           </Button>
         </div>
         
@@ -214,7 +215,7 @@ const ConnectionError: React.FC<ConnectionErrorProps> = ({
             className="w-full gap-1 mt-2 border-yellow-500 hover:bg-yellow-500/10"
           >
             <CloudOff className="h-4 w-4" />
-            تفعيل وضع عدم الاتصال
+            {t('enable_offline_mode')}
           </Button>
         )}
       </CardFooter>

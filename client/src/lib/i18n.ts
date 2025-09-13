@@ -385,7 +385,33 @@ const translations: Translations = {
     signals_temporarily_unavailable: "الإشارات غير متاحة مؤقتاً",
     updating_signals: "جاري تحديث الإشارات...",
     signals_updated_successfully: "تم تحديث الإشارات بنجاح",
-    independent_mode_activated: "تم تفعيل الوضع المستقل"
+    independent_mode_activated: "تم تفعيل الوضع المستقل",
+
+    // صفحة 404
+    page_not_found_404: "404 الصفحة غير موجودة",
+    page_not_found_description: "هل نسيت إضافة الصفحة إلى نظام التوجيه؟",
+
+    // السمات (Themes)
+    toggle_theme: "تبديل الوضع",
+    light_theme: "فاتح", 
+    dark_theme: "مظلم",
+    system_theme_short: "النظام",
+
+    // أخطاء الاتصال
+    reconnection_successful: "تم إعادة الاتصال بنجاح",
+    connection_restored_data_updated: "تم استعادة الاتصال بنجاح وتحديث البيانات",
+    data_update_in_progress: "تحديث البيانات مستمر",
+    fetching_latest_data_auto_retry: "نحن نعمل على جلب أحدث البيانات. سنحاول مرة أخرى تلقائيًا",
+    offline_mode_enabled_success: "تم تفعيل وضع عدم الاتصال",
+    offline_mode_enabled_description: "يمكنك الآن استخدام التطبيق بدون اتصال بالإنترنت. ستتم مزامنة البيانات عند عودة الاتصال.",
+    offline_mode_enable_failed: "تعذر تفعيل وضع عدم الاتصال",
+    offline_mode_enable_error: "حدث خطأ أثناء محاولة تفعيل وضع عدم الاتصال. يرجى المحاولة مرة أخرى.",
+    retrying_attempt: "جاري المحاولة...",
+    enable_offline_mode: "تفعيل وضع عدم الاتصال",
+    offline_mode_connection_issue: "إذا استمرت مشكلة الاتصال، يمكنك تفعيل وضع عدم الاتصال للاستمرار في استخدام التطبيق.",
+    offline_mode_data_storage: "في وضع عدم الاتصال، سيتم تخزين بياناتك محلياً ومزامنتها عند عودة الاتصال.",
+    retry_count: "عدد المحاولات:",
+    data_analysis_update_message: "تحديث بيانات التحليل جارٍ. يمكنك الانتظار قليلاً أو استخدام وضع التحليل المحلي للاستمرار."
   },
   en: {
     // Error message translations
@@ -758,7 +784,33 @@ const translations: Translations = {
     signals_temporarily_unavailable: "Signals temporarily unavailable",
     updating_signals: "Updating signals...",
     signals_updated_successfully: "Signals updated successfully",
-    independent_mode_activated: "Independent mode activated"
+    independent_mode_activated: "Independent mode activated",
+
+    // 404 page
+    page_not_found_404: "404 Page Not Found",
+    page_not_found_description: "Did you forget to add the page to the router?",
+
+    // Themes
+    toggle_theme: "Toggle theme",
+    light_theme: "Light",
+    dark_theme: "Dark", 
+    system_theme_short: "System",
+
+    // Connection errors
+    reconnection_successful: "Reconnection successful",
+    connection_restored_data_updated: "Connection restored successfully and data updated",
+    data_update_in_progress: "Data update in progress",
+    fetching_latest_data_auto_retry: "We are working to fetch the latest data. Will retry automatically",
+    offline_mode_enabled_success: "Offline mode enabled",
+    offline_mode_enabled_description: "You can now use the app without internet connection. Data will sync when connection is restored.",
+    offline_mode_enable_failed: "Failed to enable offline mode",
+    offline_mode_enable_error: "An error occurred while trying to enable offline mode. Please try again.",
+    retrying_attempt: "Retrying...",
+    enable_offline_mode: "Enable offline mode",
+    offline_mode_connection_issue: "If connection issues persist, you can enable offline mode to continue using the app.",
+    offline_mode_data_storage: "In offline mode, your data will be stored locally and synced when connection is restored.",
+    retry_count: "Attempts:",
+    data_analysis_update_message: "Data analysis update in progress. You can wait a moment or use local analysis mode to continue."
   },
   hi: {
     // Basic Hindi translations to prevent Arabic text fallback
