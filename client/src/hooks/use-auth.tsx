@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext } from "react";
+import { createContext, ReactNode, useContext, useEffect } from "react";
 import {
   useQuery,
   useMutation,
@@ -7,6 +7,7 @@ import {
 import { User as SelectUser, InsertUser } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { initializeLanguageSystem, clearLanguageOnLogout } from "@/lib/i18n";
 
 type AuthContextType = {
   user: SelectUser | null;
@@ -32,6 +33,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
+  // Initialize language system when user data changes
+  useEffect(() => {
+    if (user) {
+      initializeLanguageSystem(user);
+    }
+  }, [user]);
+
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
       const res = await apiRequest("POST", "/api/login", credentials);
@@ -39,6 +47,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
+      // Initialize language system immediately with user data
+      console.log('Login successful, initializing language system with user:', user);
+      initializeLanguageSystem(user);
       toast({
         title: "تم تسجيل الدخول بنجاح",
         description: `مرحباً ${user.displayName}`,
@@ -60,6 +71,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
+      // Initialize language system immediately with user data
+      console.log('Registration successful, initializing language system with user:', user);
+      initializeLanguageSystem(user);
       toast({
         title: "تم إنشاء الحساب بنجاح",
         description: `مرحباً ${user.displayName}`,
@@ -80,6 +94,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/user"], null);
+      // Clear language data and reset to English on logout
+      console.log('Logout successful, clearing language data and resetting to English');
+      clearLanguageOnLogout();
       toast({
         title: "تم تسجيل الخروج بنجاح",
       });

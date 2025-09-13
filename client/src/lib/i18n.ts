@@ -1277,6 +1277,7 @@ const translations: Translations = {
 let translationCache: { [key: string]: string } = {};
 
 // Function to detect browser language with English as default
+// This function is kept for backward compatibility but no longer used as primary fallback
 export function getBrowserLanguage(): string {
   if (typeof window !== 'undefined') {
     // Check saved language first
@@ -1284,11 +1285,8 @@ export function getBrowserLanguage(): string {
     if (savedLang && ['ar', 'en', 'hi'].includes(savedLang)) {
       return savedLang;
     }
-    // Try to detect browser language
-    const browserLang = navigator.language.split('-')[0];
-    if (['ar', 'en', 'hi'].includes(browserLang)) {
-      return browserLang;
-    }
+    // Note: Removed navigator.language detection to prevent browser language override
+    // Always default to English for consistency
   }
   // English as default
   return 'en';
@@ -1359,9 +1357,11 @@ export const t = (key: string, user?: any): string => {
 };
 
 // Function to get current language with user context support
+// Order: user.preferredLanguage > localStorage > 'en'
 export const getCurrentLanguage = (user?: any): string => {
   // Priority 1: User is logged in and has preferred language in database
   if (user && user.preferredLanguage && translations[user.preferredLanguage]) {
+    console.log('Language from user preferences:', user.preferredLanguage);
     return user.preferredLanguage;
   }
   
@@ -1369,20 +1369,23 @@ export const getCurrentLanguage = (user?: any): string => {
     // Priority 2: check saved settings in localStorage
     const settings = JSON.parse(localStorage.getItem('settings') || '{}');
     if (settings.language && translations[settings.language]) {
+      console.log('Language from localStorage settings:', settings.language);
       return settings.language;
     }
 
     // Priority 3: check old localStorage
     const storedLang = localStorage.getItem('language');
     if (storedLang && translations[storedLang]) {
+      console.log('Language from old localStorage:', storedLang);
       return storedLang;
     }
   } catch (error) {
     console.error('Error reading language from localStorage:', error);
   }
 
-  // Priority 4: browser language detection
-  return getBrowserLanguage();
+  // Priority 4: Default to English (no browser language detection)
+  console.log('Using default language: en');
+  return 'en';
 };
 
 // قائمة اللغات المدعومة
@@ -1393,20 +1396,73 @@ export const supportedLanguages = [
 ];
 
 // Function to initialize language system with user context
+// Function to change language programmatically
+export const changeLanguage = (newLanguage: string, saveToStorage: boolean = true, user?: any) => {
+  if (typeof window !== 'undefined') {
+    // Validate language
+    const supportedLanguages = ['en', 'ar', 'hi'];
+    if (!supportedLanguages.includes(newLanguage)) {
+      console.warn('Unsupported language:', newLanguage, 'defaulting to en');
+      newLanguage = 'en';
+    }
+
+    console.log('Language changed to:', newLanguage, 'Save to DB:', saveToStorage);
+    
+    // Update current language
+    currentLanguage = newLanguage;
+    
+    // Save to localStorage if requested
+    if (saveToStorage) {
+      try {
+        const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+        settings.language = newLanguage;
+        localStorage.setItem('settings', JSON.stringify(settings));
+      } catch {
+        localStorage.setItem('settings', JSON.stringify({ language: newLanguage }));
+      }
+    }
+
+    // Apply language settings to document
+    document.documentElement.setAttribute('lang', newLanguage);
+    document.documentElement.setAttribute('dir', newLanguage === 'ar' ? 'rtl' : 'ltr');
+
+    // Add/remove Arabic-specific classes
+    if (newLanguage === 'ar') {
+      document.documentElement.classList.add('ar');
+      document.body.classList.add('font-arabic');
+    } else {
+      document.documentElement.classList.remove('ar');
+      document.body.classList.remove('font-arabic');
+    }
+
+    // Dispatch custom event for components to react to language change
+    window.dispatchEvent(new CustomEvent('languageChanged', {
+      detail: { language: newLanguage, user }
+    }));
+
+    return newLanguage;
+  }
+  return 'en';
+};
+
 export const initializeLanguageSystem = (user?: any) => {
   if (typeof window !== 'undefined') {
     // Get language using proper fallback order
     const lang = getCurrentLanguage(user);
     
-    // Save to localStorage if not already saved
-    try {
-      const settings = JSON.parse(localStorage.getItem('settings') || '{}');
-      if (!settings.language || (user && user.preferredLanguage !== settings.language)) {
-        settings.language = lang;
-        localStorage.setItem('settings', JSON.stringify(settings));
+    // Only save to localStorage if user has a preference and it's different from current
+    const shouldSaveToStorage = user && user.preferredLanguage;
+    
+    if (shouldSaveToStorage) {
+      try {
+        const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+        if (!settings.language || user.preferredLanguage !== settings.language) {
+          settings.language = lang;
+          localStorage.setItem('settings', JSON.stringify(settings));
+        }
+      } catch {
+        localStorage.setItem('settings', JSON.stringify({ language: lang }));
       }
-    } catch {
-      localStorage.setItem('settings', JSON.stringify({ language: lang }));
     }
 
     // Apply language settings to document
@@ -1428,12 +1484,42 @@ export const initializeLanguageSystem = (user?: any) => {
 };
 
 // Initialize on module load for non-authenticated users
+// Clear localStorage on logout utility function
+export const clearLanguageOnLogout = () => {
+  if (typeof window !== 'undefined') {
+    try {
+      // Clear language from settings
+      const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+      delete settings.language;
+      localStorage.setItem('settings', JSON.stringify(settings));
+      
+      // Clear old language storage
+      localStorage.removeItem('language');
+      
+      // Reset to English
+      changeLanguage('en', false);
+      
+      console.log('Language cleared on logout, reset to English');
+    } catch (error) {
+      console.error('Error clearing language on logout:', error);
+      // Fallback: just reset to English
+      changeLanguage('en', false);
+    }
+  }
+};
+
 if (typeof window !== 'undefined') {
-  // Basic initialization without user context
-  const lang = getCurrentLanguage();
+  // Basic initialization without user context - always start with English
+  const lang = 'en'; // Force English as initial language
   document.documentElement.setAttribute('lang', lang);
-  document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+  document.documentElement.setAttribute('dir', 'ltr');
   currentLanguage = lang;
+  
+  // Remove any Arabic classes from initial load
+  document.documentElement.classList.remove('ar');
+  document.body.classList.remove('font-arabic');
+  
+  console.log('Initial language system setup with English');
 
   // Add listener for language changes
   window.addEventListener('languageChanged', (event: any) => {

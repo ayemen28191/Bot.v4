@@ -249,6 +249,60 @@ export function setupAuth(app: Express) {
     });
   });
 
+  // إنشاء حساب جديد
+  app.post("/api/register", async (req, res, next) => {
+    try {
+      console.log('Processing registration request:', {
+        username: req.body.username,
+        email: req.body.email,
+        hasPassword: !!req.body.password
+      });
+
+      // التحقق من صحة البيانات مع whitelist للغة
+      const validatedUser = {
+        username: req.body.username?.trim(),
+        password: req.body.password,
+        displayName: req.body.displayName?.trim(),
+        email: req.body.email?.trim().toLowerCase(),
+        isAdmin: req.body.isAdmin || false,
+        preferredLanguage: ['en', 'ar', 'hi'].includes(req.body.preferredLanguage) ? req.body.preferredLanguage : 'en'
+      };
+
+      // التحقق من الحقول المطلوبة
+      if (!validatedUser.username || !validatedUser.password || !validatedUser.displayName || !validatedUser.email) {
+        return res.status(400).json({ error: 'جميع الحقول مطلوبة' });
+      }
+
+      // تشفير كلمة المرور
+      const hashedPassword = await hashPassword(validatedUser.password);
+      
+      const newUser = await storage.createUser({
+        ...validatedUser,
+        password: hashedPassword
+      });
+
+      // تسجيل المستخدم الجديد تلقائياً
+      req.login(newUser, (err) => {
+        if (err) {
+          console.error('Auto-login error after registration:', err);
+          return next(err);
+        }
+        console.log(`User registered and logged in successfully: ${newUser.id}`);
+        // إزالة كلمة المرور من الاستجابة لأسباب أمنية
+        const { password, ...safeUser } = newUser;
+        res.status(201).json(safeUser);
+      });
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      
+      if (error.code === 'SQLITE_CONSTRAINT') {
+        return res.status(400).json({ error: 'اسم المستخدم أو البريد الإلكتروني مستخدم بالفعل' });
+      }
+      
+      res.status(400).json({ error: error.message || 'فشل في إنشاء الحساب' });
+    }
+  });
+
   app.get("/api/user", (req, res) => {
     console.log('Checking current user session:', {
       isAuthenticated: req.isAuthenticated(),

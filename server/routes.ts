@@ -112,13 +112,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Fetching all users...');
       const users = await storage.getAllUsers();
-      // إزالة كلمات المرور من الاستجابة لأسباب أمنية
+      // إزالة كلمات المرور من الاستجابة لأسباب أمنية وإضافة preferredLanguage
       const safeUsers = users.map(user => ({
         id: user.id,
         username: user.username,
         displayName: user.displayName,
         email: user.email,
         isAdmin: user.isAdmin,
+        preferredLanguage: user.preferredLanguage || 'en',
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
       }));
@@ -132,12 +133,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // إضافة مستخدم جديد - للمشرفين فقط
   app.post('/api/users', isAdmin, async (req, res) => {
     try {
-      const validatedUser = insertUserSchema.parse(req.body);
+      // إضافة whitelist validation للغة المفضلة
+      const supportedLanguages = ['en', 'ar', 'hi'];
+      const preferredLanguage = req.body.preferredLanguage && supportedLanguages.includes(req.body.preferredLanguage) 
+        ? req.body.preferredLanguage : 'en';
+      
+      const validatedUser = insertUserSchema.parse({
+        ...req.body,
+        preferredLanguage
+      });
+      
       const newUser = await storage.createUser({
         ...validatedUser,
         // التأكد من صحة البيانات
         username: validatedUser.username.trim(),
         email: validatedUser.email.trim().toLowerCase(),
+        preferredLanguage
       });
       
       // إزالة كلمة المرور من الاستجابة لأسباب أمنية
