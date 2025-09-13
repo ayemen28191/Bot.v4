@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { ArrowLeft, Bell, Clock, DollarSign, LineChart, Settings, MessageCircle, Globe, BarChart, Users, LogOut, Bot } from 'lucide-react';
-import { setLanguage, supportedLanguages, t, getCurrentLanguage, initializeLanguageSystem } from '@/lib/i18n';
+import { setLanguage, supportedLanguages, t, getCurrentLanguage } from '@/lib/i18n';
 import { changeTheme, getCurrentTheme, supportedThemes, type Theme } from '@/lib/themeSystem';
 import { useAuth } from '@/hooks/use-auth';
 import { useMutation } from '@tanstack/react-query';
@@ -92,12 +92,12 @@ export default function SettingsPage() {
     };
   }, []);
 
-  // Initialize language system with user context on mount and user change
+  // Sync language state with user context on user change
   useEffect(() => {
     if (user) {
-      initializeLanguageSystem(user);
       const userLang = getCurrentLanguage(user);
       if (userLang !== language) {
+        console.log(`👤 SettingsPage: Syncing user language preference: ${userLang}`);
         setLanguageState(userLang);
       }
     }
