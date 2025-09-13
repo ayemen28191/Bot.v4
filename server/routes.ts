@@ -80,8 +80,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'لغة المفضلة مطلوبة ويجب أن تكون نص' });
       }
       
-      // قائمة باللغات المدعومة (يمكن توسيعها حسب الحاجة)
-      const supportedLanguages = ['en', 'ar', 'fr', 'es', 'de'];
+      // قائمة باللغات المدعومة (متطابقة مع الواجهة الأمامية)
+      const supportedLanguages = ['ar', 'en', 'hi'];
       if (!supportedLanguages.includes(preferredLanguage)) {
         return res.status(400).json({ 
           error: 'اللغة غير مدعومة',
