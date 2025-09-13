@@ -196,13 +196,13 @@ export default function ChatPage() {
       reader.onload = (e) => {
         try {
           const contents = e.target?.result as string;
-          if (!contents) throw new Error('فشل قراءة المحتوى');
+          if (!contents) throw new Error(t('read_content_failed'));
           
           const importData = JSON.parse(contents);
           
           // التحقق من صحة الملف المستورد
           if (!importData.version || !importData.messages || !Array.isArray(importData.messages)) {
-            throw new Error('تنسيق الملف غير صالح');
+            throw new Error(t('invalid_file_format'));
           }
           
           // استخدام البيانات المستوردة (يمكن دمجها أو استبدالها بالبيانات الحالية)

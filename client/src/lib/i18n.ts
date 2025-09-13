@@ -460,8 +460,8 @@ const translations: Translations = {
     import_success_desc: "تم استيراد الرسائل",
     import_error: "خطأ في الاستيراد",
     import_error_desc: "الملف غير صالح أو معطوب",
-    notifications_enabled: "تم تمكين الإشعارات",
-    notifications_enabled_desc: "ستتلقى إشعارات للرسائل الجديدة عندما تكون خارج التطبيق",
+    read_content_failed: "فشل قراءة المحتوى",
+    invalid_file_format: "تنسيق الملف غير صالح",
     notifications_blocked: "تم منع الإشعارات",
     
     // Toast messages for TradingSignalPage
@@ -977,8 +977,8 @@ const translations: Translations = {
     import_success_desc: "Messages imported",
     import_error: "Import error",
     import_error_desc: "Invalid or corrupted file",
-    notifications_enabled: "Notifications enabled",
-    notifications_enabled_desc: "You will receive notifications for new messages when you are outside the app",
+    read_content_failed: "Failed to read content",
+    invalid_file_format: "Invalid file format",
     notifications_blocked: "Notifications blocked",
     
     // Toast messages for TradingSignalPage
@@ -1164,8 +1164,8 @@ const translations: Translations = {
     import_success_desc: "संदेश आयात हुए",
     import_error: "आयात त्रुटि",
     import_error_desc: "अमान्य या दूषित फ़ाइल",
-    notifications_enabled: "सूचनाएं सक्षम हुईं",
-    notifications_enabled_desc: "जब आप ऐप के बाहर हों तो आपको नए संदेशों के लिए सूचनाएं मिलेंगी",
+    read_content_failed: "सामग्री पढ़ने में विफल",
+    invalid_file_format: "अमान्य फ़ाइल प्रारूप",
     notifications_blocked: "सूचनाएं अवरुद्ध हुईं",
     
     // Toast messages for TradingSignalPage  
