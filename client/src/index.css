@@ -73,19 +73,34 @@
   flex-direction: row-reverse;
 }
 
-/* إصلاح محدد للعناصر التي تحتاج RTL */
+/* إصلاح شامل للعربية RTL مع استثناءات محددة */
 
-/* النصوص العامة والعناوين */
-[dir="rtl"] h1, [dir="rtl"] h2, [dir="rtl"] h3, 
-[dir="rtl"] h4, [dir="rtl"] h5, [dir="rtl"] h6,
-[dir="rtl"] p, [dir="rtl"] span, [dir="rtl"] label {
+/* تطبيق RTL على كل العناصر للعربية */
+[dir="rtl"] {
   text-align: right;
 }
 
-/* الحقول والأزرار النصية فقط */
-[dir="rtl"] input[type="text"],
-[dir="rtl"] input[type="email"], 
-[dir="rtl"] input[type="password"],
+[dir="rtl"] * {
+  text-align: inherit;
+}
+
+/* تطبيق RTL على التخطيط العام */
+[dir="rtl"] .flex {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .flex-col {
+  flex-direction: column;
+}
+
+[dir="rtl"] .grid {
+  direction: rtl;
+}
+
+/* تطبيق RTL على الحقول والأزرار */
+[dir="rtl"] button,
+[dir="rtl"] .btn,
+[dir="rtl"] input:not(.number-display):not(.western-nums),
 [dir="rtl"] textarea,
 [dir="rtl"] select {
   text-align: right;
@@ -99,28 +114,35 @@
   direction: ltr;
 }
 
-/* محاذاة للنصوص الطويلة والمحتوى */
-[dir="rtl"] .content, 
-[dir="rtl"] .description,
-[dir="rtl"] .settings-section {
-  text-align: right;
+/* ===== استثناءات للعناصر التي لا تحتاج انعكاس ===== */
+
+/* القائمة السفلية تبقى LTR */
+[dir="rtl"] .mobile-navbar,
+[dir="rtl"] .mobile-nav-container,
+[dir="rtl"] .mobile-nav-item,
+[dir="rtl"] nav {
+  direction: ltr !important;
+  flex-direction: row !important;
 }
 
-/* استثناءات للعناصر التي لا تحتاج انعكاس */
-[dir="rtl"] .mobile-navbar,
-[dir="rtl"] .navigation,
-[dir="rtl"] .nav-item,
 [dir="rtl"] .mobile-nav-item {
+  text-align: center !important;
+}
+
+/* أزرار اللغة تبقى LTR */
+[dir="rtl"] .language-buttons,
+[dir="rtl"] .language-selector {
   direction: ltr !important;
 }
 
-/* إصلاح محدد لأزرار اللغة */
-[dir="rtl"] .language-buttons .button-group {
-  direction: ltr;
+[dir="rtl"] .language-buttons button {
+  text-align: center !important;
 }
 
-[dir="rtl"] .language-buttons .button-group button {
-  text-align: center;
+/* الأيقونات لا تنعكس */
+[dir="rtl"] .icon,
+[dir="rtl"] svg:not(.arrow-icon) {
+  transform: none !important;
 }
 
 /* خطوط للنصوص المختلطة */
