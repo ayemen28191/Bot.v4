@@ -91,6 +91,9 @@ export function changeTheme(newTheme: Theme, saveToDatabase: boolean = true) {
   if (isUserAuthenticated && saveToDatabase && currentUser) {
     saveThemeToDatabase(newTheme);
   }
+
+  // إرسال حدث لإخطار ThemeProvider بالتغيير
+  dispatchThemeChangeEvent(newTheme);
 }
 
 // دالة لحفظ السمة في قاعدة البيانات

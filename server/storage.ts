@@ -468,6 +468,7 @@ export class DatabaseStorage implements IStorage {
             email: row.email,
             isAdmin: !!row.is_admin,
             preferredLanguage: row.preferred_language || 'en',
+            preferredTheme: row.preferred_theme || 'system',
             createdAt: row.created_at,
             updatedAt: row.updated_at
           }));

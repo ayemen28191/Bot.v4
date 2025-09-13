@@ -58,16 +58,7 @@ export default function SettingsPage() {
     // تحديث السمة عند تغيير المستخدم
     const userTheme = getCurrentTheme(user);
     setTheme(userTheme);
-
-    if (theme === 'system') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const handleChange = (e: MediaQueryListEvent) => {
-        applyTheme('system');
-      };
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    }
-  }, [theme]);
+  }, [user]);
 
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -112,7 +103,7 @@ export default function SettingsPage() {
     }
   }, [user]);
 
-  // Mutation to save user settings to database
+  // Mutation to save user language settings to database
   const saveUserSettingsMutation = useMutation({
     mutationFn: async (preferredLanguage: string) => {
       const response = await apiRequest('PUT', '/api/user/settings', {
@@ -146,7 +137,7 @@ export default function SettingsPage() {
     
     // Save to database if user is logged in
     if (user) {
-      saveUserSettingsMutation.mutate({ preferredLanguage: newLang });
+      saveUserSettingsMutation.mutate(newLang);
     } else {
       // For non-logged users, just show success locally
       setShowSuccess(true);
@@ -156,21 +147,17 @@ export default function SettingsPage() {
     }
   };
 
+
   const handleThemeChange = (newTheme: Theme) => {
     setTheme(newTheme);
-    // Apply theme immediately using the new system
-    changeTheme(newTheme, false);
+    // Apply theme immediately using the new system - this handles both localStorage and database saving
+    changeTheme(newTheme, !!user); // Save to DB only if user is logged in
     
-    // Save to database if user is logged in
-    if (user) {
-      saveUserSettingsMutation.mutate({ preferredTheme: newTheme });
-    } else {
-      // For non-logged users, just show success locally
-      setShowSuccess(true);
-      setTimeout(() => {
-        setShowSuccess(false);
-      }, 3000);
-    }
+    // Show success message for local feedback
+    setShowSuccess(true);
+    setTimeout(() => {
+      setShowSuccess(false);
+    }, 3000);
   };
 
   const themes = [

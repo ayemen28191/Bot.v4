@@ -146,27 +146,11 @@
     <div id="root"></div>
     
     <script>
-      // كشف وتطبيق الوضع المحفوظ
+      // تهيئة الوضع الافتراضي للنظام - سيتم استبداله بالنظام الجديد
       (function() {
         const root = document.documentElement;
-        
-        // قراءة الوضع من localStorage
-        const savedTheme = localStorage.getItem('ui-theme');
-        if (savedTheme && savedTheme !== 'system') {
-          root.setAttribute('data-theme', savedTheme);
-        } else {
-          // استخدام تفضيل النظام
-          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          root.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
-        }
-        
-        // مراقبة تغيير تفضيلات النظام
-        window.matchMedia('(prefers-color-scheme: dark)').addListener(function(e) {
-          const currentTheme = localStorage.getItem('ui-theme');
-          if (!currentTheme || currentTheme === 'system') {
-            root.setAttribute('data-theme', e.matches ? 'dark' : 'light');
-          }
-        });
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        root.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
       })();
       
       // إخفاء شاشة التحميل الأولية بعد تحميل التطبيق

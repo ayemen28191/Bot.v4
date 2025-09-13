@@ -1,6 +1,12 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-
-type Theme = 'light' | 'dark' | 'system';
+import { 
+  getCurrentTheme, 
+  changeTheme, 
+  setupSystemThemeListener, 
+  initializeDefaultTheme,
+  getCurrentThemeState,
+  type Theme 
+} from '@/lib/themeSystem';
 
 interface ThemeProviderProps {
   children: ReactNode;
@@ -14,7 +20,7 @@ interface ThemeProviderState {
 }
 
 const initialState: ThemeProviderState = {
-  theme: 'light',
+  theme: 'system',
   setTheme: () => null,
 };
 
@@ -22,58 +28,47 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 export function ThemeProvider({
   children,
-  defaultTheme = 'light',
+  defaultTheme = 'system',
   storageKey = 'ui-theme',
   ...props
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(() => {
-    // أولاً نحاول قراءة من localStorage
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(storageKey);
-      if (stored) return stored as Theme;
-      
-      // ثم نحاول قراءة من theme.json إذا لم يوجد في localStorage
-      try {
-        // قراءة theme.json من العنصر data إذا كان موجود
-        const themeJsonElement = document.querySelector('[data-theme-config]');
-        if (themeJsonElement) {
-          const themeConfig = JSON.parse(themeJsonElement.getAttribute('data-theme-config') || '{}');
-          if (themeConfig.appearance) {
-            return themeConfig.appearance as Theme;
-          }
-        }
-      } catch (error) {
-        console.warn('فشل في قراءة إعدادات theme.json:', error);
-      }
+      // استخدام نظام السمات المتطور بدلاً من localStorage مباشرة
+      const currentTheme = getCurrentTheme();
+      console.log('ThemeProvider initialized with theme:', currentTheme);
+      return currentTheme;
     }
-    
     return defaultTheme;
   });
 
   useEffect(() => {
-    const root = window.document.documentElement;
-
-    root.classList.remove('light', 'dark');
-
-    if (theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light';
-
-      root.classList.add(systemTheme);
-      root.setAttribute('data-theme', systemTheme);
-      return;
+    // تهيئة النظام الافتراضي فقط في البداية
+    if (typeof window !== 'undefined') {
+      initializeDefaultTheme();
+      
+      // إعداد مستمع لتغييرات النظام
+      const cleanupListener = setupSystemThemeListener();
+      
+      return cleanupListener;
     }
-
-    root.classList.add(theme);
-    root.setAttribute('data-theme', theme);
+  }, []);
+  
+  useEffect(() => {
+    // تحديث الحالة المحلية عند تغيير السمة من خلال النظام الخارجي
+    const currentSystemTheme = getCurrentThemeState();
+    if (currentSystemTheme !== theme) {
+      setTheme(currentSystemTheme);
+    }
   }, [theme]);
 
   const value = {
     theme,
-    setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme);
-      setTheme(theme);
+    setTheme: (newTheme: Theme) => {
+      console.log('ThemeProvider setTheme called with:', newTheme);
+      // استخدام نظام السمات المتطور
+      changeTheme(newTheme);
+      setTheme(newTheme);
     },
   };
 

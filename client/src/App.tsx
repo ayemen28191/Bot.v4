@@ -91,7 +91,7 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="dark" storageKey="binar-theme">
+      <ThemeProvider defaultTheme="system" storageKey="binar-theme">
         <TooltipProvider>
           <AuthProvider>
             <Router />
