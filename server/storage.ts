@@ -447,6 +447,7 @@ export class DatabaseStorage implements IStorage {
             displayName: row.display_name,
             email: row.email,
             isAdmin: !!row.is_admin,
+            preferredLanguage: row.preferred_language || 'en',
             createdAt: row.created_at,
             updatedAt: row.updated_at
           }));
