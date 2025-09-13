@@ -92,8 +92,7 @@ export function changeTheme(newTheme: Theme, saveToDatabase: boolean = true) {
     saveThemeToDatabase(newTheme);
   }
 
-  // إرسال حدث لإخطار ThemeProvider بالتغيير
-  dispatchThemeChangeEvent(newTheme);
+  // تم حذف استدعاء الحدث لأن النظام يعمل بدونه
 }
 
 // دالة لحفظ السمة في قاعدة البيانات
