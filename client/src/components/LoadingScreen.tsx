@@ -60,9 +60,13 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ message }) => {
           <div className="absolute inset-0 -right-2 -bottom-2 w-44 h-44 bg-blue-500/10 rounded-full blur-md animate-pulse" 
                style={{ animationDelay: '0.5s' }}></div>
           <img
-            src="/images/robot-logo.svg"
+            src="/robot-logo.svg"
             alt="ROBOT DATA"
             className="w-40 h-40 mb-4 relative z-10"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+            }}
           />
         </div>
 
