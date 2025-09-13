@@ -207,7 +207,7 @@ export default function IndicatorsPage() {
     fetch(`/api/market-status?market=forex&timezone=${encodeURIComponent(tz)}`)
       .then(response => {
         if (!response.ok) {
-          throw new Error('فشل في جلب حالة السوق');
+          throw new Error(t('market_status_api_error'));
         }
         return response.json();
       })
@@ -215,7 +215,7 @@ export default function IndicatorsPage() {
         setLocalMarketStatus(data);
       })
       .catch(error => {
-        console.error('خطأ في جلب حالة السوق:', error);
+        console.error(t('market_status_fetch_error'), error);
         // استخدام حالة افتراضية
         setLocalMarketStatus({
           isOpen: true,
@@ -228,7 +228,7 @@ export default function IndicatorsPage() {
       fetch(`/api/market-status?market=forex&timezone=${encodeURIComponent(tz)}`)
         .then(response => response.json())
         .then(data => setLocalMarketStatus(data))
-        .catch(error => console.error('خطأ في تحديث حالة السوق:', error));
+        .catch(error => console.error(t('market_status_update_error'), error));
     }, 300000);
     
     // تنظيف عند إزالة المكون
@@ -370,7 +370,7 @@ export default function IndicatorsPage() {
                   {indicator.strengthValue !== undefined && (
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{t('signal_strength') || 'قوة الإشارة'}</span>
+                        <span>{t('signal_strength')}</span>
                         <span className="font-medium">{indicator.strengthValue}%</span>
                       </div>
                       <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
@@ -390,11 +390,11 @@ export default function IndicatorsPage() {
 
                   <div className="flex justify-between items-center text-xs text-muted-foreground mt-1">
                     <div className="flex items-center gap-1">
-                      <span>{t('indicator_value') || 'قيمة المؤشر'}: </span>
+                      <span>{t('indicator_value')}: </span>
                       <span className="font-semibold">{indicator.value}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <span>{t('timeframe') || 'الإطار الزمني'}: </span>
+                      <span>{t('timeframe')}: </span>
                       <span className="font-semibold">{indicator.timeframe}</span>
                     </div>
                   </div>
@@ -407,12 +407,12 @@ export default function IndicatorsPage() {
                   className="text-xs w-full text-muted-foreground hover:text-foreground hover:bg-muted/60"
                   onClick={() => {
                     toast({
-                      title: t('updated') || 'تم التحديث',
-                      description: t('indicator_updated') || 'تم تحديث بيانات المؤشر بنجاح',
+                      title: t('updated'),
+                      description: t('indicator_updated'),
                     });
                   }}
                 >
-                  <RefreshCw className="h-3 w-3 mr-1" /> {t('refresh') || 'تحديث'}
+                  <RefreshCw className="h-3 w-3 mr-1" /> {t('refresh')}
                 </Button>
               </CardFooter>
             </Card>

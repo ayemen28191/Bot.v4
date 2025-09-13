@@ -64,7 +64,7 @@ export default function ChatPage() {
     if (!isConnected) {
       // تهيئة نظام الاتصال المحلي فقط إذا لم يكن متصلاً بالفعل
       initializeWebSocket();
-      console.log('تم تهيئة نظام المحاكاة للدردشة');
+      console.log(t('chat_simulation_initialized'));
     }
   }, [isConnected, initializeWebSocket]);
 
@@ -172,14 +172,14 @@ export default function ChatPage() {
       
       // إظهار رسالة نجاح
       toast({
-        title: t('export_success') || 'تم تصدير المحادثة بنجاح',
-        description: t('export_success_desc') || `تم حفظ المحادثة في ملف ${fileName}`,
+        title: t('export_success'),
+        description: `${t('export_success_desc')} ${fileName}`,
       });
     } catch (error) {
-      console.error('حدث خطأ أثناء تصدير المحادثة:', error);
+      console.error(t('error_exporting_chat'), error);
       toast({
-        title: t('export_error') || 'خطأ في التصدير',
-        description: t('export_error_desc') || 'حدث خطأ أثناء محاولة تصدير المحادثة',
+        title: t('export_error'),
+        description: t('export_error_desc'),
         variant: 'destructive',
       });
     }
@@ -219,14 +219,14 @@ export default function ChatPage() {
           
           // عرض رسالة نجاح
           toast({
-            title: t('import_success') || 'تم استيراد المحادثة بنجاح',
-            description: t('import_success_desc') || `تم استيراد ${importedMessages.length} رسالة`,
+            title: t('import_success'),
+            description: `${t('import_success_desc')} ${importedMessages.length}`,
           });
         } catch (parseError) {
-          console.error('خطأ في تحليل بيانات المحادثة المستوردة:', parseError);
+          console.error(t('error_parsing_imported_chat'), parseError);
           toast({
-            title: t('import_error') || 'خطأ في الاستيراد',
-            description: t('import_error_desc') || 'الملف غير صالح أو معطوب',
+            title: t('import_error'),
+            description: t('import_error_desc'),
             variant: 'destructive',
           });
         }
@@ -234,18 +234,18 @@ export default function ChatPage() {
       
       reader.onerror = () => {
         toast({
-          title: t('import_error') || 'خطأ في الاستيراد',
-          description: t('import_error_desc') || 'حدث خطأ أثناء قراءة الملف',
+          title: t('import_error'),
+          description: t('import_error_desc'),
           variant: 'destructive',
         });
       };
       
       reader.readAsText(file);
     } catch (error) {
-      console.error('خطأ في استيراد المحادثة:', error);
+      console.error(t('error_importing_chat'), error);
       toast({
-        title: t('import_error') || 'خطأ في الاستيراد',
-        description: t('import_error_desc') || 'حدث خطأ أثناء محاولة استيراد المحادثة',
+        title: t('import_error'),
+        description: t('import_error_desc'),
         variant: 'destructive',
       });
     }
@@ -284,18 +284,18 @@ export default function ChatPage() {
       
       if (permissionResult) {
         toast({
-          title: t('notifications_enabled') || 'تم تمكين الإشعارات',
-          description: t('notifications_enabled_desc') || 'ستتلقى إشعارات للرسائل الجديدة عندما تكون خارج التطبيق',
+          title: t('notifications_enabled'),
+          description: t('notifications_enabled_desc'),
         });
       } else {
         toast({
-          title: t('notifications_blocked') || 'تم منع الإشعارات',
+          title: t('notifications_blocked'),
           description: t('notifications_blocked_desc') || 'يرجى تمكين الإشعارات في إعدادات المتصفح لتلقي تنبيهات الرسائل الجديدة',
           variant: 'destructive',
         });
       }
     } catch (error) {
-      console.error('خطأ في طلب إذن الإشعارات:', error);
+      console.error(t('error_notifications_permission'), error);
       toast({
         title: t('error') || 'خطأ',
         description: t('notifications_error') || 'حدث خطأ أثناء محاولة تمكين الإشعارات',
@@ -323,7 +323,7 @@ export default function ChatPage() {
         });
       }
     } catch (error) {
-      console.error('خطأ في تبديل وضع الاتصال:', error);
+      console.error(t('error_toggling_connection_mode'), error);
       toast({
         title: t('error') || 'خطأ',
         description: t('connection_mode_error') || 'حدث خطأ أثناء محاولة تغيير وضع الاتصال',

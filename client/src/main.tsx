@@ -17,7 +17,7 @@ if (typeof window !== 'undefined') {
       document.documentElement.classList.add(themeConfig.appearance);
     }
   } catch (error) {
-    console.warn('فشل في تطبيق إعدادات theme.json:', error);
+    console.warn(t('theme_config_error'), error);
   }
 }
 

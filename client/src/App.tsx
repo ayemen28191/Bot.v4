@@ -42,7 +42,7 @@ function HTTPSHandler() {
                            window.location.hostname === 'replit.com';
       
       if (isSecure && isReplitApp && !isOfflineMode) {
-        console.log('تم اكتشاف HTTPS في بيئة Replit - تفعيل وضع عدم الاتصال تلقائيًا');
+        console.log(t('https_detected_replit'));
         
         // تفعيل وضع عدم الاتصال
         enableOfflineMode();
@@ -57,7 +57,7 @@ function HTTPSHandler() {
         }, 2000);
         
         // تسجيل في سجل اجراء التحميل
-        console.info('تم تفعيل وضع عدم الاتصال تلقائيًا بسبب بيئة Replit HTTPS');
+        console.info(t('offline_mode_auto_activated_replit'));
       }
     }
   }, [enableOfflineMode, isOfflineMode, toast]);

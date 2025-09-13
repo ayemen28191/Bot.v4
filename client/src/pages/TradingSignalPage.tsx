@@ -157,7 +157,7 @@ export default function TradingSignalPage() {
   
   // دالة لتفعيل وضع عدم الاتصال
   const enableOfflineMode = useCallback(() => {
-    console.log('تفعيل وضع عدم الاتصال في صفحة إشارات التداول');
+    console.log(t('offline_mode_enabled_trading_page'));
     setIsOfflineMode(true);
     localStorage.setItem('offline_mode', 'enabled');
     
@@ -166,8 +166,8 @@ export default function TradingSignalPage() {
     
     // إظهار إشعار للمستخدم
     toast({
-      title: "تم تفعيل وضع عدم الاتصال",
-      description: "سيتم استخدام البيانات المخزنة محليًا. بعض الميزات قد تكون محدودة.",
+      title: t('offline_mode_enabled_title'),
+      description: t('offline_mode_enabled_desc'),
       variant: "default",
       duration: 5000
     });
@@ -184,7 +184,7 @@ export default function TradingSignalPage() {
       if (errorMessage.includes(wsSecurityError) || errorMessage.includes('failed to connect to websocket')) {
         // تشغيل وضع عدم الاتصال تلقائيًا عند اكتشاف خطأ WebSocket في بيئة HTTPS
         if (!isOfflineMode) {
-          console.log('اكتشاف خطأ أمان WebSocket في بيئة HTTPS، تفعيل وضع عدم الاتصال تلقائيًا');
+          console.log(t('websocket_security_error_detected'));
           enableOfflineMode();
         }
       }
@@ -214,7 +214,7 @@ export default function TradingSignalPage() {
   
   // دالة لتعطيل وضع عدم الاتصال
   const disableOfflineMode = useCallback(() => {
-    console.log('تعطيل وضع عدم الاتصال في صفحة إشارات التداول');
+    console.log(t('offline_mode_disabled_trading_page'));
     setIsOfflineMode(false);
     localStorage.removeItem('offline_mode');
     
@@ -225,15 +225,15 @@ export default function TradingSignalPage() {
     checkConnection().then(isConnected => {
       if (isConnected) {
         toast({
-          title: "تم استعادة الاتصال",
-          description: "تم الاتصال بالخادم بنجاح.",
+          title: t('connection_restored_title'),
+          description: t('connection_restored_desc'),
           variant: "default",
           duration: 3000
         });
       } else {
         toast({
-          title: "تحليل الإشارات جاري",
-          description: "نعمل على تحديث تحليلات السوق. يمكنك الاستمرار في استخدام البيانات المخزنة.",
+          title: t('signal_analysis_pending_title'),
+          description: t('signal_analysis_pending_desc'),
           variant: "destructive",
           duration: 5000
         });
@@ -253,12 +253,12 @@ export default function TradingSignalPage() {
       if (cachedPriceData) {
         const { price, expires } = JSON.parse(cachedPriceData);
         if (expires > Date.now() || isOfflineMode) {
-          console.log('استخدام السعر المخزن محليًا:', price);
+          console.log(t('using_locally_stored_price'), price);
           return Number(price);
         }
       }
     } catch (cacheError) {
-      console.warn('تعذر قراءة السعر المخزن محليًا:', cacheError);
+      console.warn(t('could_not_read_stored_price_warn'), cacheError);
     }
     return null;
   };
@@ -648,7 +648,7 @@ export default function TradingSignalPage() {
     analysis: MarketAnalysis;
     indicators: Record<string, { value: number; signal: 'buy' | 'sell' | 'neutral' }>;
   }> => {
-    console.log('تحليل السوق لـ:', pair, timeframe, selectedPair.type);
+    console.log(t('market_analysis_for'), pair, timeframe, selectedPair.type);
 
     try {
       // استخدام نقطة نهاية API الخاصة بالتحليل الفني الحقيقي
@@ -656,7 +656,7 @@ export default function TradingSignalPage() {
       const response = await retryFetch(url, 3, 1500);
       const analysisData = await response.json();
       
-      console.log('استجابة تحليل السوق:', analysisData);
+      console.log(t('market_analysis_response'), analysisData);
 
       if (!analysisData || analysisData.error) {
         throw new Error(analysisData?.error || 'فشل في الحصول على تحليل السوق');
@@ -670,23 +670,23 @@ export default function TradingSignalPage() {
       };
       
       // طباعة الإشارة المستلمة للتصحيح
-      console.log('الإشارة المستلمة من الخادم:', analysisData.signal);
-      console.log('نوع الإشارة المستلمة:', typeof analysisData.signal);
+      console.log(t('signal_received_from_server'), analysisData.signal);
+      console.log(t('signal_type_received'), typeof analysisData.signal);
       
       // معالجة محسنة للإشارة - تحويل الإشارة إلى نص سفلي والتحقق من القيمة
       const serverSignal = String(analysisData.signal).toLowerCase().trim();
-      console.log('الإشارة بعد المعالجة:', serverSignal);
+      console.log(t('signal_after_processing'), serverSignal);
       
       let finalSignal: SignalType = 'WAIT';
       
       if (serverSignal === 'buy') {
         finalSignal = 'UP';
-        console.log('تم تحويل الإشارة إلى UP');
+        console.log(t('signal_converted_to_up'));
       } else if (serverSignal === 'sell') {
         finalSignal = 'DOWN';
-        console.log('تم تحويل الإشارة إلى DOWN');
+        console.log(t('signal_converted_to_down'));
       } else {
-        console.log('الإشارة لم تتطابق مع أي حالة، استخدام WAIT');
+        console.log(t('signal_no_match_using_wait'));
       }
 
       // تحويل المؤشرات إلى التنسيق المطلوب للواجهة
@@ -826,13 +826,13 @@ export default function TradingSignalPage() {
 
       // إذا كان الجهاز في وضع عدم الاتصال، استرجع السعر من التخزين المحلي
       if (isOfflineMode) {
-        console.log('جاري استرجاع السعر في وضع عدم الاتصال');
+        console.log(t('fetching_price_offline_mode'));
         const cachedPrice = getCachedPrice(symbol);
         if (cachedPrice !== null) {
           return cachedPrice;
         } else {
           // إذا لم يتوفر سعر مخزن محليًا، استخدم قيمة افتراضية
-          console.log('استخدام سعر افتراضي في وضع عدم الاتصال');
+          console.log(t('using_default_price_offline'));
           return getDefaultPriceForSymbol(symbol);
         }
       }
@@ -858,16 +858,16 @@ export default function TradingSignalPage() {
           const cachedPrice = getCachedPrice(symbol);
           if (cachedPrice !== null) {
             toast({
-              title: 'استخدام بيانات مخزنة',
-              description: 'تم استلام سعر غير صالح من الخادم، يتم استخدام بيانات محلية.',
+              title: t('cached_data_used_title'),
+              description: t('cached_data_used_desc'),
               variant: "default",
             });
             return cachedPrice;
           }
           
           toast({
-            title: 'خطأ في تحليل البيانات',
-            description: 'حدث خطأ أثناء تحليل البيانات. يرجى المحاولة مرة أخرى.',
+            title: t('data_analysis_error_title'),
+            description: t('data_analysis_error_desc'),
             variant: "destructive",
           });
           return null;
@@ -896,8 +896,8 @@ export default function TradingSignalPage() {
       if (cachedPrice !== null) {
         console.log('استخدام السعر المخزن محليًا بسبب فشل الطلب:', cachedPrice);
         toast({
-          title: "استخدام بيانات مخزنة",
-          description: "تم تحميل البيانات المخزنة مسبقاً لضمان استمرارية التحليل.",
+          title: t('cached_data_used_title'),
+          description: t('cached_data_loaded_desc'),
           variant: "default",
         });
         
@@ -910,15 +910,15 @@ export default function TradingSignalPage() {
       }
       
       toast({
-        title: 'تحويل للوضع المحلي',
-        description: 'نعمل على تحديث بيانات الأسعار. يمكنك تفعيل وضع التحليل المحلي للاستمرار.',
+        title: t('local_mode_switch_title'),
+        description: t('updating_price_data_desc'),
         variant: "destructive",
         action: !isOfflineMode ? (
           <button 
             onClick={enableOfflineMode} 
             className="bg-yellow-500 hover:bg-yellow-600 text-black px-3 py-1 rounded-lg text-xs"
           >
-            تفعيل وضع عدم الاتصال
+            {t('enable_offline_mode_button')}
           </button>
         ) : undefined
       });
@@ -930,7 +930,7 @@ export default function TradingSignalPage() {
 
   // تحسين دالة calculateTargetPrice لتعمل بشكل أكثر دقة مع إشارات البيع والشراء
   const calculateTargetPrice = (currentPrice: number, signal: SignalType, timeframe: TimeFrame): number => {
-    console.log('حساب السعر المتوقع المحسّن:', { currentPrice, signal, timeframe });
+    console.log(t('calculating_enhanced_target_price'), { currentPrice, signal, timeframe });
 
     // تاريخ ووقت التحليل
     const analysisTime = new Date();
@@ -1377,8 +1377,8 @@ export default function TradingSignalPage() {
         const reasonText = reasons[event.detail.reason] || 'سبب غير معروف';
         
         toast({
-          title: "تم تفعيل وضع عدم الاتصال",
-          description: `سبب التفعيل: ${reasonText}. سيتم استخدام البيانات المخزنة محليًا.`,
+          title: t('offline_mode_enabled_title'),
+          description: `${t('offline_mode_activation_reason')} ${reasonText}. ${t('offline_mode_enabled_desc')}`,
           variant: "default",
           duration: 7000
         });

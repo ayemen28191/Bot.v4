@@ -103,13 +103,13 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
     {
       href: "/admin/api-keys",
       icon: <KeyRound size={18} />,
-      label: "مفاتيح API",
+      label: t('api_keys_label'),
       isActive: location.includes('/admin/api-keys')
     },
     {
       href: "/admin/deployment",
       icon: <Server size={18} />,
-      label: "خوادم النشر",
+      label: t('deployment_servers_label'),
       isActive: location.includes('/admin/deployment')
     },
     {
@@ -121,7 +121,7 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
   ];
 
   if (!user?.isAdmin) {
-    return <div className="text-center p-8">يجب تسجيل الدخول كمشرف للوصول إلى لوحة التحكم</div>;
+    return <div className="text-center p-8">{t('admin_login_required')}</div>;
   }
 
   const handleLogout = () => {

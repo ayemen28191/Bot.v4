@@ -14,7 +14,7 @@ const fetchHeatmapData = async (): Promise<HeatmapData> => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('خطأ في جلب بيانات الخريطة الحرارية:', error);
+    console.error(t('heatmap_data_fetch_error'), error);
     // إرجاع بيانات فارغة في حالة الخطأ
     return {
       forex: [],
@@ -99,7 +99,7 @@ export function useHeatmap({
           data: heatmapData,
           timestamp: currentTime
         }));
-        console.log('تم تحديث بيانات النسخة الاحتياطية');
+        console.log(t('backup_data_updated_log'));
       }
       
       // تخزين بيانات لأزواج محددة للاستخدام في حالات الطوارئ
@@ -139,7 +139,7 @@ export function useHeatmap({
         });
       }
     } catch (err) {
-      console.error('خطأ في جلب بيانات الخريطة الحرارية:', err);
+      console.error(t('heatmap_data_fetch_error'), err);
       setError(err instanceof Error ? err : new Error(String(err)));
       
       // محاولة استرجاع البيانات المخزنة محليًا في حالة الخطأ
@@ -165,7 +165,7 @@ export function useHeatmap({
         
         // التحقق من صلاحية البيانات المخزنة
         if (Date.now() - timestamp < CACHE_DURATION || offlineMode) {
-          console.log('استخدام بيانات مخزنة من heatmap_data، عمر البيانات:', 
+          console.log(t('using_cached_heatmap_data'), 
                      Math.floor((Date.now() - timestamp) / 60000), 'دقائق');
           return data;
         }
@@ -182,12 +182,12 @@ export function useHeatmap({
             const { data, timestamp } = JSON.parse(pairData);
             
             if (Date.now() - timestamp < CACHE_DURATION * 2 || offlineMode) {
-              console.log(`استخدام بيانات مخزنة للزوج ${pair}، عمر البيانات:`, 
+              console.log(`${t('using_cached_pair_data')} ${pair}, ${t('data_age')}:`, 
                          Math.floor((Date.now() - timestamp) / 60000), 'دقائق');
               return data;
             }
           } catch (pairErr) {
-            console.warn(`خطأ في استرجاع بيانات ${pairKey}:`, pairErr);
+            console.warn(`${t('pair_data_fetch_error')} ${pairKey}:`, pairErr);
           }
         }
       }
@@ -197,14 +197,14 @@ export function useHeatmap({
       if (backupData && offlineMode) {
         try {
           const { data } = JSON.parse(backupData);
-          console.log('استخدام بيانات النسخة الاحتياطية في وضع عدم الاتصال');
+          console.log(t('using_backup_data_offline'));
           return data;
         } catch (backupErr) {
-          console.warn('خطأ في استرجاع بيانات النسخة الاحتياطية:', backupErr);
+          console.warn(t('backup_data_fetch_error'), backupErr);
         }
       }
     } catch (err) {
-      console.warn('خطأ في استرجاع بيانات الخريطة الحرارية من التخزين المحلي:', err);
+      console.warn(t('local_heatmap_data_error'), err);
     }
     
     return null;
