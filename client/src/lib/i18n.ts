@@ -558,7 +558,7 @@ const translations: Translations = {
     
     // API Keys messages
     api_key_saved_successfully: 'تم حفظ مفتاح API بنجاح',
-    failed_to_save_api_key: 'فشل في حفظ مفتاح API',
+
     api_key_deleted_successfully: 'تم حذف مفتاح API بنجاح',
     failed_to_delete_api_key: 'فشل في حذف مفتاح API',
     failed_to_fetch_api_keys: 'فشل في جلب مفاتيح API',
@@ -608,7 +608,6 @@ const translations: Translations = {
     admin_reset_password_title: 'إعادة تعيين كلمة مرور المسؤول',
     admin_reset_password_desc: 'يمكنك تعيين كلمة مرور جديدة للمسؤول هنا. يرجى استخدام كلمة مرور قوية وآمنة.',
     new_password: 'كلمة المرور الجديدة',
-    confirm_password: 'تأكيد كلمة المرور',
     enter_new_password: 'أدخل كلمة المرور الجديدة',
     re_enter_password: 'أعد إدخال كلمة المرور',
     reset_password_btn: 'إعادة تعيين كلمة المرور',
@@ -655,7 +654,7 @@ const translations: Translations = {
     failed_to_get_api_keys: 'فشل في جلب مفاتيح API',
     saved_successfully: 'تم الحفظ',
     saved_key_successfully: 'تم حفظ المفتاح {key} بنجاح',
-    failed_to_save_api_key: 'فشل في حفظ مفتاح API',
+
     test_successful: 'اختبار ناجح',
     test_failed: 'اختبار فاشل',
     failed_to_test_key: 'فشل في اختبار المفتاح',
@@ -675,19 +674,13 @@ const translations: Translations = {
     failed_to_update_keys: 'فشل في تحديث قائمة المفاتيح',
 
     // Error and success messages
-    passwords_do_not_match: 'كلمات المرور غير متطابقة',
-    password_must_be_longer_than_6_characters: 'كلمة المرور يجب أن تكون أطول من 6 أحرف',
-    admin_password_reset_successfully: 'تم إعادة تعيين كلمة مرور المسؤول بنجاح',
     failed_to_reset_password: 'فشل في إعادة تعيين كلمة المرور',
     error_occurred_while_resetting_password: 'حدث خطأ أثناء إعادة تعيين كلمة المرور',
-    show: 'عرض',
-    hide: 'إخفاء',
 
     // Additional common messages
     confirm_delete_key: 'هل أنت متأكد من حذف المفتاح',
     unknown_error: 'خطأ غير معروف',
     please_login_to_access: 'يرجى تسجيل الدخول للوصول إلى هذه الصفحة',
-    login: 'تسجيل الدخول',
     no_permission_access: 'ليس لديك صلاحية للوصول إلى هذه الصفحة',
 
     // Trading platforms
@@ -711,11 +704,6 @@ const translations: Translations = {
 
     // Trading messages
     analysis_data_updating: 'تحديث بيانات التحليل جارٍ. يمكنك استخدام وضع التحليل المحلي للاستمرار في استخدام التطبيق بكامل مميزاته.',
-    offline_mode_enabled_trading_page: 'تم تفعيل وضع عدم الاتصال في صفحة التداول',
-    offline_mode_disabled_trading_page: 'تم تعطيل وضع عدم الاتصال في صفحة التداول',
-    websocket_security_error_detected: 'تم اكتشاف خطأ أمان في WebSocket',
-    using_locally_stored_price: 'استخدام السعر المحفوظ محلياً',
-    could_not_read_stored_price_warn: 'لم يمكن قراءة السعر المحفوظ',
 
     // Deployment stages
     deployment_stage_connection: 'الاتصال',
@@ -904,8 +892,6 @@ const translations: Translations = {
     logout_failed: 'Logout failed',
     
     // Admin messages
-    admin_password_reset_successfully: 'Admin password reset successfully',
-    passwords_do_not_match: 'Passwords do not match',
     password_must_be_longer_than_6_characters: 'Password must be longer than 6 characters',
     
     // System updater messages
@@ -1015,7 +1001,6 @@ const translations: Translations = {
     market_closed_title: 'Market Closed',
     cooldown_period: 'Cooldown Period',
     previous_signals: 'Previous Signals',
-    show: 'Show',
     hide: 'Hide',
     forex: 'Forex',
     crypto: 'Crypto',
@@ -1321,7 +1306,6 @@ const translations: Translations = {
     admin_reset_password_title: 'Reset Admin Password',
     admin_reset_password_desc: 'You can set a new password for the admin here. Please use a strong and secure password.',
     new_password: 'New Password',
-    confirm_password: 'Confirm Password',
     enter_new_password: 'Enter new password',
     re_enter_password: 'Re-enter password',
     reset_password_btn: 'Reset Password',
@@ -1368,7 +1352,6 @@ const translations: Translations = {
     failed_to_get_api_keys: 'Failed to get API keys',
     saved_successfully: 'Saved Successfully',
     saved_key_successfully: 'Key {key} saved successfully',
-    failed_to_save_api_key: 'Failed to save API key',
     test_successful: 'Test Successful',
     test_failed: 'Test Failed',
     failed_to_test_key: 'Failed to test key',
@@ -1388,19 +1371,13 @@ const translations: Translations = {
     failed_to_update_keys: 'Failed to update keys list',
 
     // Error and success messages
-    passwords_do_not_match: 'Passwords do not match',
-    password_must_be_longer_than_6_characters: 'Password must be longer than 6 characters',
-    admin_password_reset_successfully: 'Admin password reset successfully',
     failed_to_reset_password: 'Failed to reset password',
     error_occurred_while_resetting_password: 'An error occurred while resetting password',
-    show: 'Show',
-    hide: 'Hide',
 
     // Additional common messages
     confirm_delete_key: 'Are you sure you want to delete the key',
     unknown_error: 'Unknown error',
     please_login_to_access: 'Please login to access this page',
-    login: 'Login',
     no_permission_access: 'You do not have permission to access this page',
 
     // Trading platforms
@@ -1424,11 +1401,6 @@ const translations: Translations = {
 
     // Trading messages
     analysis_data_updating: 'Analysis data updating. You can use offline analysis mode to continue using the app with all features.',
-    offline_mode_enabled_trading_page: 'Offline mode enabled on trading page',
-    offline_mode_disabled_trading_page: 'Offline mode disabled on trading page',
-    websocket_security_error_detected: 'WebSocket security error detected',
-    using_locally_stored_price: 'Using locally stored price',
-    could_not_read_stored_price_warn: 'Could not read stored price',
 
     // Deployment stages
     deployment_stage_connection: 'Connection',
@@ -1611,7 +1583,7 @@ const translations: Translations = {
     delete: 'हटाएं',
     save: 'सेव करें',
     cancel: 'रद्द करें',
-    show: 'दिखाएं',
+
     hide: 'छिपाएं',
 
     // Languages and themes
@@ -1784,7 +1756,7 @@ const translations: Translations = {
     create_account: 'नया खाता बनाएं',
     username: 'उपयोगकर्ता नाम',
     password: 'पासवर्ड',
-    confirm_password: 'पासवर्ड की पुष्टि करें',
+
     display_name: 'डिस्प्ले नाम',
     email: 'ईमेल',
     password_mismatch: 'पासवर्ड मेल नहीं खाते',
@@ -2044,8 +2016,8 @@ const translations: Translations = {
     
     // Admin messages
     admin_password_reset_successfully: 'व्यवस्थापक पासवर्ड सफलतापूर्वक रीसेट हुआ',
-    passwords_do_not_match: 'पासवर्ड मेल नहीं खाते',
-    password_must_be_longer_than_6_characters: 'पासवर्ड 6 अक्षरों से अधिक होना चाहिए',
+
+
     
     // System updater messages
     system_update_completed: 'सिस्टम अपडेट पूरा हुआ',
@@ -2062,7 +2034,7 @@ const translations: Translations = {
     admin_reset_password_title: 'व्यवस्थापक पासवर्ड रीसेट करें',
     admin_reset_password_desc: 'आप यहाँ व्यवस्थापक के लिए नया पासवर्ड सेट कर सकते हैं। कृपया मजबूत और सुरक्षित पासवर्ड का उपयोग करें।',
     new_password: 'नया पासवर्ड',
-    confirm_password: 'पासवर्ड की पुष्टि करें',
+
     enter_new_password: 'नया पासवर्ड दर्ज करें',
     re_enter_password: 'पासवर्ड फिर से दर्ज करें',
     reset_password_btn: 'पासवर्ड रीसेट करें',
@@ -2109,7 +2081,6 @@ const translations: Translations = {
     failed_to_get_api_keys: 'API कुंजियां प्राप्त करने में विफल',
     saved_successfully: 'सफलतापूर्वक सहेजा गया',
     saved_key_successfully: 'कुंजी {key} सफलतापूर्वक सहेजी गई',
-    failed_to_save_api_key: 'API कुंजी सहेजने में विफल',
     test_successful: 'परीक्षण सफल',
     test_failed: 'परीक्षण असफल',
     failed_to_test_key: 'कुंजी परीक्षण में विफल',
@@ -2129,19 +2100,16 @@ const translations: Translations = {
     failed_to_update_keys: 'कुंजी सूची अपडेट करने में विफल',
 
     // Error and success messages
-    passwords_do_not_match: 'पासवर्ड मेल नहीं खाते',
-    password_must_be_longer_than_6_characters: 'पासवर्ड 6 अक्षरों से अधिक होना चाहिए',
-    admin_password_reset_successfully: 'व्यवस्थापक पासवर्ड सफलतापूर्वक रीसेट किया गया',
+
+
     failed_to_reset_password: 'पासवर्ड रीसेट करने में विफल',
     error_occurred_while_resetting_password: 'पासवर्ड रीसेट करते समय त्रुटि हुई',
-    show: 'दिखाएं',
-    hide: 'छुपाएं',
+
 
     // Additional common messages
     confirm_delete_key: 'क्या आप वाकई कुंजी हटाना चाहते हैं',
     unknown_error: 'अज्ञात त्रुटि',
     please_login_to_access: 'इस पृष्ठ तक पहुंचने के लिए कृपया लॉगिन करें',
-    login: 'लॉगिन',
     no_permission_access: 'आपके पास इस पृष्ठ तक पहुंचने की अनुमति नहीं है',
 
     // Trading platforms
@@ -2165,11 +2133,6 @@ const translations: Translations = {
 
     // Trading messages
     analysis_data_updating: 'विश्लेषण डेटा अपडेट हो रहा है। आप सभी सुविधाओं के साथ ऐप का उपयोग जारी रखने के लिए ऑफलाइन विश्लेषण मोड का उपयोग कर सकते हैं।',
-    offline_mode_enabled_trading_page: 'ट्रेडिंग पेज पर ऑफलाइन मोड सक्षम',
-    offline_mode_disabled_trading_page: 'ट्रेडिंग पेज पर ऑफलाइन मोड अक्षम',
-    websocket_security_error_detected: 'वेबसॉकेट सुरक्षा त्रुटि का पता चला',
-    using_locally_stored_price: 'स्थानीय रूप से संग्रहीत मूल्य का उपयोग',
-    could_not_read_stored_price_warn: 'संग्रहीत मूल्य नहीं पढ़ सका',
 
     // Deployment stages
     deployment_stage_connection: 'कनेक्शन',
