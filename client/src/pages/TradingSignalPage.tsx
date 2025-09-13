@@ -6,7 +6,7 @@ import { SignalType } from '@/features/trading/SignalIndicator';
 import { TimeframeButtons } from '@/features/trading';
 import { TimeFrame } from '@/features/trading/TimeframeButtons';
 import { ProbabilityHeatmap } from '@/features/trading';
-import { t } from '@/lib/i18n';
+import { t, getCurrentLanguage } from '@/lib/i18n';
 import { MarketStatus } from '@/features/trading';
 import { MarketClosedAlert } from '@/features/trading';
 import OfflineModeNotice from '@/components/OfflineModeNotice';
@@ -576,21 +576,22 @@ export default function TradingSignalPage() {
   ], []);
 
   // قائمة الأزواج التداولية
+  const currentLanguage = getCurrentLanguage();
   const tradingPairs = useMemo(() => [
-    { symbol: 'EUR/USD', name: 'يورو / دولار أمريكي', type: 'forex' as MarketType },
-    { symbol: 'GBP/USD', name: 'جنيه إسترليني / دولار أمريكي', type: 'forex' as MarketType },
-    { symbol: 'USD/JPY', name: 'دولار أمريكي / ين ياباني', type: 'forex' as MarketType },
-    { symbol: 'USD/CHF', name: 'دولار أمريكي / فرنك سويسري', type: 'forex' as MarketType },
-    { symbol: 'EUR/JPY', name: 'يورو / ين ياباني', type: 'forex' as MarketType },
-    { symbol: 'GBP/JPY', name: 'جنيه إسترليني / ين ياباني', type: 'forex' as MarketType },
-    { symbol: 'BTC/USDT', name: 'بيتكوين / تيثر', type: 'crypto' as MarketType },
-    { symbol: 'ETH/USDT', name: 'إيثريوم / تيثر', type: 'crypto' as MarketType },
-    { symbol: 'XRP/USDT', name: 'ريببل / تيثر', type: 'crypto' as MarketType },
-    { symbol: 'AAPL', name: 'شركة أبل', type: 'stocks' as MarketType },
-    { symbol: 'MSFT', name: 'شركة مايكروسوفت', type: 'stocks' as MarketType },
-    { symbol: 'GOOGL', name: 'شركة جوجل', type: 'stocks' as MarketType },
-    { symbol: 'AMZN', name: 'شركة أمازون', type: 'stocks' as MarketType },
-  ], []);
+    { symbol: 'EUR/USD', name: t('EUR/USD'), type: 'forex' as MarketType },
+    { symbol: 'GBP/USD', name: t('GBP/USD'), type: 'forex' as MarketType },
+    { symbol: 'USD/JPY', name: t('USD/JPY'), type: 'forex' as MarketType },
+    { symbol: 'USD/CHF', name: t('USD/CHF'), type: 'forex' as MarketType },
+    { symbol: 'EUR/JPY', name: t('EUR/JPY'), type: 'forex' as MarketType },
+    { symbol: 'GBP/JPY', name: t('GBP/JPY'), type: 'forex' as MarketType },
+    { symbol: 'BTC/USDT', name: t('BTC/USDT'), type: 'crypto' as MarketType },
+    { symbol: 'ETH/USDT', name: t('ETH/USDT'), type: 'crypto' as MarketType },
+    { symbol: 'XRP/USDT', name: t('XRP/USDT'), type: 'crypto' as MarketType },
+    { symbol: 'AAPL', name: t('AAPL'), type: 'stocks' as MarketType },
+    { symbol: 'MSFT', name: t('MSFT'), type: 'stocks' as MarketType },
+    { symbol: 'GOOGL', name: t('GOOGL'), type: 'stocks' as MarketType },
+    { symbol: 'AMZN', name: t('AMZN'), type: 'stocks' as MarketType },
+  ], [currentLanguage]);
 
   // متغيرات للعداد التنازلي
   const [cooldownTime, setCooldownTime] = useState<number>(() => {
