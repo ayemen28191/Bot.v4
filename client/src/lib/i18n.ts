@@ -2413,22 +2413,38 @@ if (typeof window !== 'undefined') {
   
   console.log('Initial language system setup with English');
 
-  // Add listener for language changes
+  // Add listener for language changes - enhanced dynamic direction support
   window.addEventListener('languageChanged', (event: any) => {
     const detail = event.detail;
     const newLang = detail.language;
+    const isRTL = newLang === 'ar';
+    
+    // Update HTML attributes
     document.documentElement.setAttribute('lang', newLang);
-    document.documentElement.setAttribute('dir', newLang === 'ar' ? 'rtl' : 'ltr');
+    document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
     currentLanguage = newLang;
     
-    // Apply Arabic-specific styling
-    if (newLang === 'ar') {
+    // Apply/remove Arabic-specific styling and classes
+    if (isRTL) {
       document.documentElement.classList.add('ar');
       document.body.classList.add('font-arabic');
+      // Add RTL class for better CSS targeting
+      document.documentElement.classList.add('rtl');
+      document.documentElement.classList.remove('ltr');
     } else {
       document.documentElement.classList.remove('ar');
       document.body.classList.remove('font-arabic');
+      // Add LTR class for better CSS targeting  
+      document.documentElement.classList.add('ltr');
+      document.documentElement.classList.remove('rtl');
     }
+    
+    // Dispatch additional RTL event for components that need to update icons/layouts
+    window.dispatchEvent(new CustomEvent('directionChanged', { 
+      detail: { direction: isRTL ? 'rtl' : 'ltr', language: newLang } 
+    }));
+    
+    console.log(`Direction changed to: ${isRTL ? 'RTL' : 'LTR'} for language: ${newLang}`);
   });
 }
 

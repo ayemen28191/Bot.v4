@@ -31,21 +31,46 @@
 [dir="rtl"] input,
 [dir="rtl"] .number-display {
   direction: ltr;
-  text-align: left;
+  text-align: start; /* logical property بدلاً من left */
 }
 
 [dir="rtl"] input.arabic-input {
   direction: rtl;
-  text-align: right;
+  text-align: end; /* logical property بدلاً من right */
 }
 
 /* تحسين أداء الخطوط العربية */
-[lang="ar"], .font-arabic {
+[lang="ar"], .font-arabic, .rtl {
   font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* دعم اتجاه العناصر الديناميكي */
+.rtl {
+  direction: rtl;
+}
+
+.ltr {
+  direction: ltr;
+}
+
+/* تحسين الأيقونات في RTL - انعكاس الأسهم */
+[dir="rtl"] .icon-arrow-left,
+[dir="rtl"] .lucide-arrow-left {
+  transform: scaleX(-1);
+}
+
+[dir="rtl"] .icon-arrow-right,
+[dir="rtl"] .lucide-arrow-right {
+  transform: scaleX(-1);
+}
+
+/* تحسين التخطيط العام للـ RTL */
+[dir="rtl"] .flex-row-reverse {
+  flex-direction: row-reverse;
 }
 
 /* خطوط للنصوص المختلطة */
@@ -227,12 +252,12 @@ html, body {
 /* دعم اللغة العربية والتصميم المستجيب */
 .arabic-support {
   font-family: 'Tajawal', sans-serif;
-  text-align: right;
+  text-align: end; /* logical property بدلاً من right */
 }
 
 .arabic-support input,
 .arabic-support textarea {
-  text-align: right;
+  text-align: end; /* logical property بدلاً من right */
 }
 
 /* دعم تغيير الاتجاه بناءً على اللغة - يتم التحكم فيه عبر JavaScript */
@@ -265,16 +290,16 @@ html[lang="ar"] .ml-1,
 html[lang="ar"] .ml-2,
 html[lang="ar"] .ml-3,
 html[lang="ar"] .ml-4 {
-  margin-left: 0;
-  margin-right: 0.25rem;
+  margin-inline-start: 0;
+  margin-inline-end: 0.25rem; /* logical properties للاتجاه الديناميكي */
 }
 
 html[lang="ar"] .mr-1, 
 html[lang="ar"] .mr-2,
 html[lang="ar"] .mr-3,
 html[lang="ar"] .mr-4 {
-  margin-right: 0;
-  margin-left: 0.25rem;
+  margin-inline-end: 0;
+  margin-inline-start: 0.25rem; /* logical properties للاتجاه الديناميكي */
 }
 
 /* تصحيح وضع العناصر في الواجهة العربية */
@@ -283,8 +308,8 @@ html[lang="ar"] .mr-4 {
 }
 
 .rtl-margin {
-  margin-right: 0 !important;
-  margin-left: 0.5rem !important;
+  margin-inline-end: 0 !important;
+  margin-inline-start: 0.5rem !important; /* logical properties */
 }
 
 /* تنسيق خاص لمؤشرات الإشارات */
