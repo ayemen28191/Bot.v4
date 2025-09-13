@@ -461,7 +461,6 @@ const translations: Translations = {
     import_error: "خطأ في الاستيراد",
     import_error_desc: "الملف غير صالح أو معطوب",
     read_content_failed: "فشل قراءة المحتوى",
-    invalid_file_format: "تنسيق الملف غير صالح",
     notifications_blocked: "تم منع الإشعارات",
     
     // Toast messages for TradingSignalPage
@@ -502,12 +501,8 @@ const translations: Translations = {
     market_status_fetch_error: "خطأ في جلب حالة السوق:",
     market_status_update_error: "خطأ في تحديث حالة السوق:",
     market_status_api_error: "فشل في جلب حالة السوق",
-    signal_strength: "قوة الإشارة",
-    indicator_value: "قيمة المؤشر",
-    timeframe: "الإطار الزمني",
     updated: "تم التحديث",
     indicator_updated: "تم تحديث بيانات المؤشر بنجاح",
-    refresh: "تحديث",
     
     // Console messages from hooks and other files
     heatmap_data_fetch_error: "خطأ في جلب بيانات الخريطة الحرارية:",
@@ -978,7 +973,6 @@ const translations: Translations = {
     import_error: "Import error",
     import_error_desc: "Invalid or corrupted file",
     read_content_failed: "Failed to read content",
-    invalid_file_format: "Invalid file format",
     notifications_blocked: "Notifications blocked",
     
     // Toast messages for TradingSignalPage
@@ -1019,12 +1013,8 @@ const translations: Translations = {
     market_status_fetch_error: "Error fetching market status:",
     market_status_update_error: "Error updating market status:",
     market_status_api_error: "Failed to fetch market status",
-    signal_strength: "Signal Strength",
-    indicator_value: "Indicator Value",
-    timeframe: "Timeframe",
     updated: "Updated",
     indicator_updated: "Indicator data updated successfully",
-    refresh: "Refresh",
     
     // Console messages from hooks and other files
     heatmap_data_fetch_error: "Error fetching heatmap data:",
@@ -1165,7 +1155,6 @@ const translations: Translations = {
     import_error: "आयात त्रुटि",
     import_error_desc: "अमान्य या दूषित फ़ाइल",
     read_content_failed: "सामग्री पढ़ने में विफल",
-    invalid_file_format: "अमान्य फ़ाइल प्रारूप",
     notifications_blocked: "सूचनाएं अवरुद्ध हुईं",
     
     // Toast messages for TradingSignalPage  
