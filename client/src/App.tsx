@@ -11,6 +11,7 @@ import { ProtectedRoute } from "@/lib/protected-route";
 import { ProtectedAdminRoute } from "@/lib/protected-admin-route";
 import { useStore as useChatStore } from './store/chatStore';
 import { useToast } from '@/hooks/use-toast';
+import { t } from '@/lib/i18n';
 
 // التحميل المتأخر للصفحات
 const TradingSignalPage = lazy(() => import('@/pages/TradingSignalPage'));
@@ -49,8 +50,8 @@ function HTTPSHandler() {
         // عرض إشعار للمستخدم
         setTimeout(() => {
           toast({
-            title: "تم تفعيل وضع عدم الاتصال تلقائيًا",
-            description: "تم تفعيل وضع عدم الاتصال تلقائيًا لتحسين الأداء في بيئة Replit HTTPS. ستعمل جميع ميزات التطبيق ولكن بدون اتصال مباشر بالخادم.",
+            title: t('offline_mode_auto_enabled_title'),
+            description: t('offline_mode_auto_enabled_description'),
             duration: 8000
           });
         }, 2000);
@@ -67,7 +68,7 @@ function HTTPSHandler() {
 // مكون التوجيه المحسن
 function Router() {
   return (
-    <Suspense fallback={<LoadingScreen message="جاري تحميل الصفحة..." />}>
+    <Suspense fallback={<LoadingScreen message={t('loading_page')} />}>
       <HTTPSHandler />
       <Switch>
         <ProtectedRoute path="/" component={TradingSignalPage} />
