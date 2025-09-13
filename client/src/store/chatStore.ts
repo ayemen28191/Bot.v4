@@ -80,21 +80,21 @@ export const useStore = create<ChatState>((set, get) => {
       }
     });
   }
-    
+
   return {
     messages: (() => {
       try {
         if (typeof window === 'undefined') return [];
-        
+
         // التحقق إذا كان وضع عدم الاتصال مفعل مسبقا
         const offlineMode = localStorage.getItem('offline_mode') === 'enabled';
-        
+
         // محاولة قراءة البيانات بالتنسيق الجديد أولاً
         const messagesData = getFromLocalStorage<Message[]>('chat_data', []);
         if (messagesData && messagesData.length > 0) {
           return messagesData;
         }
-  
+
         // الرجوع للتنسيق القديم كاحتياط
         const saved = localStorage.getItem('chat_messages');
         if (saved) {
@@ -103,7 +103,7 @@ export const useStore = create<ChatState>((set, get) => {
           saveToLocalStorage('chat_data', parsedMessages);
           return parsedMessages;
         }
-  
+
         return [];
       } catch (e) {
         console.error('خطأ في قراءة الرسائل من التخزين المحلي:', e);
@@ -115,7 +115,7 @@ export const useStore = create<ChatState>((set, get) => {
     onlineUsers: 1000,
     // قراءة حالة وضع عدم الاتصال من التخزين المحلي
     isOfflineMode: typeof window !== 'undefined' && (
-      localStorage.getItem('offlineMode') === 'enabled' || 
+      localStorage.getItem('offlineMode') === 'enabled' ||
       localStorage.getItem('offline_mode') === 'enabled'
     ),
     pendingMessages: [],
@@ -127,22 +127,22 @@ export const useStore = create<ChatState>((set, get) => {
         console.log('في وضع عدم الاتصال، تجاوز محاولة الاتصال بالـ WebSocket');
         return;
       }
-      
+
       try {
         // تفعيل وضع عدم الاتصال تلقائياً في بيئة Replit HTTPS
         if (window.location.protocol === 'https:') {
           console.log('تم اكتشاف طريقة اتصال HTTPS - التحقق من شروط الأمان لاتصال WebSocket');
-          
+
           // في بيئة Replit، التحول تلقائياً لوضع عدم الاتصال لتجنب أخطاء WebSocket
-          const isReplitApp = window.location.hostname.endsWith('.replit.app') || 
+          const isReplitApp = window.location.hostname.endsWith('.replit.app') ||
                               window.location.hostname.endsWith('.repl.co') ||
                               window.location.hostname === 'replit.com';
-          
+
           if (isReplitApp) {
             console.log('تم اكتشاف بيئة Replit HTTPS - تفعيل وضع عدم الاتصال تلقائياً');
             // تفعيل وضع عدم الاتصال لتجنب أخطاء أمنية مع WebSocket
             get().enableOfflineMode();
-            
+
             // إنشاء حدث نظام
             try {
               const { toast } = require('@/hooks/use-toast');
@@ -155,21 +155,21 @@ export const useStore = create<ChatState>((set, get) => {
             } catch (toastError) {
               console.warn('تعذر عرض إشعار وضع عدم الاتصال:', toastError);
             }
-            
+
             return;
           }
-          
+
           // للبيئات الأخرى، نستمر بالمنطق العادي
-          const useOfflineMode = localStorage.getItem('ws_failed_attempts') && 
+          const useOfflineMode = localStorage.getItem('ws_failed_attempts') &&
                                 parseInt(localStorage.getItem('ws_failed_attempts') || '0') > 1;
-          
+
           if (useOfflineMode) {
             console.log('محاولات اتصال فاشلة سابقة - تفعيل وضع عدم الاتصال');
             get().enableOfflineMode();
             return;
           }
         }
-        
+
         // الحصول على عنوان URL آمن للـ WebSocket باستخدام الدالة المساعدة
         const wsUrl = getWebSocketUrl('/ws');
         console.log(`محاولة الاتصال بـ WebSocket على: ${wsUrl}`);
@@ -185,7 +185,7 @@ export const useStore = create<ChatState>((set, get) => {
             ws.close();
             // عدم تعيين حالة الاتصال على true
             set({ isConnected: false });
-            
+
             // تفعيل وضع عدم الاتصال تلقائيًا عند فشل محاولة الاتصال
             get().enableOfflineMode();
           }
@@ -267,7 +267,7 @@ export const useStore = create<ChatState>((set, get) => {
         ws.onerror = (error) => {
           console.error('WebSocket error:', error);
           set({ isConnected: false, socket: null });
-          
+
           // عرض تنبيه للمستخدم حول خطأ الاتصال
           try {
             const { toast } = require('@/hooks/use-toast');
@@ -280,11 +280,11 @@ export const useStore = create<ChatState>((set, get) => {
           } catch (toastError) {
             console.warn('تعذر عرض إشعار الخطأ:', toastError);
           }
-          
+
           // تفعيل وضع عدم الاتصال تلقائياً بعد 3 محاولات فاشلة
           const failedAttempts = parseInt(localStorage.getItem('ws_failed_attempts') || '0');
           localStorage.setItem('ws_failed_attempts', (failedAttempts + 1).toString());
-          
+
           if (failedAttempts >= 2) { // بعد 3 محاولات (0, 1, 2)
             console.log('فشلت 3 محاولات للاتصال، تفعيل وضع عدم الاتصال تلقائيًا');
             get().enableOfflineMode();
@@ -294,7 +294,7 @@ export const useStore = create<ChatState>((set, get) => {
         ws.onclose = () => {
           console.log('WebSocket connection closed');
           set({ isConnected: false, socket: null });
-          
+
           // تحقق إذا كان الإغلاق بسبب خطأ في الاتصال
           if (!get().isOfflineMode) {
             // إظهار إشعار فقط إذا كان الاتصال قد تم بالفعل من قبل
@@ -309,7 +309,7 @@ export const useStore = create<ChatState>((set, get) => {
             } catch (toastError) {
               console.warn('تعذر عرض إشعار قطع الاتصال:', toastError);
             }
-            
+
             // محاولة إعادة الاتصال بعد تأخير
             setTimeout(() => {
               if (!get().isConnected && !get().isOfflineMode) {
@@ -448,16 +448,16 @@ export const useStore = create<ChatState>((set, get) => {
     enableOfflineMode: () => {
       try {
         if (typeof window === 'undefined') return;
-        
+
         // التحقق مما إذا كان الوضع مفعل بالفعل
         if (get().isOfflineMode) {
           console.log('وضع عدم الاتصال مفعل بالفعل');
           return;
         }
-        
+
         // إعادة تعيين عداد المحاولات الفاشلة
         localStorage.removeItem('ws_failed_attempts');
-        
+
         // تخزين الرسائل الحالية قبل تمكين وضع عدم الاتصال
         const messages = get().messages;
         saveToLocalStorage('chat_data_offline', messages);
@@ -500,7 +500,7 @@ export const useStore = create<ChatState>((set, get) => {
     disableOfflineMode: () => {
       try {
         if (typeof window === 'undefined') return;
-        
+
         set({ isOfflineMode: false });
         // إزالة كلا المفتاحين للتوافق مع الإصدارات السابقة
         localStorage.removeItem('offlineMode');
@@ -538,7 +538,7 @@ export const useStore = create<ChatState>((set, get) => {
     syncMessages: async () => {
       try {
         if (typeof window === 'undefined') return;
-        
+
         const { socket, pendingMessages, messages, isConnected } = get();
 
         // التحقق من وجود اتصال نشط
@@ -602,7 +602,7 @@ export const useStore = create<ChatState>((set, get) => {
     clearMessages: () => {
       try {
         if (typeof window === 'undefined') return;
-        
+
         set({ messages: [] });
         localStorage.removeItem('chat_messages');
         localStorage.removeItem('chat_data');

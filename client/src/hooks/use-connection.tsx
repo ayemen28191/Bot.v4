@@ -22,42 +22,42 @@ export function useConnection(
     if (isChecking) return isOnline;
 
     setIsChecking(true);
-    
+
     try {
       // فحص الاتصال بالإنترنت أولًا
       if (!navigator.onLine) {
         setIsOnline(false);
         return false;
       }
-      
+
       // فحص الاتصال بالخادم من خلال طلب بسيط
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // timeout بعد 5 ثواني
-      
+
       const response = await fetch(pingUrl, {
         method: 'GET',
         headers: { 'Cache-Control': 'no-cache' },
         signal: controller.signal
       });
-      
+
       clearTimeout(timeoutId);
-      
+
       const isConnected = response.ok;
       setIsOnline(isConnected);
       setLastCheckTime(Date.now());
-      
+
       return isConnected;
     } catch (error) {
-      console.error("خطأ في فحص الاتصال:", error);
+      console.error('connection_check_error', error);
       setIsOnline(false);
       setLastCheckTime(Date.now());
-      
+
       return false;
     } finally {
       setIsChecking(false);
     }
   }, [isChecking, isOnline, pingUrl]);
-  
+
   // إعادة ضبط حالة الاتصال
   const resetState = useCallback(() => {
     setIsOnline(navigator.onLine);
@@ -70,14 +70,14 @@ export function useConnection(
       // إعادة فحص الاتصال بالخادم عند عودة الإنترنت
       checkConnection();
     };
-    
+
     const handleOffline = () => {
       setIsOnline(false);
     };
-    
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-    
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
@@ -87,17 +87,17 @@ export function useConnection(
   // فحص دوري للاتصال
   useEffect(() => {
     let intervalId: NodeJS.Timeout | null = null;
-    
+
     if (autoCheck) {
       // فحص أولي
       checkConnection();
-      
+
       // فحص دوري
       intervalId = setInterval(() => {
         checkConnection();
       }, checkInterval);
     }
-    
+
     return () => {
       if (intervalId) clearInterval(intervalId);
     };

@@ -374,7 +374,18 @@ const translations: Translations = {
     app_welcome: "مرحباً بك في تطبيق Binar Join Analytic",
     app_description: "منصة متكاملة لتحليل إشارات التداول في الأسواق المالية مع دعم متعدد اللغات وميزات متقدمة للتحليل والمتابعة.",
     logout: "تسجيل الخروج",
-    logout_success: "تم تسجيل الخروج بنجاح"
+    logout_success: "تم تسجيل الخروج بنجاح",
+    
+    // إضافة النصوص المفقودة
+    error_checking_connection: "خطأ في فحص الاتصال",
+    backup_data_updated: "تم تحديث بيانات النسخة الاحتياطية",
+    connection_check_error: "خطأ في فحص الاتصال:",
+    no_signals_available: "لا توجد إشارات متاحة حالياً",
+    temporary_maintenance: "قد يكون هناك صيانة مؤقتة أو تحديث للإشارات",
+    signals_temporarily_unavailable: "الإشارات غير متاحة مؤقتاً",
+    updating_signals: "جاري تحديث الإشارات...",
+    signals_updated_successfully: "تم تحديث الإشارات بنجاح",
+    independent_mode_activated: "تم تفعيل الوضع المستقل"
   },
   en: {
     // Error message translations
@@ -736,7 +747,18 @@ const translations: Translations = {
     app_welcome: "Welcome to Binar Join Analytic",
     app_description: "An integrated platform for analyzing trading signals in financial markets with multilingual support and advanced analysis features.",
     logout: "Logout",
-    logout_success: "Logged out successfully"
+    logout_success: "Logged out successfully",
+    
+    // Adding missing translations
+    error_checking_connection: "Error checking connection",
+    backup_data_updated: "Backup data updated",
+    connection_check_error: "Connection check error:",
+    no_signals_available: "No signals available at the moment",
+    temporary_maintenance: "There might be temporary maintenance or signal updates in progress",
+    signals_temporarily_unavailable: "Signals temporarily unavailable",
+    updating_signals: "Updating signals...",
+    signals_updated_successfully: "Signals updated successfully",
+    independent_mode_activated: "Independent mode activated"
   },
   hi: {
     // Error message translations
@@ -1009,7 +1031,18 @@ const translations: Translations = {
     platform_kucoin: 'कुकॉइन',
     platform_deriv: 'डेरिव',
     logout: "लॉग आउट",
-    logout_success: "सफलतापूर्वक लॉग आउट किया गया"
+    logout_success: "सफलतापूर्वक लॉग आउट किया गया",
+    
+    // Adding missing translations
+    error_checking_connection: "कनेक्शन जांचने में त्रुटि",
+    backup_data_updated: "बैकअप डेटा अपडेट किया गया",
+    connection_check_error: "कनेक्शन जांच त्रुटि:",
+    no_signals_available: "फिलहाल कोई सिग्नल उपलब्ध नहीं है",
+    temporary_maintenance: "अस्थायी रखरखाव या सिग्नल अपडेट चल रहा हो सकता है",
+    signals_temporarily_unavailable: "सिग्नल अस्थायी रूप से अनुपलब्ध",
+    updating_signals: "सिग्नल अपडेट कर रहे हैं...",
+    signals_updated_successfully: "सिग्नल सफलतापूर्वक अपडेट किए गए",
+    independent_mode_activated: "स्वतंत्र मोड सक्रिय"
   }
 };
 
