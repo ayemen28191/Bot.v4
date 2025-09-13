@@ -1045,6 +1045,22 @@ const translations: Translations = {
     offline_mode_auto_enabled_description: 'Replit HTTPS वातावरण में प्रदर्शन सुधारने के लिए ऑफलाइन मोड स्वचालित रूप से सक्षम हो गया है। सभी ऐप सुविधाएं काम करेंगी लेकिन प्रत्यक्ष सर्वर कनेक्शन के बिना।',
     initializing_app: 'ऐप इनिशियलाइज़ हो रहा है...',
     please_wait: 'कृपया प्रतीक्षा करें...',
+    refreshing_market_data: 'बाजार डेटा अपडेट हो रहा है...',
+    market_opening_now: 'बाजार अब खुल रहा है',
+    refreshing_for_market_open: 'ट्रेडिंग शुरू करने के लिए डेटा अपडेट हो रहा है',
+    time_calculation_error: 'समय गणना त्रुटि',
+    notifications_enabled: 'सूचनाएं सक्षम',
+    market_status_notifications_enabled: 'बाजार खुलने/बंद होने की सूचनाएं मिलेंगी',
+    enable_market_notifications: 'बाजार सूचनाएं सक्षम करें',
+    market_closed_message_improved: 'बाजार वर्तमान में बंद है। यह {time} पर खुलेगा। आप नीचे काउंटडाउन देख सकते हैं और बाजार खुलने पर सूचना मिलेगी।',
+    forex_market_hours_info_improved: 'विदेशी मुद्रा बाजार सोमवार से शुक्रवार तक 24 घंटे खुला रहता है। यूरोप और अमेरिका के सत्रों के दौरान उच्चतम अस्थिरता होती है।',
+    crypto_market_hours_info_improved: 'क्रिप्टोकरेंसी बाजार 24/7 बिना रुके चलता रहता है और सप्ताहांत में भी बंद नहीं होता।',
+    stocks_market_hours_info_improved: 'स्टॉक मार्केट आमतौर पर सोमवार से शुक्रवार तक चलता है, जिसके ट्रेडिंग घंटे एक्सचेंज के अनुसार अलग-अलग होते हैं।',
+    opening_very_soon: 'बहुत जल्दी खुलेगा',
+    opening_soon: 'जल्दी खुलेगा',
+    show_details: 'विवरण दिखाएं',
+    show_compact: 'संक्षिप्त दिखाएं',
+    close: 'बंद करें',
     login: 'लॉग इन',
     username: 'उपयोगकर्ता नाम',
     password: 'पासवर्ड',
@@ -1260,12 +1276,16 @@ const translations: Translations = {
 // تخزين مؤقت للترجمات المستخدمة حالياً
 let translationCache: { [key: string]: string } = {};
 
-// دالة للحصول على لغة المتصفح
-function getBrowserLanguage(): string {
+// دالة للحصول على لغة المتصفح - العربية دائماً افتراضية
+export function getBrowserLanguage(): string {
   if (typeof window !== 'undefined') {
-    const browserLang = navigator.language.split('-')[0];
-    return translations[browserLang] ? browserLang : 'en';
+    // التحقق من اللغة المحفوظة أولاً
+    const savedLang = localStorage.getItem('language');
+    if (savedLang && ['ar', 'en', 'hi'].includes(savedLang)) {
+      return savedLang;
+    }
   }
+  // الإنجليزية كافتراضي دائماً
   return 'en';
 }
 
@@ -1287,8 +1307,18 @@ export const setLanguage = (lang: string) => {
       console.error('Error saving language to settings:', e);
     }
 
-    // تحديث سمة lang في HTML
+    // تحديث سمة lang و dir في HTML
     document.documentElement.setAttribute('lang', lang);
+    document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+
+    // إضافة css class للغة العربية
+    if (lang === 'ar') {
+      document.documentElement.classList.add('ar');
+      document.body.classList.add('font-arabic');
+    } else {
+      document.documentElement.classList.remove('ar');
+      document.body.classList.remove('font-arabic');
+    }
 
     // مسح التخزين المؤقت
     translationCache = {};
@@ -1309,8 +1339,8 @@ export const t = (key: string): string => {
     return translationCache[cacheKey];
   }
 
-  // التأكد من أن اللغة مدعومة، الافتراضية الإنجليزية
-  const validLang = translations[lang] ? lang : 'en';
+  // التأكد من أن اللغة مدعومة، الافتراضية العربية
+  const validLang = translations[lang] ? lang : 'ar';
 
   // حفظ الترجمة في التخزين المؤقت
   const translation = translations[validLang]?.[key] || key;
@@ -1334,11 +1364,11 @@ export const getCurrentLanguage = (): string => {
       return storedLang;
     }
 
-    // ثالثاً: استخدام اللغة الافتراضية الجديدة (الإنجليزية)
-    return 'en';
+    // ثالثاً: استخدام اللغة الافتراضية (العربية)
+    return 'ar';
   } catch {
     const storedLang = localStorage.getItem('language');
-    return storedLang || 'en';
+    return storedLang || 'ar';
   }
 };
 
@@ -1351,16 +1381,16 @@ export const supportedLanguages = [
 
 // تهيئة اللغة عند بدء التطبيق
 if (typeof window !== 'undefined') {
-  // التحقق إذا لم تكن هناك إعدادات محفوظة، تعيين الإنجليزية كافتراضية
+  // التحقق إذا لم تكن هناك إعدادات محفوظة، تعيين العربية كافتراضية
   try {
     const settings = JSON.parse(localStorage.getItem('settings') || '{}');
     if (!settings.language) {
-      settings.language = 'en';
+      settings.language = 'ar';
       localStorage.setItem('settings', JSON.stringify(settings));
     }
   } catch {
     // في حالة وجود خطأ، إنشاء إعدادات جديدة
-    localStorage.setItem('settings', JSON.stringify({ language: 'en' }));
+    localStorage.setItem('settings', JSON.stringify({ language: 'ar' }));
   }
 
   const lang = getCurrentLanguage();
@@ -1373,4 +1403,81 @@ if (typeof window !== 'undefined') {
     document.documentElement.setAttribute('lang', newLang);
     currentLanguage = newLang;
   });
+}
+
+// دالة لإعادة تعيين اللغة إلى العربية (إصلاح المشاكل القديمة)
+export const resetToArabic = () => {
+  if (typeof window !== 'undefined') {
+    try {
+      // تحديث الإعدادات
+      const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+      settings.language = 'ar';
+      localStorage.setItem('settings', JSON.stringify(settings));
+      localStorage.setItem('language', 'ar');
+      
+      // تحديث اللغة الحالية
+      currentLanguage = 'ar';
+      document.documentElement.setAttribute('lang', 'ar');
+      document.documentElement.setAttribute('dir', 'rtl');
+      
+      // مسح التخزين المؤقت
+      translationCache = {};
+      
+      // إطلاق حدث تغيير اللغة
+      window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: 'ar' } }));
+      
+      console.log('تم إعادة تعيين اللغة إلى العربية');
+      return true;
+    } catch (error) {
+      console.error('خطأ في إعادة تعيين اللغة:', error);
+      return false;
+    }
+  }
+  return false;
+};
+
+// دالة تنسيق الأرقام حسب اللغة
+export const formatNumber = (num: number | string, lang?: string): string => {
+  const currentLang = lang || getCurrentLanguage();
+  const numString = num.toString();
+  
+  // للعربية، نستخدم الأرقام الغربية مع RTL
+  if (currentLang === 'ar') {
+    // تحويل الأرقام العربية إلى غربية إذا كانت موجودة
+    const arabicNumbers = '٠١٢٣٤٥٦٧٨٩';
+    const westernNumbers = '0123456789';
+    let result = numString;
+    for (let i = 0; i < arabicNumbers.length; i++) {
+      result = result.replace(new RegExp(arabicNumbers[i], 'g'), westernNumbers[i]);
+    }
+    return result;
+  }
+  
+  return numString;
+};
+
+// دالة لإضافة classes مفيدة للنصوص المختلطة
+export const getTextClasses = (hasNumbers: boolean = false): string => {
+  const lang = getCurrentLanguage();
+  let classes = '';
+  
+  if (lang === 'ar') {
+    classes += 'text-right ';
+    if (hasNumbers) {
+      classes += 'mixed-text ';
+    }
+  } else {
+    classes += 'text-left ';
+  }
+  
+  return classes;
+};
+
+// تشغيل إعادة تعيين اللغة تلقائياً عند بدء التطبيق
+if (typeof window !== 'undefined') {
+  // التحقق من الإعدادات الحالية
+  const currentLang = getCurrentLanguage();
+  if (currentLang !== 'ar') {
+    resetToArabic();
+  }
 }

@@ -4,6 +4,55 @@
 @tailwind components;
 @tailwind utilities;
 
+/* إعدادات RTL والأرقام العربية */
+[dir="rtl"] {
+  font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* دعم الأرقام العربية والغربية */
+.arabic-nums {
+  font-variant-numeric: normal;
+  unicode-bidi: isolate;
+}
+
+/* عرض الأرقام الغربية في النصوص العربية */
+[dir="rtl"] .western-nums {
+  direction: ltr;
+  unicode-bidi: embed;
+  display: inline-block;
+}
+
+/* تحسين عرض النصوص المختلطة */
+[dir="rtl"] .mixed-text {
+  unicode-bidi: isolate;
+}
+
+/* إصلاح مشاكل الأرقام في RTL */
+[dir="rtl"] input,
+[dir="rtl"] .number-display {
+  direction: ltr;
+  text-align: left;
+}
+
+[dir="rtl"] input.arabic-input {
+  direction: rtl;
+  text-align: right;
+}
+
+/* تحسين أداء الخطوط العربية */
+[lang="ar"], .font-arabic {
+  font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* خطوط للنصوص المختلطة */
+.mixed-content {
+  font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
 /* تأثيرات رسومية إضافية لشاشة التحميل */
 @keyframes wobble {
   0%, 100% { transform: rotate(0deg); }
@@ -103,7 +152,6 @@
   body {
     @apply antialiased font-sans;
     font-family: 'Tajawal', sans-serif;
-    direction: rtl;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
     overscroll-behavior: none;
@@ -185,18 +233,10 @@ html, body {
 .arabic-support input,
 .arabic-support textarea {
   text-align: right;
-  direction: rtl;
 }
 
-/* دعم تغيير الاتجاه بناءً على اللغة */
-html[lang="ar"] {
-  direction: rtl;
-}
-
-html[lang="en"],
-html[lang="hi"] {
-  direction: ltr;
-}
+/* دعم تغيير الاتجاه بناءً على اللغة - يتم التحكم فيه عبر JavaScript */
+/* الاتجاه يتم تعيينه بواسطة dir attribute في setLanguage() */
 
 /* ضبط عناصر الواجهة حسب اتجاه اللغة */
 html[lang="ar"] .navbar-icon,

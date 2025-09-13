@@ -64,7 +64,7 @@ export default function ChatPage() {
     if (!isConnected) {
       // تهيئة نظام الاتصال المحلي فقط إذا لم يكن متصلاً بالفعل
       initializeWebSocket();
-      console.log(t('chat_simulation_initialized'));
+      console.log('تم تهيئة نظام المحاكاة للدردشة');
     }
   }, [isConnected, initializeWebSocket]);
 
