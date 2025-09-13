@@ -52,7 +52,7 @@ export default function AuthPage() {
               />
               {form.formState.errors.username && (
                 <p className="text-destructive text-sm mt-1">
-                  {form.formState.errors.username.message}
+                  {String(form.formState.errors.username.message)}
                 </p>
               )}
             </div>
@@ -67,7 +67,7 @@ export default function AuthPage() {
               />
               {form.formState.errors.password && (
                 <p className="text-destructive text-sm mt-1">
-                  {form.formState.errors.password.message}
+                  {String(form.formState.errors.password.message)}
                 </p>
               )}
             </div>

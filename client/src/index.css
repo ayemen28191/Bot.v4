@@ -28,15 +28,29 @@
 }
 
 /* إصلاح مشاكل الأرقام في RTL */
-[dir="rtl"] input,
-[dir="rtl"] .number-display {
+[dir="rtl"] input[type="number"],
+[dir="rtl"] input[type="tel"],
+[dir="rtl"] .number-display,
+[dir="rtl"] .western-nums {
   direction: ltr;
-  text-align: start; /* logical property بدلاً من left */
+  text-align: start;
+  unicode-bidi: embed;
+}
+
+[dir="rtl"] input:not([type="number"]):not([type="tel"]):not(.number-display):not(.western-nums):not(.ltr-input) {
+  direction: rtl;
+  text-align: start;
 }
 
 [dir="rtl"] input.arabic-input {
   direction: rtl;
-  text-align: end; /* logical property بدلاً من right */
+  text-align: start;
+}
+
+[dir="rtl"] input.ltr-input {
+  direction: ltr;
+  text-align: start;
+  unicode-bidi: embed;
 }
 
 /* تحسين أداء الخطوط العربية */
@@ -77,15 +91,15 @@
 
 /* تطبيق RTL على كل العناصر للعربية */
 [dir="rtl"] {
-  text-align: right;
+  text-align: start;
 }
 
 [dir="rtl"] * {
   text-align: inherit;
 }
 
-/* تطبيق RTL على التخطيط العام */
-[dir="rtl"] .flex {
+/* تطبيق RTL على التخطيط العام - مع استثناءات */
+[dir="rtl"] .flex:not(.ltr-content):not(.mobile-navbar):not(.mobile-nav-container):not(.language-buttons):not(.navbar-actions) {
   flex-direction: row-reverse;
 }
 
@@ -93,56 +107,79 @@
   flex-direction: column;
 }
 
-[dir="rtl"] .grid {
+[dir="rtl"] .grid:not(.ltr-content) {
   direction: rtl;
 }
 
 /* تطبيق RTL على الحقول والأزرار */
-[dir="rtl"] button,
-[dir="rtl"] .btn,
-[dir="rtl"] input:not(.number-display):not(.western-nums),
-[dir="rtl"] textarea,
-[dir="rtl"] select {
-  text-align: right;
-}
-
-/* الحقول الرقمية تبقى LTR */
-[dir="rtl"] input[type="number"],
-[dir="rtl"] .number-display,
-[dir="rtl"] .western-nums {
-  text-align: left;
-  direction: ltr;
+[dir="rtl"] button:not(.ltr-content button):not(.language-buttons button),
+[dir="rtl"] .btn:not(.ltr-content),
+[dir="rtl"] textarea:not(.ltr-content textarea),
+[dir="rtl"] select:not(.ltr-content select) {
+  text-align: start;
 }
 
 /* ===== استثناءات للعناصر التي لا تحتاج انعكاس ===== */
 
-/* القائمة السفلية تبقى LTR */
+/* القائمة السفلية والملاحة تبقى LTR */
 [dir="rtl"] .mobile-navbar,
 [dir="rtl"] .mobile-nav-container,
 [dir="rtl"] .mobile-nav-item,
-[dir="rtl"] nav {
-  direction: ltr !important;
-  flex-direction: row !important;
+[dir="rtl"] nav:not(.rtl-nav),
+[dir="rtl"] .navbar-actions {
+  direction: ltr;
+  flex-direction: row;
 }
 
 [dir="rtl"] .mobile-nav-item {
-  text-align: center !important;
+  text-align: center;
 }
 
 /* أزرار اللغة تبقى LTR */
 [dir="rtl"] .language-buttons,
 [dir="rtl"] .language-selector {
-  direction: ltr !important;
+  direction: ltr;
 }
 
 [dir="rtl"] .language-buttons button {
-  text-align: center !important;
+  text-align: center;
 }
 
-/* الأيقونات لا تنعكس */
-[dir="rtl"] .icon,
-[dir="rtl"] svg:not(.arrow-icon) {
-  transform: none !important;
+/* الأيقونات لا تنعكس إلا الأسهم */
+[dir="rtl"] .icon:not(.arrow-icon),
+[dir="rtl"] svg:not(.arrow-icon):not(.lucide-arrow-left):not(.lucide-arrow-right):not(.lucide-chevron-left):not(.lucide-chevron-right) {
+  transform: none;
+}
+
+/* انعكاس أيقونات الأسهم */
+[dir="rtl"] .arrow-icon,
+[dir="rtl"] .lucide-arrow-left,
+[dir="rtl"] .lucide-arrow-right,
+[dir="rtl"] .lucide-chevron-left,
+[dir="rtl"] .lucide-chevron-right,
+[dir="rtl"] .lucide-arrow-up-right,
+[dir="rtl"] .lucide-arrow-down-right {
+  transform: scaleX(-1);
+}
+
+/* كلاسات مساعدة للتحكم في الاتجاه */
+.ltr-content {
+  direction: ltr !important;
+}
+
+.rtl-content {
+  direction: rtl !important;
+}
+
+.ltr-text {
+  text-align: start !important;
+  direction: ltr !important;
+  unicode-bidi: embed;
+}
+
+.rtl-text {
+  text-align: start !important;
+  direction: rtl !important;
 }
 
 /* خطوط للنصوص المختلطة */
@@ -324,54 +361,122 @@ html, body {
 /* دعم اللغة العربية والتصميم المستجيب */
 .arabic-support {
   font-family: 'Tajawal', sans-serif;
-  text-align: end; /* logical property بدلاً من right */
+  text-align: start;
 }
 
 .arabic-support input,
 .arabic-support textarea {
-  text-align: end; /* logical property بدلاً من right */
+  text-align: start;
 }
 
 /* دعم تغيير الاتجاه بناءً على اللغة - يتم التحكم فيه عبر JavaScript */
 /* الاتجاه يتم تعيينه بواسطة dir attribute في setLanguage() */
 
 /* ضبط عناصر الواجهة حسب اتجاه اللغة */
-html[lang="ar"] .navbar-icon,
-html[lang="ar"] header svg, 
-html[lang="ar"] .mobile-navbar svg {
+html[dir="rtl"] .navbar-icon.arrow-icon,
+html[dir="rtl"] header svg.arrow-icon {
   transform: scaleX(-1);
 }
 
-html[lang="ar"] .mobile-navbar {
-  flex-direction: row-reverse;
-}
-
-html[lang="ar"] .space-x-4 {
+/* إعدادات المسافات مع logical properties */
+html[dir="rtl"] .space-x-1 > :not([hidden]) ~ :not([hidden]) {
   --tw-space-x-reverse: 1;
+  margin-inline-start: calc(0.25rem * calc(1 - var(--tw-space-x-reverse)));
+  margin-inline-end: calc(0.25rem * var(--tw-space-x-reverse));
 }
 
-html[lang="ar"] header .flex {
-  flex-direction: row-reverse;
+html[dir="rtl"] .space-x-2 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+  margin-inline-start: calc(0.5rem * calc(1 - var(--tw-space-x-reverse)));
+  margin-inline-end: calc(0.5rem * var(--tw-space-x-reverse));
 }
 
-html[lang="ar"] header .gap-1\.5 {
-  flex-direction: row;
+html[dir="rtl"] .space-x-4 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+  margin-inline-start: calc(1rem * calc(1 - var(--tw-space-x-reverse)));
+  margin-inline-end: calc(1rem * var(--tw-space-x-reverse));
 }
 
-html[lang="ar"] .ml-1, 
-html[lang="ar"] .ml-2,
-html[lang="ar"] .ml-3,
-html[lang="ar"] .ml-4 {
+/* تحويل الهوامش للخصائص المنطقية */
+html[dir="rtl"] .ml-1 {
   margin-inline-start: 0;
-  margin-inline-end: 0.25rem; /* logical properties للاتجاه الديناميكي */
+  margin-inline-end: 0.25rem;
 }
 
-html[lang="ar"] .mr-1, 
-html[lang="ar"] .mr-2,
-html[lang="ar"] .mr-3,
-html[lang="ar"] .mr-4 {
+html[dir="rtl"] .ml-2 {
+  margin-inline-start: 0;
+  margin-inline-end: 0.5rem;
+}
+
+html[dir="rtl"] .ml-3 {
+  margin-inline-start: 0;
+  margin-inline-end: 0.75rem;
+}
+
+html[dir="rtl"] .ml-4 {
+  margin-inline-start: 0;
+  margin-inline-end: 1rem;
+}
+
+html[dir="rtl"] .mr-1 {
   margin-inline-end: 0;
-  margin-inline-start: 0.25rem; /* logical properties للاتجاه الديناميكي */
+  margin-inline-start: 0.25rem;
+}
+
+html[dir="rtl"] .mr-2 {
+  margin-inline-end: 0;
+  margin-inline-start: 0.5rem;
+}
+
+html[dir="rtl"] .mr-3 {
+  margin-inline-end: 0;
+  margin-inline-start: 0.75rem;
+}
+
+html[dir="rtl"] .mr-4 {
+  margin-inline-end: 0;
+  margin-inline-start: 1rem;
+}
+
+/* تحويل الحشو للخصائص المنطقية */
+html[dir="rtl"] .pl-1 {
+  padding-inline-start: 0;
+  padding-inline-end: 0.25rem;
+}
+
+html[dir="rtl"] .pl-2 {
+  padding-inline-start: 0;
+  padding-inline-end: 0.5rem;
+}
+
+html[dir="rtl"] .pl-3 {
+  padding-inline-start: 0;
+  padding-inline-end: 0.75rem;
+}
+
+html[dir="rtl"] .pl-4 {
+  padding-inline-start: 0;
+  padding-inline-end: 1rem;
+}
+
+html[dir="rtl"] .pr-1 {
+  padding-inline-end: 0;
+  padding-inline-start: 0.25rem;
+}
+
+html[dir="rtl"] .pr-2 {
+  padding-inline-end: 0;
+  padding-inline-start: 0.5rem;
+}
+
+html[dir="rtl"] .pr-3 {
+  padding-inline-end: 0;
+  padding-inline-start: 0.75rem;
+}
+
+html[dir="rtl"] .pr-4 {
+  padding-inline-end: 0;
+  padding-inline-start: 1rem;
 }
 
 /* تصحيح وضع العناصر في الواجهة العربية */
@@ -379,9 +484,33 @@ html[lang="ar"] .mr-4 {
   transform: scaleX(-1);
 }
 
-.rtl-margin {
-  margin-inline-end: 0 !important;
-  margin-inline-start: 0.5rem !important; /* logical properties */
+/* مساعدات للهوامش في RTL */
+.rtl-margin-start {
+  margin-inline-start: 0.5rem;
+}
+
+.rtl-margin-end {
+  margin-inline-end: 0.5rem;
+}
+
+.rtl-padding-start {
+  padding-inline-start: 0.5rem;
+}
+
+.rtl-padding-end {
+  padding-inline-end: 0.5rem;
+}
+
+/* تحسين العناصر المختلطة */
+.mixed-content {
+  unicode-bidi: isolate;
+}
+
+.number-display {
+  direction: ltr;
+  text-align: start;
+  unicode-bidi: embed;
+  display: inline-block;
 }
 
 /* تنسيق خاص لمؤشرات الإشارات */
