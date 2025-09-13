@@ -1026,7 +1026,7 @@ function getBrowserLanguage(): string {
 }
 
 // تهيئة اللغة الحالية
-let currentLanguage = getBrowserLanguage();
+let currentLanguage = 'en'; // اللغة الافتراضية الإنجليزية
 
 // دالة تغيير اللغة
 export const setLanguage = (lang: string) => {
@@ -1056,23 +1056,17 @@ export const setLanguage = (lang: string) => {
 
 // دالة الترجمة المحسنة
 export const t = (key: string): string => {
+  // الحصول على اللغة الحالية
+  const lang = getCurrentLanguage();
+  
   // التحقق من وجود الترجمة في التخزين المؤقت
-  const cacheKey = `${currentLanguage}:${key}`;
+  const cacheKey = `${lang}:${key}`;
   if (translationCache[cacheKey]) {
     return translationCache[cacheKey];
   }
 
-  // الحصول على اللغة الحالية من الإعدادات
-  let lang: string;
-  try {
-    const settings = JSON.parse(localStorage.getItem('settings') || '{}');
-    lang = settings.language;
-  } catch {
-    lang = localStorage.getItem('language') || currentLanguage;
-  }
-
-  // التأكد من أن اللغة مدعومة
-  const validLang = translations[lang] ? lang : 'ar';
+  // التأكد من أن اللغة مدعومة، الافتراضية الإنجليزية
+  const validLang = translations[lang] ? lang : 'en';
 
   // حفظ الترجمة في التخزين المؤقت
   const translation = translations[validLang]?.[key] || key;
@@ -1084,10 +1078,23 @@ export const t = (key: string): string => {
 // دالة للحصول على اللغة الحالية
 export const getCurrentLanguage = (): string => {
   try {
+    // أولاً: التحقق من الإعدادات المحفوظة
     const settings = JSON.parse(localStorage.getItem('settings') || '{}');
-    return settings.language || localStorage.getItem('language') || currentLanguage;
+    if (settings.language) {
+      return settings.language;
+    }
+    
+    // ثانياً: التحقق من localStorage القديم
+    const storedLang = localStorage.getItem('language');
+    if (storedLang) {
+      return storedLang;
+    }
+    
+    // ثالثاً: استخدام اللغة الافتراضية الجديدة (الإنجليزية)
+    return 'en';
   } catch {
-    return localStorage.getItem('language') || currentLanguage;
+    const storedLang = localStorage.getItem('language');
+    return storedLang || 'en';
   }
 };
 
@@ -1100,11 +1107,26 @@ export const supportedLanguages = [
 
 // تهيئة اللغة عند بدء التطبيق
 if (typeof window !== 'undefined') {
+  // التحقق إذا لم تكن هناك إعدادات محفوظة، تعيين الإنجليزية كافتراضية
+  try {
+    const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+    if (!settings.language) {
+      settings.language = 'en';
+      localStorage.setItem('settings', JSON.stringify(settings));
+    }
+  } catch {
+    // في حالة وجود خطأ، إنشاء إعدادات جديدة
+    localStorage.setItem('settings', JSON.stringify({ language: 'en' }));
+  }
+  
   const lang = getCurrentLanguage();
   document.documentElement.setAttribute('lang', lang);
+  currentLanguage = lang;
 
   // إضافة مستمع لتغييرات اللغة
   window.addEventListener('languageChanged', () => {
-    document.documentElement.setAttribute('lang', getCurrentLanguage());
+    const newLang = getCurrentLanguage();
+    document.documentElement.setAttribute('lang', newLang);
+    currentLanguage = newLang;
   });
 }
