@@ -584,7 +584,22 @@ const translations: Translations = {
     
     // Trading and market messages
     refreshing_data: 'جاري تحديث البيانات',
-    fetching_latest_prices: 'نعمل على جلب أحدث الأسعار. الرجاء الانتظار أو المحاولة مرة أخرى لاحقاً.'
+    fetching_latest_prices: 'نعمل على جلب أحدث الأسعار. الرجاء الانتظار أو المحاولة مرة أخرى لاحقاً.',
+
+    // Trading pairs names
+    'EUR/USD': 'يورو / دولار أمريكي',
+    'GBP/USD': 'جنيه إسترليني / دولار أمريكي',
+    'USD/JPY': 'دولار أمريكي / ين ياباني',
+    'USD/CHF': 'دولار أمريكي / فرنك سويسري',
+    'EUR/JPY': 'يورو / ين ياباني',
+    'GBP/JPY': 'جنيه إسترليني / ين ياباني',
+    'BTC/USDT': 'بيتكوين / تيثر',
+    'ETH/USDT': 'إيثريوم / تيثر',
+    'XRP/USDT': 'ريببل / تيثر',
+    'AAPL': 'شركة أبل',
+    'MSFT': 'شركة مايكروسوفت',
+    'GOOGL': 'شركة جوجل',
+    'AMZN': 'شركة أمازون'
   },
   en: {
     // Error message translations
@@ -1156,7 +1171,22 @@ const translations: Translations = {
     final_enhanced_target_price: "Final enhanced target price:",
     current_price_updated: "Current price updated:",
     received_analysis_results: "Received analysis results:",
-    data_age: "data age"
+    data_age: "data age",
+
+    // Trading pairs names
+    'EUR/USD': 'Euro / US Dollar',
+    'GBP/USD': 'British Pound / US Dollar',
+    'USD/JPY': 'US Dollar / Japanese Yen',
+    'USD/CHF': 'US Dollar / Swiss Franc',
+    'EUR/JPY': 'Euro / Japanese Yen',
+    'GBP/JPY': 'British Pound / Japanese Yen',
+    'BTC/USDT': 'Bitcoin / Tether',
+    'ETH/USDT': 'Ethereum / Tether',
+    'XRP/USDT': 'Ripple / Tether',
+    'AAPL': 'Apple Inc.',
+    'MSFT': 'Microsoft Corporation',
+    'GOOGL': 'Google LLC',
+    'AMZN': 'Amazon.com Inc.'
   },
   hi: {
     // Error messages
@@ -1430,6 +1460,7 @@ const translations: Translations = {
     market_order: 'मार्केट',
     limit_order: 'लिमिट',
     stop_order: 'स्टॉप',
+    stop_limit: 'स्टॉप लिमिट',
     stop_limit_order: 'स्टॉप लिमिट',
     binary_options: 'बाइनरी ऑप्शन',
     turbo: 'टर्बो',
@@ -1544,6 +1575,7 @@ const translations: Translations = {
     stoch_description: 'स्टोकेस्टिक 30 से नीचे है, ओवरसोल्ड स्थिति दिखाता है',
     momentum_description: 'नकारात्मक मोमेंटम तेजी की कमजोरी दिखाता है',
     volatility_description: 'कीमत में मध्यम अस्थिरता',
+    indicator_value: 'मूल्य',
     buy: 'खरीदें',
     sell: 'बेचें',
     neutral: 'न्यूट्रल',
@@ -1771,7 +1803,22 @@ const translations: Translations = {
     
     // Trading and market messages
     refreshing_data: 'डेटा रीफ्रेश हो रहा है',
-    fetching_latest_prices: 'नवीनतम कीमतों को प्राप्त कर रहे हैं। कृपया प्रतीक्षा करें या बाद में पुनः प्रयास करें।'
+    fetching_latest_prices: 'नवीनतम कीमतों को प्राप्त कर रहे हैं। कृपया प्रतीक्षा करें या बाद में पुनः प्रयास करें।',
+
+    // Trading pairs names
+    'EUR/USD': 'यूरो / अमेरिकी डॉलर',
+    'GBP/USD': 'ब्रिटिश पाउंड / अमेरिकी डॉलर',
+    'USD/JPY': 'अमेरिकी डॉलर / जापानी येन',
+    'USD/CHF': 'अमेरिकी डॉलर / स्विस फ्रैंक',
+    'EUR/JPY': 'यूरो / जापानी येन',
+    'GBP/JPY': 'ब्रिटिश पाउंड / जापानी येन',
+    'BTC/USDT': 'बिटकॉइन / टेदर',
+    'ETH/USDT': 'एथेरियम / टेदर',
+    'XRP/USDT': 'रिप्पल / टेदर',
+    'AAPL': 'एप्पल इंक.',
+    'MSFT': 'माइक्रोसॉफ्ट कॉर्पोरेशन',
+    'GOOGL': 'गूगल एलएलसी',
+    'AMZN': 'अमेज़न.कॉम इंक.'
   }
 };
 
