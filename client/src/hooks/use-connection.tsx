@@ -9,7 +9,7 @@ interface ConnectionState {
 }
 
 export function useConnection(
-  pingUrl = '/api/test/health', 
+  pingUrl = '/api/test/health',
   checkInterval = 60000, // فحص كل دقيقة افتراضيًا
   autoCheck = true
 ): ConnectionState {
@@ -48,7 +48,7 @@ export function useConnection(
 
       return isConnected;
     } catch (error) {
-      console.error('connection_check_error', error);
+      console.error('Connection check error:', error);
       setIsOnline(false);
       setLastCheckTime(Date.now());
 

@@ -42,7 +42,7 @@ const saveToLocalStorage = <T>(key: string, data: T, version: string = '1.0.0'):
     localStorage.setItem(key, JSON.stringify(cachedData));
     return true;
   } catch (error) {
-    console.error(`خطأ في حفظ البيانات (${key}):`, error);
+    console.error(`Error saving data (${key}):`, error);
     return false;
   }
 };
@@ -64,7 +64,7 @@ const getFromLocalStorage = <T>(key: string, defaultValue: T, ttl: number = CACH
 
     return parsed.data;
   } catch (error) {
-    console.error(`خطأ في قراءة البيانات (${key}):`, error);
+    console.error(`Error reading data (${key}):`, error);
     return defaultValue;
   }
 };
@@ -75,7 +75,7 @@ export const useStore = create<ChatState>((set, get) => {
     window.addEventListener('enableOfflineMode', (event: any) => {
       const store = get();
       if (!store.isOfflineMode) {
-        console.log('تم تفعيل وضع عدم الاتصال بواسطة حدث خارجي', event?.detail);
+        console.log('Offline mode enabled by external event', event?.detail);
         store.enableOfflineMode();
       }
     });
@@ -106,7 +106,7 @@ export const useStore = create<ChatState>((set, get) => {
 
         return [];
       } catch (e) {
-        console.error('خطأ في قراءة الرسائل من التخزين المحلي:', e);
+        console.error('Error reading messages from local storage:', e);
         return [];
       }
     })(),
@@ -124,14 +124,14 @@ export const useStore = create<ChatState>((set, get) => {
     initializeWebSocket: () => {
       // إذا كان وضع عدم الاتصال مفعلاً، لا نحاول فتح اتصال
       if (get().isOfflineMode || typeof window === 'undefined') {
-        console.log('في وضع عدم الاتصال، تجاوز محاولة الاتصال بالـ WebSocket');
+        console.log('In offline mode, skipping WebSocket connection');
         return;
       }
 
       try {
         // تفعيل وضع عدم الاتصال تلقائياً في بيئة Replit HTTPS
         if (window.location.protocol === 'https:') {
-          console.log('تم اكتشاف طريقة اتصال HTTPS - التحقق من شروط الأمان لاتصال WebSocket');
+          console.log('HTTPS connection detected - checking security for WebSocket');
 
           // في بيئة Replit، التحول تلقائياً لوضع عدم الاتصال لتجنب أخطاء WebSocket
           const isReplitApp = window.location.hostname.endsWith('.replit.app') ||
@@ -139,7 +139,7 @@ export const useStore = create<ChatState>((set, get) => {
                               window.location.hostname === 'replit.com';
 
           if (isReplitApp) {
-            console.log('تم اكتشاف بيئة Replit HTTPS - تفعيل وضع عدم الاتصال تلقائياً');
+            console.log('Replit HTTPS environment detected - enabling offline mode automatically');
             // تفعيل وضع عدم الاتصال لتجنب أخطاء أمنية مع WebSocket
             get().enableOfflineMode();
 
@@ -147,13 +147,13 @@ export const useStore = create<ChatState>((set, get) => {
             try {
               const { toast } = require('@/hooks/use-toast');
               toast({
-                title: "وضع عدم الاتصال مفعل",
-                description: "لا يمكن استخدام WebSocket من صفحة HTTPS في Replit. تم تفعيل وضع عدم الاتصال تلقائيًا.",
+                title: "Offline Mode Enabled",
+                description: "WebSocket cannot be used from HTTPS in Replit. Offline mode has been enabled automatically.",
                 variant: "default",
                 duration: 5000
               });
             } catch (toastError) {
-              console.warn('تعذر عرض إشعار وضع عدم الاتصال:', toastError);
+              console.warn('Failed to display offline mode notification:', toastError);
             }
 
             return;
@@ -164,7 +164,7 @@ export const useStore = create<ChatState>((set, get) => {
                                 parseInt(localStorage.getItem('ws_failed_attempts') || '0') > 1;
 
           if (useOfflineMode) {
-            console.log('محاولات اتصال فاشلة سابقة - تفعيل وضع عدم الاتصال');
+            console.log('Previous failed connection attempts detected - enabling offline mode');
             get().enableOfflineMode();
             return;
           }
@@ -172,7 +172,7 @@ export const useStore = create<ChatState>((set, get) => {
 
         // الحصول على عنوان URL آمن للـ WebSocket باستخدام الدالة المساعدة
         const wsUrl = getWebSocketUrl('/ws');
-        console.log(`محاولة الاتصال بـ WebSocket على: ${wsUrl}`);
+        console.log(`Attempting to connect to WebSocket at: ${wsUrl}`);
 
         // محاولة إنشاء اتصال WebSocket
         const ws = new WebSocket(wsUrl);
@@ -186,7 +186,7 @@ export const useStore = create<ChatState>((set, get) => {
             // عدم تعيين حالة الاتصال على true
             set({ isConnected: false });
 
-            // تفعيل وضع عدم الاتصال تلقائيًا عند فشل محاولة الاتصال
+            // تفعيل وضع عدم الاتصال تلقائياً عند فشل محاولة الاتصال
             get().enableOfflineMode();
           }
         }, 5000);
@@ -214,7 +214,7 @@ export const useStore = create<ChatState>((set, get) => {
                     encrypted: false
                   };
                 } catch (decryptError) {
-                  console.warn('خطأ في فك تشفير الرسالة:', decryptError);
+                  console.warn('Error decrypting message:', decryptError);
                   // استخدام النص الأصلي في حالة فشل فك التشفير
                 }
               }
@@ -225,7 +225,7 @@ export const useStore = create<ChatState>((set, get) => {
                 const isSelfMessage = currentUser && processedMessage.sender === currentUser;
 
                 // إرسال إشعار فقط إذا كانت الرسالة من شخص آخر وليست من نفس المستخدم
-                if (!isSelfMessage && processedMessage.sender !== 'النظام') {
+                if (!isSelfMessage && processedMessage.sender !== 'System') {
                   // محاولة إرسال إشعار إذا كانت الصفحة غير نشطة أو في الخلفية
                   if (!document.hasFocus()) {
                     NotificationService.sendChatMessage({
@@ -235,7 +235,7 @@ export const useStore = create<ChatState>((set, get) => {
                   }
                 }
               } catch (notifyError) {
-                console.warn('تعذر إرسال إشعار للرسالة الجديدة:', notifyError);
+                console.warn('Could not send notification for new message:', notifyError);
               }
 
               // منع تكرار الرسائل عن طريق فحص معرف الرسالة
@@ -253,7 +253,7 @@ export const useStore = create<ChatState>((set, get) => {
                   localStorage.setItem('chat_messages', JSON.stringify(newMessages));
                   saveToLocalStorage('chat_data', newMessages);
                 } catch (error) {
-                  console.warn('تعذر حفظ الرسائل في التخزين المحلي:', error);
+                  console.warn('Failed to save messages to local storage:', error);
                 }
 
                 return { messages: newMessages };
@@ -272,13 +272,13 @@ export const useStore = create<ChatState>((set, get) => {
           try {
             const { toast } = require('@/hooks/use-toast');
             toast({
-              title: "خطأ في الاتصال",
-              description: "تعذر الاتصال بالخادم. سيتم تفعيل وضع عدم الاتصال تلقائياً.",
+              title: "Connection Error",
+              description: "Failed to connect to the server. Offline mode will be enabled automatically.",
               variant: "destructive",
               duration: 5000
             });
           } catch (toastError) {
-            console.warn('تعذر عرض إشعار الخطأ:', toastError);
+            console.warn('Failed to display error notification:', toastError);
           }
 
           // تفعيل وضع عدم الاتصال تلقائياً بعد 3 محاولات فاشلة
@@ -286,7 +286,7 @@ export const useStore = create<ChatState>((set, get) => {
           localStorage.setItem('ws_failed_attempts', (failedAttempts + 1).toString());
 
           if (failedAttempts >= 2) { // بعد 3 محاولات (0, 1, 2)
-            console.log('فشلت 3 محاولات للاتصال، تفعيل وضع عدم الاتصال تلقائيًا');
+            console.log('3 connection attempts failed, enabling offline mode automatically');
             get().enableOfflineMode();
           }
         };
@@ -301,13 +301,13 @@ export const useStore = create<ChatState>((set, get) => {
             try {
               const { toast } = require('@/hooks/use-toast');
               toast({
-                title: "انقطع الاتصال",
-                description: "تم إغلاق الاتصال بالخادم. جاري محاولة إعادة الاتصال...",
+                title: "Connection Interrupted",
+                description: "The connection to the server has been closed. Attempting to reconnect...",
                 variant: "default",
                 duration: 3000
               });
             } catch (toastError) {
-              console.warn('تعذر عرض إشعار قطع الاتصال:', toastError);
+              console.warn('Failed to display connection interrupted notification:', toastError);
             }
 
             // محاولة إعادة الاتصال بعد تأخير
@@ -341,7 +341,7 @@ export const useStore = create<ChatState>((set, get) => {
 
       // إذا كان في وضع عدم الاتصال، نخزن الرسالة للمزامنة لاحقاً
       if (isOfflineMode) {
-        console.log('تم إرسال الرسالة في وضع عدم الاتصال، وسيتم حفظها للمزامنة لاحقاً');
+        console.log('Message sent in offline mode, will be saved for later sync');
 
         // إضافة الرسالة إلى قائمة الرسائل المعلقة
         set(state => ({
@@ -353,7 +353,7 @@ export const useStore = create<ChatState>((set, get) => {
           const allPendingMessages = [...pendingMessages, message];
           saveToLocalStorage('pending_messages', allPendingMessages);
         } catch (storageError) {
-          console.warn('تعذر حفظ الرسائل المعلقة في التخزين المحلي:', storageError);
+          console.warn('Failed to save pending messages to local storage:', storageError);
         }
       }
       // محاولة الإرسال عبر WebSocket إذا كان الاتصال متاحاً
@@ -372,9 +372,9 @@ export const useStore = create<ChatState>((set, get) => {
 
           // إرسال الرسالة إلى الخادم
           socket.send(JSON.stringify(wsMessage));
-          console.log('تم إرسال الرسالة إلى الخادم عبر WebSocket');
+          console.log('Message sent to server via WebSocket');
         } catch (wsError) {
-          console.error('خطأ في إرسال الرسالة عبر WebSocket، سيتم حفظها محليًا فقط:', wsError);
+          console.error('Error sending message via WebSocket, saving locally only:', wsError);
 
           // إضافة الرسالة للمعلقة في حالة فشل الإرسال
           set(state => ({
@@ -382,7 +382,7 @@ export const useStore = create<ChatState>((set, get) => {
           }));
         }
       } else {
-        console.log('لا يوجد اتصال WebSocket نشط، سيتم حفظ الرسالة محليًا فقط');
+        console.log('No active WebSocket connection, saving message locally only');
       }
 
       // في جميع الحالات، نضيف الرسالة إلى الرسائل المحلية للعرض الفوري
@@ -394,14 +394,14 @@ export const useStore = create<ChatState>((set, get) => {
           localStorage.setItem('chat_messages', JSON.stringify(newMessages));
           saveToLocalStorage('chat_data', newMessages);
         } catch (storageError) {
-          console.warn('تعذر حفظ الرسائل في التخزين المحلي:', storageError);
+          console.warn('Failed to save messages to local storage:', storageError);
         }
 
         return { messages: newMessages };
       });
 
       // تسجيل في وحدة التحكم للتصحيح
-      console.log('تم إرسال وحفظ الرسالة الجديدة محلياً:', message);
+      console.log('New message sent and saved locally:', message);
 
       // إذا كنا في وضع المحاكاة المحلية أو وضع عدم الاتصال، نستمر في إنشاء ردود افتراضية
       if (isOfflineMode || !socket || !('send' in socket) || typeof socket.send !== 'function') {
@@ -410,8 +410,8 @@ export const useStore = create<ChatState>((set, get) => {
           if (Math.random() > 0.7) { // 30% فرصة للرد التلقائي
             const autoResponse: Message = {
               id: `auto_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
-              text: `رد تلقائي على: "${text.substring(0, 15)}${text.length > 15 ? '...' : ''}"`,
-              sender: 'مستخدم آخر',
+              text: `Auto-reply to: "${text.substring(0, 15)}${text.length > 15 ? '...' : ''}"`,
+              sender: 'Another User',
               avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${Math.random()}`,
               timestamp: Date.now() + 1000
             };
@@ -423,7 +423,7 @@ export const useStore = create<ChatState>((set, get) => {
                 localStorage.setItem('chat_messages', JSON.stringify(newMessages));
                 saveToLocalStorage('chat_data', newMessages);
               } catch (error) {
-                console.warn('تعذر حفظ الرد التلقائي في التخزين المحلي:', error);
+                console.warn('Failed to save auto-reply to local storage:', error);
               }
               return { messages: newMessages };
             });
@@ -437,7 +437,7 @@ export const useStore = create<ChatState>((set, get) => {
                 });
               }
             } catch (notifyError) {
-              console.warn('تعذر إرسال إشعار للرد التلقائي:', notifyError);
+              console.warn('Could not send notification for auto-reply:', notifyError);
             }
           }
         }, 1500 + Math.random() * 2000); // رد عشوائي بين 1.5 و 3.5 ثوانٍ
@@ -451,7 +451,7 @@ export const useStore = create<ChatState>((set, get) => {
 
         // التحقق مما إذا كان الوضع مفعل بالفعل
         if (get().isOfflineMode) {
-          console.log('وضع عدم الاتصال مفعل بالفعل');
+          console.log('Offline mode already enabled');
           return;
         }
 
@@ -474,25 +474,25 @@ export const useStore = create<ChatState>((set, get) => {
           socket: null
         });
 
-        console.log('تم تمكين وضع عدم الاتصال بالإنترنت. الرسائل سيتم تخزينها محلياً فقط.');
+        console.log('Offline mode enabled. Messages will be stored locally only.');
 
         // إظهار إشعار للمستخدم
         try {
           const { toast } = require('@/hooks/use-toast');
           toast({
-            title: "تم تفعيل وضع عدم الاتصال",
-            description: "سيتم تخزين البيانات محليًا. يمكنك العودة إلى وضع الاتصال المباشر لاحقًا.",
+            title: "Offline Mode Activated",
+            description: "Data will be stored locally. You can return to live mode later.",
             variant: "default",
             duration: 5000
           });
         } catch (toastError) {
-          console.warn('تعذر عرض إشعار تفعيل وضع عدم الاتصال:', toastError);
+          console.warn('Failed to display offline mode activation notification:', toastError);
         }
 
         // تخزين حالة وضع عدم الاتصال
         localStorage.setItem('offlineMode', 'enabled');
       } catch (error) {
-        console.error('خطأ في تمكين وضع عدم الاتصال:', error);
+        console.error('Error enabling offline mode:', error);
       }
     },
 
@@ -511,13 +511,13 @@ export const useStore = create<ChatState>((set, get) => {
         try {
           const { toast } = require('@/hooks/use-toast');
           toast({
-            title: "جاري الاتصال بالخادم",
-            description: "محاولة الاتصال ومزامنة البيانات...",
+            title: "Connecting to Server",
+            description: "Attempting to connect and sync data...",
             variant: "default",
             duration: 3000
           });
         } catch (toastError) {
-          console.warn('تعذر عرض إشعار تعطيل وضع عدم الاتصال:', toastError);
+          console.warn('Failed to display offline mode deactivation notification:', toastError);
         }
 
         // إعادة تهيئة اتصال WebSocket
@@ -528,9 +528,9 @@ export const useStore = create<ChatState>((set, get) => {
           get().syncMessages();
         }, 2000);
 
-        console.log('تم تعطيل وضع عدم الاتصال بالإنترنت ومحاولة إعادة الاتصال.');
+        console.log('Offline mode disabled, attempting to reconnect.');
       } catch (error) {
-        console.error('خطأ في تعطيل وضع عدم الاتصال:', error);
+        console.error('Error disabling offline mode:', error);
       }
     },
 
@@ -543,7 +543,7 @@ export const useStore = create<ChatState>((set, get) => {
 
         // التحقق من وجود اتصال نشط
         if (!isConnected || !socket || !('send' in socket) || typeof socket.send !== 'function') {
-          console.warn('لا يمكن مزامنة الرسائل: لا يوجد اتصال نشط بالخادم');
+          console.warn('Cannot sync messages: no active server connection');
           return;
         }
 
@@ -558,11 +558,11 @@ export const useStore = create<ChatState>((set, get) => {
 
         // إذا لم نجد أي رسائل معلقة للمزامنة، نخرج
         if (messagesToSync.length === 0) {
-          console.log('لا توجد رسائل معلقة للمزامنة');
+          console.log('No pending messages to sync');
           return;
         }
 
-        console.log(`جاري مزامنة ${messagesToSync.length} رسالة مع الخادم...`);
+        console.log(`Syncing ${messagesToSync.length} messages with the server...`);
 
         // إرسال الرسائل للمزامنة بشكل متعاقب
         for (const message of messagesToSync) {
@@ -576,7 +576,7 @@ export const useStore = create<ChatState>((set, get) => {
             socket.send(JSON.stringify(wsMessage));
             await new Promise(resolve => setTimeout(resolve, 100)); // انتظار قصير بين كل رسالة
           } catch (sendError) {
-            console.error('خطأ في مزامنة الرسالة:', sendError);
+            console.error('Error syncing message:', sendError);
             // تسجيل الرسالة كمعلقة
             set(state => ({
               pendingMessages: [...state.pendingMessages, message]
@@ -589,12 +589,12 @@ export const useStore = create<ChatState>((set, get) => {
         set({ lastSyncTimestamp: syncTime, pendingMessages: [] });
         localStorage.setItem('last_sync_timestamp', syncTime.toString());
 
-        console.log('تمت مزامنة الرسائل بنجاح');
+        console.log('Messages synced successfully');
 
         // تحديث التخزين المؤقت بالبيانات المحدثة
         saveToLocalStorage('chat_data', get().messages);
       } catch (error) {
-        console.error('خطأ في مزامنة الرسائل:', error);
+        console.error('Error syncing messages:', error);
       }
     },
 
@@ -606,9 +606,9 @@ export const useStore = create<ChatState>((set, get) => {
         set({ messages: [] });
         localStorage.removeItem('chat_messages');
         localStorage.removeItem('chat_data');
-        console.log('تم مسح جميع الرسائل من المخزن المؤقت');
+        console.log('All messages cleared from cache');
       } catch (error) {
-        console.error('خطأ في مسح الرسائل:', error);
+        console.error('Error clearing messages:', error);
       }
     }
   };

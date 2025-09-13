@@ -86,20 +86,20 @@ apiKeysRouter.get('/quicktest/:keyname', async (req, res) => {
     // تنفيذ طلب الاختبار
     console.log(`جاري إرسال طلب اختبار إلى: ${testUrl}`);
     const response = await axios.get(testUrl, { params, headers, timeout: 5000 });
-    console.log(`تم استلام الاستجابة من ${testUrl}`);
+    console.log(`Response received from ${testUrl}`);
     
     return res.json({
       success: true,
-      message: `تم اختبار المفتاح ${keyName} بنجاح`,
+      message: `Key ${keyName} tested successfully`,
       key: keyName,
       value: `${keyData.value.substring(0, 4)}...`,
       response: response.status
     });
   } catch (error: any) {
-    console.error(`خطأ في اختبار المفتاح ${keyName}:`, error);
+    console.error(`Error testing key ${keyName}:`, error);
     return res.json({
       success: false,
-      message: `فشل في اختبار المفتاح ${keyName}: ${error.message}`,
+      message: `Failed to test key ${keyName}: ${error.message}`,
       key: keyName
     });
   }
@@ -113,13 +113,13 @@ apiKeysRouter.get('/defaults', async (req, res) => {
       {
         key: 'MARKET_API_KEY',
         value: '6KCF...bf75',
-        description: 'مفتاح API الرئيسي',
+        description: 'Primary API Key',
         isSecret: true
       },
       {
         key: 'PRIMARY_API_KEY',
         value: 'CWMH...N26B',
-        description: 'مفتاح Alpha Vantage API الرئيسي',
+        description: 'Primary Alpha Vantage API Key',
         isSecret: true
       },
       {
