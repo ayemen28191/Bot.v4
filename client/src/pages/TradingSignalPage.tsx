@@ -1676,7 +1676,7 @@ export default function TradingSignalPage() {
       {showConnectionError && !isOfflineMode && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/30 z-50 p-4">
           <ConnectionError 
-            message="تحديث بيانات التحليل جارٍ. يمكنك استخدام وضع التحليل المحلي للاستمرار في استخدام التطبيق بكامل مميزاته." 
+            message={t("analysis_data_updating")} 
             onRetry={handleRetryConnection}
             onEnableOfflineMode={enableOfflineMode}
             showOfflineModeOption={true}

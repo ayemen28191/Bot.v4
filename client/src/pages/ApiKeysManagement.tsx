@@ -89,8 +89,8 @@ interface ApiKey {
 
 // نموذج Zod للتحقق من صحة المدخلات
 const apiKeyFormSchema = z.object({
-  key: z.string().min(1, { message: "اسم المفتاح مطلوب" }),
-  value: z.string().min(1, { message: "قيمة المفتاح مطلوبة" }),
+  key: z.string().min(1, { message: t("key_name_required") }),
+  value: z.string().min(1, { message: t("key_value_required") }),
   description: z.string().optional(),
   isSecret: z.boolean().default(true)
 });
@@ -167,8 +167,8 @@ export default function ApiKeysManagement() {
         } catch (fallbackError) {
           console.error("فشل في جلب المفاتيح الافتراضية:", fallbackError);
           toast({
-            title: "خطأ",
-            description: "فشل في جلب مفاتيح API",
+            title: t('error'),
+            description: t('failed_to_get_api_keys'),
             variant: "destructive"
           });
         }
@@ -209,15 +209,15 @@ export default function ApiKeysManagement() {
       form.reset();
       
       toast({
-        title: "تم الحفظ",
-        description: `تم حفظ المفتاح ${data.key} بنجاح`,
+        title: t('saved_successfully'),
+        description: t('saved_key_successfully').replace('{key}', data.key),
       });
       
     } catch (error) {
       console.error("Error saving API key:", error);
       toast({
-        title: "خطأ",
-        description: "فشل في حفظ مفتاح API",
+        title: t('error'),
+        description: t('failed_to_save_api_key'),
         variant: "destructive"
       });
     } finally {
@@ -250,8 +250,8 @@ export default function ApiKeysManagement() {
       
       // إظهار إشعار بنتيجة الاختبار
       toast({
-        title: result.success ? "اختبار ناجح" : "اختبار فاشل",
-        description: result.message || `تم اختبار المفتاح ${keyName}`,
+        title: result.success ? t('test_successful') : t('test_failed'),
+        description: result.message || `${t('test_key_button')} ${keyName}`,
         variant: result.success ? "default" : "destructive"
       });
       
@@ -273,8 +273,8 @@ export default function ApiKeysManagement() {
         }));
         
         toast({
-          title: fallbackResult.success ? "اختبار ناجح" : "اختبار فاشل",
-          description: fallbackResult.message || `تم اختبار المفتاح ${keyName}`,
+          title: fallbackResult.success ? t('test_successful') : t('test_failed'),
+          description: fallbackResult.message || `${t('test_key_button')} ${keyName}`,
           variant: fallbackResult.success ? "default" : "destructive"
         });
         
@@ -288,13 +288,13 @@ export default function ApiKeysManagement() {
         ...prev,
         [keyName]: {
           status: 'invalid',
-          message: error.message || "فشل في اختبار المفتاح"
+          message: error.message || t('failed_to_test_key')
         }
       }));
       
       toast({
-        title: "خطأ",
-        description: `فشل في اختبار المفتاح ${keyName}: ${error.message || 'خطأ غير معروف'}`,
+        title: t('error'),
+        description: `${t('failed_to_test_key')} ${keyName}: ${error.message || t('unknown_error')}`,
         variant: "destructive"
       });
     } finally {
@@ -305,7 +305,7 @@ export default function ApiKeysManagement() {
 
   // حذف مفتاح API
   const deleteApiKey = async (keyName: string) => {
-    if (!confirm(`هل أنت متأكد من حذف المفتاح ${keyName}؟`)) {
+    if (!confirm(`${t('confirm_delete_key')} ${keyName}?`)) {
       return;
     }
     
@@ -317,14 +317,14 @@ export default function ApiKeysManagement() {
       setApiKeys(prev => prev.filter(key => key.key !== keyName));
       
       toast({
-        title: "تم الحذف",
-        description: `تم حذف المفتاح ${keyName} بنجاح`,
+        title: t('deleted_successfully'),
+        description: t('deleted_key_successfully').replace('{key}', keyName),
       });
     } catch (error) {
       console.error(`Error deleting API key ${keyName}:`, error);
       toast({
-        title: "خطأ",
-        description: `فشل في حذف المفتاح ${keyName}`,
+        title: t('error'),
+        description: t('failed_to_delete_key').replace('{key}', keyName),
         variant: "destructive"
       });
     } finally {
@@ -350,19 +350,19 @@ export default function ApiKeysManagement() {
     if (status.status === 'valid') {
       return (
         <Badge variant="outline" className="bg-green-50 text-green-600 hover:bg-green-50">
-          <Check className="w-3 h-3 mr-1" /> صالح
+          <Check className="w-3 h-3 mr-1" /> {t('valid')}
         </Badge>
       );
     } else if (status.status === 'invalid') {
       return (
         <Badge variant="outline" className="bg-red-50 text-red-600 hover:bg-red-50">
-          <AlertTriangle className="w-3 h-3 mr-1" /> غير صالح
+          <AlertTriangle className="w-3 h-3 mr-1" /> {t('invalid')}
         </Badge>
       );
     } else {
       return (
         <Badge variant="outline" className="bg-muted text-muted-foreground hover:bg-muted">
-          غير مختبر
+          {t('untested')}
         </Badge>
       );
     }
@@ -372,9 +372,9 @@ export default function ApiKeysManagement() {
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <p className="text-center text-muted-foreground mb-4">يرجى تسجيل الدخول للوصول إلى هذه الصفحة</p>
+        <p className="text-center text-muted-foreground mb-4">{t('please_login_to_access')}</p>
         <Link href="/auth">
-          <Button>تسجيل الدخول</Button>
+          <Button>{t('login')}</Button>
         </Link>
       </div>
     );
@@ -383,7 +383,7 @@ export default function ApiKeysManagement() {
   if (!user.isAdmin) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <p className="text-center text-muted-foreground">ليس لديك صلاحية للوصول إلى هذه الصفحة</p>
+        <p className="text-center text-muted-foreground">{t('no_permission_access')}</p>
       </div>
     );
   }

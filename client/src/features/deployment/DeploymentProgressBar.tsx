@@ -1,6 +1,7 @@
 import { CheckCircle2, Circle, XCircle, AlertCircle, ArrowRight } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { t } from "@/lib/i18n";
 
 interface DeploymentProgressBarProps {
   stage: number;
@@ -19,11 +20,11 @@ export default function DeploymentProgressBar({
 }: DeploymentProgressBarProps) {
   // مراحل النشر
   const stages = [
-    { id: 1, name: "الاتصال", icon: Circle },
-    { id: 2, name: "إنشاء الحزمة", icon: Circle },
-    { id: 3, name: "رفع الملفات", icon: Circle },
-    { id: 4, name: "التنفيذ", icon: Circle },
-    { id: 5, name: "الاكتمال", icon: Circle },
+    { id: 1, name: t("deployment_stage_connection"), icon: Circle },
+    { id: 2, name: t("deployment_stage_package"), icon: Circle },
+    { id: 3, name: t("deployment_stage_upload"), icon: Circle },
+    { id: 4, name: t("deployment_stage_execution"), icon: Circle },
+    { id: 5, name: t("deployment_stage_completion"), icon: Circle },
   ];
 
   // حساب قيمة التقدم
