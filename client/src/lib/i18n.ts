@@ -2187,55 +2187,70 @@ export function getBrowserLanguage(): string {
 // Initialize current language
 let currentLanguage = 'en'; // English as default language
 
+// Normalize language codes to supported values
+const normalizeLanguage = (lang: string): 'ar' | 'en' => {
+  // Handle variations like 'ar-SA' -> 'ar', 'en-US' -> 'en'
+  const langCode = lang.toLowerCase().split('-')[0];
+  console.log('Normalizing language:', lang, '=>', langCode === 'ar' ? 'ar' : 'en');
+  return langCode === 'ar' ? 'ar' : 'en';
+};
+
 // Function to change language with optional database save
+// FIXED: Always update DOM regardless of saveToDatabase flag
 export const setLanguage = (lang: string, saveToDatabase: boolean = false) => {
-  if (translations[lang]) {
-    currentLanguage = lang;
-    localStorage.setItem('language', lang);
+  // Normalize language code first
+  const normalizedLang = normalizeLanguage(lang);
+  console.log('setLanguage called with:', lang, '=> normalized to:', normalizedLang, 'saveToDatabase:', saveToDatabase);
+  
+  // Update internal language state
+  currentLanguage = normalizedLang;
+  
+  // ALWAYS update DOM attributes regardless of flags
+  const isRTL = normalizedLang === 'ar';
+  document.documentElement.setAttribute('lang', normalizedLang);
+  document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
 
-    // Update settings in localStorage
-    try {
-      const settings = JSON.parse(localStorage.getItem('settings') || '{}');
-      settings.language = lang;
-      localStorage.setItem('settings', JSON.stringify(settings));
-    } catch (e) {
-      console.error('Error saving language to settings:', e);
-    }
-
-    // Update HTML attributes - Enhanced Direction Support
-    const isRTL = lang === 'ar';
-    document.documentElement.setAttribute('lang', lang);
-    document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
-
-    console.log(`Direction updated: ${isRTL ? 'RTL' : 'LTR'} for language: ${lang}`);
-    console.log('HTML dir attribute set to:', document.documentElement.getAttribute('dir'));
-
-    // Add/remove CSS classes for language-specific styling
-    if (isRTL) {
-      document.documentElement.classList.add('ar', 'rtl');
-      document.documentElement.classList.remove('ltr');
-      document.body.classList.add('font-arabic');
-    } else {
-      document.documentElement.classList.remove('ar', 'rtl');
-      document.documentElement.classList.add('ltr');
-      document.body.classList.remove('font-arabic');
-    }
-
-    console.log('CSS classes applied:', {
-      html: document.documentElement.className,
-      body: document.body.className
-    });
-
-    // Clear translation cache
-    translationCache = {};
-
-    // Dispatch language change event with database save flag
-    window.dispatchEvent(new CustomEvent('languageChanged', { 
-      detail: { language: lang, saveToDatabase } 
-    }));
-
-    console.log('Language changed to:', lang, 'Save to DB:', saveToDatabase);
+  // Remove any existing direction classes to avoid conflicts
+  document.documentElement.classList.remove('ar', 'rtl', 'ltr');
+  document.body.classList.remove('font-arabic');
+  
+  // Add appropriate classes for the selected language
+  if (isRTL) {
+    document.documentElement.classList.add('ar', 'rtl');
+    document.body.classList.add('font-arabic');
+  } else {
+    document.documentElement.classList.add('ltr');
   }
+
+  console.log('DOM updated unconditionally:', {
+    direction: isRTL ? 'RTL' : 'LTR',
+    language: normalizedLang,
+    htmlDir: document.documentElement.getAttribute('dir'),
+    htmlLang: document.documentElement.getAttribute('lang'),
+    htmlClasses: document.documentElement.className,
+    bodyClasses: document.body.className
+  });
+
+  // Update localStorage for persistence
+  localStorage.setItem('language', normalizedLang);
+  try {
+    const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+    settings.language = normalizedLang;
+    localStorage.setItem('settings', JSON.stringify(settings));
+    console.log('Language saved to localStorage:', normalizedLang);
+  } catch (e) {
+    console.error('Error saving language to settings:', e);
+  }
+
+  // Clear translation cache to force refresh
+  translationCache = {};
+
+  // Dispatch language change event
+  window.dispatchEvent(new CustomEvent('languageChanged', { 
+    detail: { language: normalizedLang, saveToDatabase } 
+  }));
+
+  console.log('Language change complete:', normalizedLang, 'Save to DB:', saveToDatabase);
 };
 
 // Enhanced translation function with user context support
