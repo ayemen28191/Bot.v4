@@ -73,6 +73,56 @@
   flex-direction: row-reverse;
 }
 
+/* إصلاح محدد للعناصر التي تحتاج RTL */
+
+/* النصوص العامة والعناوين */
+[dir="rtl"] h1, [dir="rtl"] h2, [dir="rtl"] h3, 
+[dir="rtl"] h4, [dir="rtl"] h5, [dir="rtl"] h6,
+[dir="rtl"] p, [dir="rtl"] span, [dir="rtl"] label {
+  text-align: right;
+}
+
+/* الحقول والأزرار النصية فقط */
+[dir="rtl"] input[type="text"],
+[dir="rtl"] input[type="email"], 
+[dir="rtl"] input[type="password"],
+[dir="rtl"] textarea,
+[dir="rtl"] select {
+  text-align: right;
+}
+
+/* الحقول الرقمية تبقى LTR */
+[dir="rtl"] input[type="number"],
+[dir="rtl"] .number-display,
+[dir="rtl"] .western-nums {
+  text-align: left;
+  direction: ltr;
+}
+
+/* محاذاة للنصوص الطويلة والمحتوى */
+[dir="rtl"] .content, 
+[dir="rtl"] .description,
+[dir="rtl"] .settings-section {
+  text-align: right;
+}
+
+/* استثناءات للعناصر التي لا تحتاج انعكاس */
+[dir="rtl"] .mobile-navbar,
+[dir="rtl"] .navigation,
+[dir="rtl"] .nav-item,
+[dir="rtl"] .mobile-nav-item {
+  direction: ltr !important;
+}
+
+/* إصلاح محدد لأزرار اللغة */
+[dir="rtl"] .language-buttons .button-group {
+  direction: ltr;
+}
+
+[dir="rtl"] .language-buttons .button-group button {
+  text-align: center;
+}
+
 /* خطوط للنصوص المختلطة */
 .mixed-content {
   font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, sans-serif;
