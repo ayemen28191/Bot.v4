@@ -97,4 +97,4 @@ author = 47525934
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "NODE_ENV=production node dist/index.js"
+args = "pm2 start dist/index.js --name bot-v4"
