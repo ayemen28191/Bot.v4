@@ -1,0 +1,318 @@
+/* LTR-specific styles for English and other left-to-right languages */
+
+/* Base LTR direction and text alignment */
+[dir="ltr"] {
+  direction: ltr;
+  text-align: start;
+}
+
+[dir="ltr"] * {
+  text-align: inherit;
+}
+
+/* Auth form input styling for LTR */
+[dir="ltr"] .auth-input-with-icon {
+  padding-inline-start: 2.5rem;
+  padding-inline-end: 1rem;
+}
+
+[dir="ltr"] .auth-input-icon {
+  inset-inline-start: 0.75rem;
+  inset-inline-end: auto;
+}
+
+/* Toggle password button positioning */
+[dir="ltr"] .auth-password-toggle {
+  inset-inline-start: auto;
+  inset-inline-end: 0.25rem;
+}
+
+/* LTR form elements alignment */
+[dir="ltr"] button,
+[dir="ltr"] .btn,
+[dir="ltr"] input,
+[dir="ltr"] textarea,
+[dir="ltr"] select {
+  text-align: start;
+}
+
+/* LTR flex layouts */
+[dir="ltr"] .flex {
+  flex-direction: row;
+}
+
+[dir="ltr"] .flex-row-reverse {
+  flex-direction: row-reverse;
+}
+
+[dir="ltr"] .flex-col {
+  flex-direction: column;
+}
+
+/* LTR grid layouts */
+[dir="ltr"] .grid {
+  direction: ltr;
+}
+
+/* LTR spacing using logical properties */
+[dir="ltr"] .space-x-1 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 0;
+  margin-inline-start: calc(0.25rem * calc(1 - var(--tw-space-x-reverse)));
+  margin-inline-end: calc(0.25rem * var(--tw-space-x-reverse));
+}
+
+[dir="ltr"] .space-x-2 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 0;
+  margin-inline-start: calc(0.5rem * calc(1 - var(--tw-space-x-reverse)));
+  margin-inline-end: calc(0.5rem * var(--tw-space-x-reverse));
+}
+
+[dir="ltr"] .space-x-4 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 0;
+  margin-inline-start: calc(1rem * calc(1 - var(--tw-space-x-reverse)));
+  margin-inline-end: calc(1rem * var(--tw-space-x-reverse));
+}
+
+/* LTR margin adjustments using logical properties */
+[dir="ltr"] .ml-1 {
+  margin-inline-start: 0.25rem;
+  margin-inline-end: 0;
+}
+
+[dir="ltr"] .ml-2 {
+  margin-inline-start: 0.5rem;
+  margin-inline-end: 0;
+}
+
+[dir="ltr"] .ml-3 {
+  margin-inline-start: 0.75rem;
+  margin-inline-end: 0;
+}
+
+[dir="ltr"] .ml-4 {
+  margin-inline-start: 1rem;
+  margin-inline-end: 0;
+}
+
+[dir="ltr"] .mr-1 {
+  margin-inline-end: 0.25rem;
+  margin-inline-start: 0;
+}
+
+[dir="ltr"] .mr-2 {
+  margin-inline-end: 0.5rem;
+  margin-inline-start: 0;
+}
+
+[dir="ltr"] .mr-3 {
+  margin-inline-end: 0.75rem;
+  margin-inline-start: 0;
+}
+
+[dir="ltr"] .mr-4 {
+  margin-inline-end: 1rem;
+  margin-inline-start: 0;
+}
+
+/* LTR padding adjustments using logical properties */
+[dir="ltr"] .pl-1 {
+  padding-inline-start: 0.25rem;
+  padding-inline-end: 0;
+}
+
+[dir="ltr"] .pl-2 {
+  padding-inline-start: 0.5rem;
+  padding-inline-end: 0;
+}
+
+[dir="ltr"] .pl-3 {
+  padding-inline-start: 0.75rem;
+  padding-inline-end: 0;
+}
+
+[dir="ltr"] .pl-4 {
+  padding-inline-start: 1rem;
+  padding-inline-end: 0;
+}
+
+[dir="ltr"] .pr-1 {
+  padding-inline-end: 0.25rem;
+  padding-inline-start: 0;
+}
+
+[dir="ltr"] .pr-2 {
+  padding-inline-end: 0.5rem;
+  padding-inline-start: 0;
+}
+
+[dir="ltr"] .pr-3 {
+  padding-inline-end: 0.75rem;
+  padding-inline-start: 0;
+}
+
+[dir="ltr"] .pr-4 {
+  padding-inline-end: 1rem;
+  padding-inline-start: 0;
+}
+
+/* LTR icons - no transformation needed */
+[dir="ltr"] .icon,
+[dir="ltr"] svg {
+  transform: none;
+}
+
+/* LTR dropdown and menu positioning */
+[dir="ltr"] .dropdown-menu {
+  left: 0;
+  right: auto;
+}
+
+[dir="ltr"] .popover-content {
+  left: 0;
+  right: auto;
+}
+
+/* LTR form label alignment */
+[dir="ltr"] label {
+  text-align: start;
+}
+
+/* LTR checkbox and radio positioning */
+[dir="ltr"] .checkbox-wrapper {
+  flex-direction: row;
+}
+
+[dir="ltr"] .radio-wrapper {
+  flex-direction: row;
+}
+
+/* LTR card layout adjustments */
+[dir="ltr"] .card-header {
+  text-align: start;
+}
+
+[dir="ltr"] .card-content {
+  text-align: start;
+}
+
+/* LTR toast and notification positioning */
+[dir="ltr"] .toast {
+  right: 1rem;
+  left: auto;
+}
+
+/* LTR sidebar adjustments */
+[dir="ltr"] .sidebar {
+  left: 0;
+  right: auto;
+}
+
+/* LTR search input icons */
+[dir="ltr"] .search-icon {
+  left: 0.75rem;
+  right: auto;
+}
+
+/* LTR breadcrumb separators */
+[dir="ltr"] .breadcrumb-separator {
+  transform: none;
+}
+
+/* LTR table text alignment */
+[dir="ltr"] .table th,
+[dir="ltr"] .table td {
+  text-align: start;
+}
+
+/* LTR progress bar direction */
+[dir="ltr"] .progress-bar {
+  direction: ltr;
+}
+
+/* LTR tab navigation */
+[dir="ltr"] .tabs-list {
+  direction: ltr;
+}
+
+[dir="ltr"] .tab-trigger {
+  text-align: start;
+}
+
+/* LTR dialog positioning */
+[dir="ltr"] .dialog-content {
+  text-align: start;
+}
+
+/* LTR form field error positioning */
+[dir="ltr"] .field-error {
+  text-align: start;
+  margin-inline-start: 0;
+}
+
+/* LTR loading spinner adjustments */
+[dir="ltr"] .loading-text {
+  text-align: center;
+}
+
+/* LTR select component adjustments */
+[dir="ltr"] .select-trigger {
+  text-align: start;
+}
+
+[dir="ltr"] .select-content {
+  text-align: start;
+}
+
+/* LTR avatar and profile adjustments */
+[dir="ltr"] .avatar-fallback {
+  text-align: center;
+}
+
+/* LTR command palette adjustments */
+[dir="ltr"] .command-input {
+  text-align: start;
+}
+
+[dir="ltr"] .command-item {
+  text-align: start;
+}
+
+/* LTR navigation and mobile layout */
+[dir="ltr"] .mobile-navbar,
+[dir="ltr"] .mobile-nav-container,
+[dir="ltr"] .mobile-nav-item,
+[dir="ltr"] nav,
+[dir="ltr"] .navbar-actions {
+  direction: ltr;
+  flex-direction: row;
+}
+
+[dir="ltr"] .mobile-nav-item {
+  text-align: center;
+}
+
+[dir="ltr"] .language-buttons,
+[dir="ltr"] .language-selector {
+  direction: ltr;
+}
+
+[dir="ltr"] .language-buttons button {
+  text-align: center;
+}
+
+/* LTR utility classes */
+.ltr-margin-start {
+  margin-inline-start: 0.5rem;
+}
+
+.ltr-margin-end {
+  margin-inline-end: 0.5rem;
+}
+
+.ltr-padding-start {
+  padding-inline-start: 0.5rem;
+}
+
+.ltr-padding-end {
+  padding-inline-end: 0.5rem;
+}

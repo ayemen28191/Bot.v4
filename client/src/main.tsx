@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
-import "./index.css";
+import "./styles/common.css"; // Load common styles first instead of index.css
 import { setLanguage, getBrowserLanguage } from "./lib/i18n";
 import { initializeDefaultTheme, setupSystemThemeListener } from "./lib/themeSystem";
 // @ts-ignore - theme.json is read-only config
@@ -16,11 +16,12 @@ if (typeof window !== 'undefined') {
   }
 }
 
-// تهيئة اللغة الإنجليزية كافتراضية
+// تهيئة اللغة مع تحميل CSS الديناميكي
 if (typeof window !== 'undefined') {
   try {
     const initialLanguage = getBrowserLanguage();
-    setLanguage(initialLanguage);
+    console.log('Initializing language and CSS system:', initialLanguage);
+    setLanguage(initialLanguage); // This will now load the appropriate directional CSS
   } catch (error) {
     console.warn('Language initialization error:', error);
     setLanguage('en'); // الإنجليزية كافتراضي في حالة الخطأ

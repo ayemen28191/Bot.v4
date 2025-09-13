@@ -1,0 +1,441 @@
+/* Common styles shared between RTL and LTR */
+
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base typography and font settings */
+.font-arabic, .rtl, [lang="ar"] {
+  font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.mixed-content {
+  font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, sans-serif;
+  unicode-bidi: isolate;
+}
+
+/* Number display (always LTR regardless of language) */
+.arabic-nums {
+  font-variant-numeric: normal;
+  unicode-bidi: isolate;
+}
+
+.western-nums,
+.number-display,
+input[type="number"],
+input[type="tel"] {
+  direction: ltr;
+  text-align: start;
+  unicode-bidi: embed;
+  display: inline-block;
+}
+
+/* Utility classes for text direction control */
+.ltr-content {
+  direction: ltr !important;
+}
+
+.rtl-content {
+  direction: rtl !important;
+}
+
+.ltr-text {
+  text-align: start !important;
+  direction: ltr !important;
+  unicode-bidi: embed;
+}
+
+.rtl-text {
+  text-align: start !important;
+  direction: rtl !important;
+}
+
+.mixed-text {
+  unicode-bidi: isolate;
+}
+
+/* Base animations */
+@keyframes wobble {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(1deg); }
+  75% { transform: rotate(-1deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animation classes */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.fade-out {
+  animation: fadeOut 0.3s ease-in-out forwards;
+}
+
+.robot-wobble {
+  animation: wobble 3s ease-in-out infinite;
+  transform-origin: center center;
+}
+
+/* Transition utilities */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+/* Color scheme and theme variables */
+@layer base {
+  :root[data-theme="light"] {
+    --background: 0 0% 100%;
+    --foreground: 213 33% 15%;
+    --card: 0 0% 98%;
+    --card-foreground: 213 33% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 213 33% 15%;
+    --primary: 48 95% 53%;
+    --primary-foreground: 213 33% 15%;
+    --secondary: 219 19% 85%;
+    --secondary-foreground: 213 33% 15%;
+    --muted: 219 19% 90%;
+    --muted-foreground: 219 19% 40%;
+    --accent: 219 19% 85%;
+    --accent-foreground: 213 33% 15%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 219 19% 85%;
+    --input: 219 19% 85%;
+    --ring: 48 95% 53%;
+    --success: 142 60% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 48 95% 53%;
+    --warning-foreground: 213 33% 15%;
+    --signal-icon: 213 33% 15%;
+  }
+
+  :root[data-theme="dark"] {
+    --background: 213 33% 15%;
+    --foreground: 0 0% 95%;
+    --card: 213 19% 28%;
+    --card-foreground: 0 0% 95%;
+    --popover: 213 33% 15%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 48 95% 53%;
+    --primary-foreground: 213 33% 15%;
+    --secondary: 213 19% 28%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 213 19% 28%;
+    --muted-foreground: 0 0% 70%;
+    --accent: 213 19% 28%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 213 19% 28%;
+    --input: 213 19% 28%;
+    --ring: 48 95% 53%;
+    --success: 142 60% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 48 95% 53%;
+    --warning-foreground: 213 33% 15%;
+    --signal-icon: 0 0% 85%;
+  }
+
+  * {
+    @apply border-[hsl(var(--border))];
+  }
+
+  body {
+    @apply antialiased font-sans;
+    font-family: 'Tajawal', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    overscroll-behavior: none;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+
+  [data-theme="light"] .signal-card {
+    background-color: hsla(var(--card), 0.95);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+
+  [data-theme="light"] .mobile-navbar {
+    background-color: hsla(var(--background), 0.95);
+    border-color: hsla(var(--border), 0.5);
+  }
+
+  [data-theme="light"] .message-input {
+    background-color: hsla(var(--card), 0.95);
+    border-color: hsla(var(--border), 0.5);
+  }
+}
+
+/* Base layout styles */
+html, body {
+  height: 100%;
+  overflow-x: hidden;
+  position: relative;
+}
+
+.trading-app {
+  background-color: hsl(var(--background));
+  background-image: linear-gradient(to bottom right, hsla(var(--foreground), 0.1), hsla(var(--foreground), 0.05));
+  min-height: 100vh;
+}
+
+[data-theme="dark"] .trading-app {
+  background-image: linear-gradient(to bottom right, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.8)), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="black" /><path d="M0 50 L100 50" stroke="%23333" stroke-width="0.5" /><path d="M50 0 L50 100" stroke="%23333" stroke-width="0.5" /></svg>');
+  background-size: cover;
+}
+
+[data-theme="light"] .trading-app {
+  background-image: linear-gradient(to bottom right, hsla(var(--muted), 0.8), hsla(var(--muted), 0.6)), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="white" /><path d="M0 50 L100 50" stroke="%23e5e5e5" stroke-width="0.5" /><path d="M50 0 L50 100" stroke="%23e5e5e5" stroke-width="0.5" /></svg>');
+  background-size: cover;
+}
+
+/* Component styles */
+.signal-card {
+  background-color: hsla(var(--card), 0.8);
+  border-radius: 0.75rem;
+  backdrop-filter: blur(8px);
+  border: 1px solid hsla(var(--border), 0.5);
+}
+
+.signal-button {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-weight: bold;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+}
+
+.signal-button:hover {
+  background-color: hsl(var(--primary) / 0.9);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px hsla(var(--primary), 0.4);
+}
+
+.signal-icon {
+  background-color: hsl(var(--signal-icon));
+  border-radius: 0.75rem;
+}
+
+/* Signal type styles */
+.signal-up {
+  color: hsl(var(--success));
+  background-color: hsla(var(--success), 0.1);
+  border: 1px solid hsla(var(--success), 0.3);
+}
+
+.signal-down {
+  color: hsl(var(--destructive));
+  background-color: hsla(var(--destructive), 0.1);
+  border: 1px solid hsla(var(--destructive), 0.3);
+}
+
+.signal-wait {
+  color: hsl(var(--warning));
+  background-color: hsla(var(--warning), 0.1);
+  border: 1px solid hsla(var(--warning), 0.3);
+}
+
+/* Mobile navigation */
+.mobile-navbar {
+  box-shadow: 0 -8px 16px rgba(0, 0, 0, 0.5);
+  transition: transform 0.3s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.mobile-nav-item {
+  position: relative;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  text-align: center;
+}
+
+.mobile-nav-item:active {
+  transform: scale(0.92);
+}
+
+.mobile-nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 3px;
+  background-color: hsl(var(--primary));
+  border-radius: 1.5px;
+  box-shadow: 0 0 8px hsla(var(--primary), 0.6);
+}
+
+.mobile-nav-item svg {
+  margin-bottom: 3px;
+  transition: all 0.2s ease;
+}
+
+.mobile-nav-item.active svg {
+  transform: scale(1.15);
+}
+
+/* Dropdown menus */
+.custom-dropdown {
+  position: relative;
+  z-index: 40;
+}
+
+.dropdown-menu {
+  border-radius: 1rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  animation: slideDown 0.2s ease;
+}
+
+.dropdown-item {
+  transition: all 0.15s ease;
+}
+
+.dropdown-item:active {
+  transform: scale(0.98);
+}
+
+/* Arabic language support */
+.arabic-support {
+  font-family: 'Tajawal', sans-serif;
+  text-align: start;
+}
+
+.arabic-support input,
+.arabic-support textarea {
+  text-align: start;
+}
+
+/* Base input styles (direction-neutral) */
+.auth-input {
+  position: relative;
+  width: 100%;
+  border-radius: 0.375rem;
+  border: 1px solid hsl(var(--border));
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  transition: all 0.2s ease;
+}
+
+.auth-input:focus {
+  outline: none;
+  ring: 2px;
+  ring-color: hsla(var(--primary), 0.2);
+  border-color: hsl(var(--primary));
+}
+
+/* Icon positioning base (will be overridden by RTL/LTR specific files) */
+.auth-input-icon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: hsl(var(--muted-foreground));
+  pointer-events: none;
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+  .timeframe-buttons {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .timeframe-buttons button {
+    margin: 0.25rem;
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .signal-card {
+    padding: 0.75rem;
+  }
+
+  .mobile-navbar {
+    padding: 0.5rem 0.25rem;
+    height: 4rem;
+  }
+
+  .mobile-nav-item {
+    padding: 0 0.25rem;
+  }
+
+  .trading-signal-app main,
+  .settings-page main {
+    padding: 0.75rem;
+    padding-top: 4.5rem;
+    padding-bottom: 5.5rem;
+  }
+
+  .signal-display, 
+  .platform-selector,
+  .trading-pair-selector,
+  .time-frame-selector {
+    margin-bottom: 0.75rem;
+  }
+
+  .custom-dropdown button {
+    font-size: 0.875rem;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .dropdown-menu {
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+
+  .market-status {
+    font-size: 0.65rem;
+  }
+
+  .get-signal-button {
+    height: 2.75rem;
+    font-size: 0.95rem;
+  }
+
+  label.block {
+    margin-bottom: 0.35rem;
+    font-size: 0.8rem;
+  }
+
+  .signal-display h3 {
+    margin-bottom: 0.25rem;
+  }
+}

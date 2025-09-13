@@ -1,4 +1,4 @@
-// نظام الترجمة متعدد اللغات
+// نظام الترجمة متعدد اللغات مع دعم CSS ديناميكي
 interface Translations {
   [key: string]: {
     [key: string]: string;
@@ -6,6 +6,48 @@ interface Translations {
 }
 
 import { z } from "zod";
+
+// Dynamic CSS loading system
+let currentDirectionalCSS: HTMLLinkElement | null = null;
+
+/**
+ * Load directional CSS (RTL or LTR) dynamically
+ * @param direction - 'rtl' or 'ltr'
+ */
+function loadDirectionalCSS(direction: 'rtl' | 'ltr'): void {
+  // Remove existing directional CSS
+  if (currentDirectionalCSS) {
+    currentDirectionalCSS.remove();
+    currentDirectionalCSS = null;
+  }
+
+  // Create new link element for directional CSS
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = `/src/styles/${direction}.css`;
+  link.id = `${direction}-styles`;
+  
+  // Add to document head
+  document.head.appendChild(link);
+  currentDirectionalCSS = link;
+  
+  console.log(`Loaded ${direction.toUpperCase()} CSS`);
+}
+
+/**
+ * Initialize common CSS that's always needed
+ */
+function initializeCommonCSS(): void {
+  // Check if common CSS is already loaded
+  if (!document.querySelector('#common-styles')) {
+    const commonLink = document.createElement('link');
+    commonLink.rel = 'stylesheet';
+    commonLink.href = '/src/styles/common.css';
+    commonLink.id = 'common-styles';
+    document.head.appendChild(commonLink);
+    console.log('Loaded common CSS');
+  }
+}
 
 const translations: Translations = {
   ar: {
@@ -383,6 +425,23 @@ const translations: Translations = {
     logout: "تسجيل الخروج",
     logout_success: "تم تسجيل الخروج بنجاح",
 
+    // نصوص صفحة تسجيل الدخول المحسنة
+    remember_me: "تذكرني",
+    forgot_password: "نسيت كلمة المرور؟",
+    show_password: "إظهار كلمة المرور",
+    hide_password: "إخفاء كلمة المرور",
+    login_welcome_title: "أهلاً بعودتك",
+    login_welcome_subtitle: "سجل دخولك للوصول إلى حسابك",
+    login_success: "تم تسجيل الدخول بنجاح",
+    invalid_username_password: "اسم المستخدم أو كلمة المرور غير صحيحة",
+    username_required: "اسم المستخدم مطلوب",
+    password_required: "كلمة المرور مطلوبة",
+    username_placeholder: "أدخل اسم المستخدم",
+    password_placeholder: "أدخل كلمة المرور",
+    logging_in: "جاري تسجيل الدخول...",
+    secure_login: "تسجيل دخول آمن",
+    welcome_back: "مرحباً بعودتك",
+
     // إضافة النصوص المفقودة
     error_checking_connection: "خطأ في فحص الاتصال",
     backup_data_updated: "تم تحديث بيانات النسخة الاحتياطية",
@@ -570,7 +629,6 @@ const translations: Translations = {
     
     // Auth messages
     login_successful: 'تم تسجيل الدخول بنجاح',
-    login_failed: 'فشل تسجيل الدخول',
     account_created_successfully: 'تم إنشاء الحساب بنجاح',
     account_creation_failed: 'فشل إنشاء الحساب',
     logout_successful: 'تم تسجيل الخروج بنجاح',
@@ -890,7 +948,6 @@ const translations: Translations = {
     
     // Auth messages
     login_successful: 'Login successful',
-    login_failed: 'Login failed',
     account_created_successfully: 'Account created successfully',
     account_creation_failed: 'Account creation failed',
     logout_successful: 'Logout successful',
@@ -1140,6 +1197,24 @@ const translations: Translations = {
     app_description: "An integrated platform for analyzing trading signals in financial markets with multilingual support and advanced analysis features.",
     logout: "Logout",
     logout_success: "Logged out successfully",
+
+    // Enhanced login page texts
+    remember_me: "Remember me",
+    forgot_password: "Forgot password?",
+    show_password: "Show password",
+    hide_password: "Hide password",
+    login_welcome_title: "Welcome back",
+    login_welcome_subtitle: "Sign in to access your account",
+    login_success: "Login successful",
+    login_failed: "Login failed",
+    invalid_username_password: "Invalid username or password",
+    username_required: "Username is required",
+    password_required: "Password is required",
+    username_placeholder: "Enter your username",
+    password_placeholder: "Enter your password",
+    logging_in: "Signing in...",
+    secure_login: "Secure Login",
+    welcome_back: "Welcome back",
 
     // Adding missing translations
     error_checking_connection: "Error checking connection",
@@ -2207,8 +2282,15 @@ export const setLanguage = (lang: string, saveToDatabase: boolean = false) => {
   
   // ALWAYS update DOM attributes regardless of flags
   const isRTL = normalizedLang === 'ar';
+  const direction = isRTL ? 'rtl' : 'ltr';
   document.documentElement.setAttribute('lang', normalizedLang);
-  document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
+  document.documentElement.setAttribute('dir', direction);
+  
+  // Initialize common CSS and load directional CSS (browser environment only)
+  if (typeof window !== 'undefined') {
+    initializeCommonCSS();
+    loadDirectionalCSS(direction);
+  }
 
   // Remove any existing direction classes to avoid conflicts
   document.documentElement.classList.remove('ar', 'rtl', 'ltr');
