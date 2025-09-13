@@ -1020,9 +1020,9 @@ let translationCache: { [key: string]: string } = {};
 function getBrowserLanguage(): string {
   if (typeof window !== 'undefined') {
     const browserLang = navigator.language.split('-')[0];
-    return translations[browserLang] ? browserLang : 'ar';
+    return translations[browserLang] ? browserLang : 'en';
   }
-  return 'ar';
+  return 'en';
 }
 
 // تهيئة اللغة الحالية

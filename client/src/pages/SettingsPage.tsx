@@ -48,12 +48,12 @@ export default function SettingsPage() {
       const savedSettings = localStorage.getItem('settings');
       if (savedSettings) {
         const settings = JSON.parse(savedSettings);
-        return settings.theme || 'dark';
+        return settings.theme || 'light';
       }
     } catch (e) {
       console.error('خطأ في تحميل إعدادات السمة:', e);
     }
-    return 'dark'; 
+    return 'light'; 
   });
 
   useEffect(() => {
