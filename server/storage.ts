@@ -80,6 +80,7 @@ try {
       email TEXT NOT NULL UNIQUE,
       is_admin INTEGER DEFAULT 0,
       preferred_language TEXT NOT NULL DEFAULT 'en',
+      preferred_theme TEXT NOT NULL DEFAULT 'system',
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
@@ -96,6 +97,17 @@ try {
           console.error('Error adding preferred_language column:', alterErr);
         } else {
           console.log('Preferred language column ensured in users table');
+        }
+      });
+      
+      // إضافة عمود preferred_theme إلى الجدول الموجود إذا لم يكن موجوداً
+      sqliteDb.run(`
+        ALTER TABLE users ADD COLUMN preferred_theme TEXT DEFAULT 'system'
+      `, (alterErr) => {
+        if (alterErr && alterErr.message.indexOf('duplicate column name') === -1) {
+          console.error('Error adding preferred_theme column:', alterErr);
+        } else {
+          console.log('Preferred theme column ensured in users table');
         }
       });
     }
@@ -227,6 +239,7 @@ export class DatabaseStorage implements IStorage {
               email: row.email,
               isAdmin: !!row.is_admin,
               preferredLanguage: row.preferred_language || 'en',
+              preferredTheme: row.preferred_theme || 'system',
               createdAt: row.created_at,
               updatedAt: row.updated_at
             };
@@ -256,6 +269,7 @@ export class DatabaseStorage implements IStorage {
               email: row.email,
               isAdmin: !!row.is_admin,
               preferredLanguage: row.preferred_language || 'en',
+              preferredTheme: row.preferred_theme || 'system',
               createdAt: row.created_at,
               updatedAt: row.updated_at
             };
@@ -272,8 +286,8 @@ export class DatabaseStorage implements IStorage {
       
       // تحويل من camelCase إلى snake_case للقاعدة
       sqliteDb.run(
-        'INSERT INTO users (username, password, display_name, email, is_admin, preferred_language, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [user.username, user.password, user.displayName, user.email, user.isAdmin ? 1 : 0, user.preferredLanguage || 'en', now, now],
+        'INSERT INTO users (username, password, display_name, email, is_admin, preferred_language, preferred_theme, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [user.username, user.password, user.displayName, user.email, user.isAdmin ? 1 : 0, user.preferredLanguage || 'en', user.preferredTheme || 'system', now, now],
         function(err) {
           if (err) {
             console.error('Error creating user:', err);
@@ -288,6 +302,7 @@ export class DatabaseStorage implements IStorage {
               email: user.email,
               isAdmin: !!user.isAdmin,
               preferredLanguage: user.preferredLanguage || 'en',
+              preferredTheme: user.preferredTheme || 'system',
               createdAt: now,
               updatedAt: now
             };
@@ -373,6 +388,11 @@ export class DatabaseStorage implements IStorage {
         if (updateData.preferredLanguage) {
           updateFields.push('preferred_language = ?');
           updateValues.push(updateData.preferredLanguage);
+        }
+        
+        if (updateData.preferredTheme) {
+          updateFields.push('preferred_theme = ?');
+          updateValues.push(updateData.preferredTheme);
         }
         
         // تحديث تاريخ التحديث

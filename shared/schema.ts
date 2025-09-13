@@ -10,6 +10,7 @@ export const users = sqliteTable("users", {
   email: text("email").notNull().unique(),
   isAdmin: integer("is_admin", { mode: "boolean" }).default(false),
   preferredLanguage: text("preferred_language").notNull().default("en"),
+  preferredTheme: text("preferred_theme").notNull().default("system"),
   createdAt: text("created_at").notNull().default(new Date().toISOString()),
   updatedAt: text("updated_at").notNull().default(new Date().toISOString()),
 });
