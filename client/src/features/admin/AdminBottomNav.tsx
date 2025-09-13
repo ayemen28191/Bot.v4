@@ -27,7 +27,7 @@ export function AdminBottomNav() {
 
         <Link href="/admin/api-keys" className={`flex flex-col items-center ${isActive('/admin/api-keys') ? 'text-yellow-400' : 'text-gray-400 hover:text-yellow-400'} mobile-nav-item`}>
           <KeyRound className="h-5 w-5" />
-          <span className="text-[10px] mt-1 font-medium">مفاتيح API</span>
+          <span className="text-[10px] mt-1 font-medium">{t('api_keys')}</span>
         </Link>
 
         <Link href="/admin/deployment" className={`flex flex-col items-center ${isActive('/admin/deployment') ? 'text-yellow-400' : 'text-gray-400 hover:text-yellow-400'} mobile-nav-item`}>
@@ -37,7 +37,7 @@ export function AdminBottomNav() {
 
         <Link href="/admin/reset-password" className={`flex flex-col items-center ${isActive('/admin/reset-password') ? 'text-yellow-400' : 'text-gray-400 hover:text-yellow-400'} mobile-nav-item`}>
           <Lock className="h-5 w-5" />
-          <span className="text-[10px] mt-1 font-medium">كلمة المرور</span>
+          <span className="text-[10px] mt-1 font-medium">{t('reset_password')}</span>
         </Link>
       </div>
     </footer>

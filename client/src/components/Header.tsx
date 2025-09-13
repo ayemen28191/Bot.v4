@@ -27,13 +27,13 @@ export default function Header() {
           <Link href="/settings">
             <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary/20" data-testid="button-settings">
               <Settings className="h-5 w-5" />
-              <span className="sr-only">الإعدادات</span>
+              <span className="sr-only">{t('settings')}</span>
             </Button>
           </Link>
           <Link href="/settings">
             <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary/20" data-testid="button-profile">
               <User className="h-5 w-5" />
-              <span className="sr-only">الملف الشخصي</span>
+              <span className="sr-only">{t('profile')}</span>
             </Button>
           </Link>
         </div>
