@@ -1,7 +1,13 @@
 
 import express from 'express';
 import axios, { AxiosError } from 'axios';
-import { isAuthenticated } from '../auth';
+// إنشاء دالة محلية للتحقق من المصادقة
+function isAuthenticated(req: any, res: any, next: any) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
+}
 
 const proxyRouter = express.Router();
 
