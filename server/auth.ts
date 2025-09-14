@@ -24,19 +24,7 @@ export async function hashPassword(password: string) {
 
 export async function comparePasswords(supplied: string, stored: string) {
   try {
-    // حالة خاصة: التحقق من كلمة المرور الافتراضية
-    if (supplied === '--772293228') {
-      console.log("Default password login attempt detected");
-      return true;
-    }
-    
-    // حالة 1: كلمة المرور هي نفسها المخزنة بدون تشفير (للسماح بالتوافق مع كلمات المرور القديمة)
-    if (supplied === stored) {
-      console.log("Direct password match detected");
-      return true;
-    }
-    
-    // حالة 2: كلمة المرور المشفرة بتنسيق [hash].[salt]
+    // فقط التحقق من كلمات المرور المشفرة بتنسيق [hash].[salt]
     if (stored && stored.includes(".")) {
       const [hashed, salt] = stored.split(".");
       
@@ -47,7 +35,9 @@ export async function comparePasswords(supplied: string, stored: string) {
           const isEqual = timingSafeEqual(hashedBuf, suppliedBuf);
           
           if (isEqual) {
-            console.log("Hashed password match detected");
+            console.log("Password verification successful");
+          } else {
+            console.log("Password verification failed");
           }
           
           return isEqual;
@@ -57,8 +47,8 @@ export async function comparePasswords(supplied: string, stored: string) {
       }
     }
     
-    // حالة 3: محاولة أخيرة للمطابقة الافتراضية بين كلمة المرور المقدمة والمخزنة
-    console.log("Falling back to default comparison");
+    // رفض أي كلمة مرور غير مشفرة أو غير صالحة
+    console.log("Invalid password format - only properly hashed passwords are accepted");
     return false;
   } catch (error) {
     console.error("Error in password comparison:", error);
@@ -75,9 +65,10 @@ export function setupAuth(app: Express) {
     saveUninitialized: false,
     store: storage.sessionStore,
     cookie: {
-      secure: false, // Setting to false to allow HTTP in development
+      secure: env.NODE_ENV === 'production', // آمن في الإنتاج فقط
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: 'lax'
+      sameSite: 'lax',
+      httpOnly: true // منع الوصول من JavaScript لأمان إضافي
     }
   };
 
@@ -120,7 +111,9 @@ export function setupAuth(app: Express) {
       const admin = await storage.getUserByUsername('admin');
       if (!admin) {
         console.log('Creating admin account...');
-        const hashedPassword = await hashPassword('--772293228');
+        // إنشاء كلمة مرور عشوائية قوية للمدير
+        const randomPassword = Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12).toUpperCase() + Math.random().toString(36).slice(-4);
+        const hashedPassword = await hashPassword(randomPassword);
         await storage.createUser({
           username: 'admin',
           password: hashedPassword,
@@ -129,6 +122,8 @@ export function setupAuth(app: Express) {
           isAdmin: true
         });
         console.log('Admin account created successfully');
+        console.log('🔐 IMPORTANT: Admin password for first login:', randomPassword);
+        console.log('🔐 Please change this password immediately after first login!');
       } else {
         console.log('Admin account already exists');
         
