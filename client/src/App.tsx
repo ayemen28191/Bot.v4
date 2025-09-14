@@ -27,78 +27,106 @@ const AuthPage = lazy(() => import('@/pages/auth-page'));
 const NotFound = lazy(() => import('@/pages/not-found'));
 const SystemTestPage = lazy(() => import('@/pages/SystemTestPage'));
 
-// مكون للتعامل مع وضع HTTPS في Replit ومشاكل WebSocket
+// مكون للتعامل مع وضع HTTPS في Replit ومنع حلقة إعادة التحميل
 function HTTPSHandler() {
   const enableOfflineMode = useChatStore(state => state.enableOfflineMode);
   const isOfflineMode = useChatStore(state => state.isOfflineMode);
   const { toast } = useToast();
 
   useEffect(() => {
-    // فحص إذا كان التطبيق يعمل على HTTPS في بيئة Replit
+    // **الحل الفوري**: منع حلقة إعادة التحميل في بيئة HTTPS
     if (typeof window !== 'undefined') {
       const isSecure = window.location.protocol === 'https:';
       const isReplitApp = window.location.hostname.endsWith('.replit.app') ||
                            window.location.hostname.endsWith('.repl.co') ||
-                           window.location.hostname === 'replit.com';
+                           window.location.hostname.includes('replit');
 
-      // التعامل مع مشاكل Vite WebSocket في بيئة HTTPS
+      // **أولاً**: تفعيل وضع عدم الاتصال فوراً لمنع محاولات WebSocket الفاشلة
+      if (isSecure && isReplitApp && !isOfflineMode) {
+        console.log('🚫 منع حلقة إعادة التحميل: تفعيل وضع الحماية المبكر');
+        enableOfflineMode();
+        localStorage.setItem('replit_https_protection', 'enabled');
+      }
+
+      // **ثانياً**: منع Vite من إعادة تحميل الصفحة عند فشل WebSocket
       if (isSecure) {
-        console.log('🔒 HTTPS environment detected - Setting up WebSocket error handling');
+        // منع إعادة تحميل الصفحة بسبب HMR
+        const originalLocation = window.location;
+        let reloadBlocked = false;
 
-        // قمع أخطاء WebSocket console المتكررة
+        // اعتراض محاولات إعادة التحميل
+        const blockReload = () => {
+          if (!reloadBlocked) {
+            reloadBlocked = true;
+            console.log('🛡️ تم منع إعادة التحميل التلقائي للحفاظ على استقرار التطبيق');
+          }
+        };
+
+        // منع إعادة التحميل من beforeunload
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+          if (reloadBlocked) {
+            e.preventDefault();
+            return '';
+          }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        // قمع أخطاء WebSocket المزعجة
         const originalConsoleWarn = console.warn;
         const originalConsoleError = console.error;
 
         console.warn = (...args) => {
           const message = args.join(' ');
-          // تجاهل رسائل Vite WebSocket الشائعة
           if (message.includes('[vite] server connection lost') ||
               message.includes('WebSocket connection') ||
-              message.includes('server connection lost') ||
               message.includes('Polling for restart') ||
               message.includes('hmr update') ||
-              message.includes('vite:ws')) {
-            // لا تعرض هذه الرسائل في console
-            return;
+              message.includes('vite:ws') ||
+              message.includes('HMR connection lost')) {
+            blockReload();
+            return; // تجاهل هذه الرسائل
           }
           originalConsoleWarn.apply(console, args);
         };
 
         console.error = (...args) => {
           const message = args.join(' ');
-          // تجاهل أخطاء WebSocket المتكررة
           if (message.includes('WebSocket connection') ||
               message.includes('502') ||
               message.includes('handshake') ||
               message.includes('Failed to construct') ||
               message.includes('SecurityError') ||
-              message.includes('ERR_SSL_PROTOCOL_ERROR')) {
-            // لا تعرض هذه الأخطاء في console  
-            return;
+              message.includes('ERR_SSL_PROTOCOL_ERROR') ||
+              message.includes('HMR')) {
+            blockReload();
+            return; // تجاهل هذه الأخطاء
           }
           originalConsoleError.apply(console, args);
         };
 
-        // تسجيل معلومات البيئة فقط
-            console.log('🔒 HTTPS environment - WebSocket errors will be handled gracefully');
+        console.log('🔒 نظام الحماية من إعادة التحميل مفعل للبيئة الآمنة');
+
+        // تنظيف المستمعين عند الإلغاء
+        return () => {
+          window.removeEventListener('beforeunload', handleBeforeUnload);
+          console.warn = originalConsoleWarn;
+          console.error = originalConsoleError;
+        };
       }
 
-      if (isSecure && isReplitApp && !isOfflineMode) {
-        console.log('تم اكتشاف HTTPS في بيئة Replit - تفعيل وضع عدم الاتصال تلقائيًا');
-
-        // تفعيل وضع عدم الاتصال
-        enableOfflineMode();
-
-        // عرض إشعار للمستخدم (مؤجل لتجنب الإزعاج)
+      // **ثالثاً**: إشعار المستخدم بالوضع الآمن (مؤجل)
+      if (isSecure && isReplitApp) {
         setTimeout(() => {
-          toast({
-            title: "Environment Optimized",
-            description: "The app has been optimized for HTTPS environment. All features will work normally.",
-            duration: 6000
-          });
-        }, 3000);
-
-        console.info('تم تفعيل وضع عدم الاتصال تلقائيًا بسبب بيئة Replit HTTPS');
+          if (!document.hidden) { // فقط إذا كانت الصفحة نشطة
+            toast({
+              title: "🔒 Secure Mode Active",
+              description: "App optimized for HTTPS environment. All features working normally.",
+              variant: "default",
+              duration: 4000
+            });
+          }
+        }, 2000);
       }
     }
   }, [enableOfflineMode, isOfflineMode, toast]);

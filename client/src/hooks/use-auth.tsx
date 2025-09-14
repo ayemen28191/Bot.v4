@@ -11,6 +11,7 @@ interface AuthContextValue {
   logout: () => Promise<void>;
   register: (credentials: { username: string; password: string }) => Promise<User>;
   setUser: (user: User | null) => void;
+  sessionChecked: boolean; // إضافة فحص الجلسة
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -21,6 +22,7 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
+  const [sessionChecked, setSessionChecked] = useState(false);
 
   // Query to get current user
   const {
@@ -82,6 +84,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Update user state when query data changes
   useEffect(() => {
+    // تأكد من انتهاء فحص الجلسة قبل المتابعة
+    if (!isLoading) {
+      setSessionChecked(true);
+    }
+
     if (userData && typeof userData === 'object') {
       const userDataObj = userData as User;
       setUser(userDataObj);
@@ -112,7 +119,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         console.error('Error clearing language on logout:', error);
       }
     }
-  }, [userData]);
+  }, [userData, isLoading]);
 
   // Login mutation
   const loginMutation = useMutation({
@@ -171,6 +178,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     logout: logoutMutation.mutateAsync,
     register: registerMutation.mutateAsync,
     setUser,
+    sessionChecked, // إضافة حالة فحص الجلسة
   };
 
   return (

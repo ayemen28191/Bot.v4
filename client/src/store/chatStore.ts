@@ -73,8 +73,27 @@ const getFromLocalStorage = <T>(key: string, defaultValue: T, ttl: number = CACH
 };
 
 export const useStore = create<ChatState>((set, get) => {
-  // إعداد مستمع الأحداث لتفعيل وضع عدم الاتصال من خارج المخزن (مثل queryClient)
+  // **حماية مبكرة من حلقة إعادة التحميل**
   if (typeof window !== 'undefined') {
+    // فحص فوري للبيئة الآمنة
+    const isSecure = window.location.protocol === 'https:';
+    const isReplitApp = window.location.hostname.includes('replit') || 
+                        window.location.hostname.endsWith('.repl.co');
+    
+    // تفعيل الحماية المبكرة فوراً
+    if (isSecure && isReplitApp) {
+      const currentOfflineState = localStorage.getItem('offlineMode') === 'enabled' ||
+                                  localStorage.getItem('offline_mode') === 'enabled' ||
+                                  localStorage.getItem('replit_https_protection') === 'enabled';
+      
+      if (!currentOfflineState) {
+        console.log('🛡️ تفعيل الحماية المبكرة من حلقة إعادة التحميل');
+        localStorage.setItem('offline_mode', 'enabled');
+        localStorage.setItem('replit_https_protection', 'enabled');
+      }
+    }
+
+    // إعداد مستمع الأحداث لتفعيل وضع عدم الاتصال من خارج المخزن
     window.addEventListener('enableOfflineMode', (event: any) => {
       const store = get();
       if (!store.isOfflineMode) {
