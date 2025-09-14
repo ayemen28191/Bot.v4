@@ -812,6 +812,7 @@ const translations: Translations = {
     notifications_enabled: 'Notifications Enabled',
     market_status_notifications_enabled: 'You will receive notifications when markets open and close',
     enable_market_notifications: 'Enable Market Notifications',
+    market_closed_message_improved: 'Market is currently closed. It will open at {time}. You can follow the countdown below and will be notified when the market opens.',
     user_management: 'Users',
     admin_panel: 'Admin Panel',
     bot: 'Bot',
