@@ -29,10 +29,13 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+    
     const checkAuth = async () => {
+      if (!isMounted) return;
+      
       try {
         console.log('Checking authentication...');
-        setIsLoading(true);
         setError(null);
         
         // تحديد العنوان الصحيح للـ API
@@ -48,6 +51,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
           },
         });
 
+        if (!isMounted) return;
+
         if (response.ok) {
           const userData = await response.json();
           console.log('User authenticated:', userData);
@@ -60,18 +65,24 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
           setUser(null);
         }
       } catch (error) {
+        if (!isMounted) return;
         console.error('Auth check error:', error);
         setUser(null);
         // لا نعرض خطأ للمستخدم في حالة فشل فحص المصادقة
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
-    // تجنب الفحص المتكرر
-    if (isLoading) return;
+    // فحص المصادقة مرة واحدة فقط عند التحميل
     checkAuth();
-  }, []); // إزالة التبعيات لتجنب التكرار
+    
+    return () => {
+      isMounted = false;
+    };
+  }, []); // تشغيل مرة واحدة فقط عند التحميل
 
   const contextValue = {
     user,
@@ -85,6 +96,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
           ? `${window.location.origin}/api/login`
           : `http://localhost:5000/api/login`;
           
+        console.log('Attempting login to:', apiUrl);
+        
         const response = await fetch(apiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -101,6 +114,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         } else {
           const errorData = await response.json().catch(() => ({}));
           const errorMessage = errorData.message || 'فشل تسجيل الدخول';
+          console.warn('Login failed:', response.status, errorMessage);
           setError(errorMessage);
           throw new Error(errorMessage);
         }

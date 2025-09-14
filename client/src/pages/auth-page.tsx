@@ -34,11 +34,14 @@ export default function AuthPage() {
 
   // Redirect if already logged in - مع حماية من التكرار
   useEffect(() => {
-    if (user && !isLoading) {
+    if (user && !isLoading && !loginPending) {
       console.log('User authenticated, redirecting to home...');
-      setLocation("/");
+      const timer = setTimeout(() => {
+        setLocation("/");
+      }, 100);
+      return () => clearTimeout(timer);
     }
-  }, [user, isLoading, setLocation]);
+  }, [user, isLoading, loginPending, setLocation]);
 
   // Handle animation effect on form submission
   useEffect(() => {
@@ -52,11 +55,16 @@ export default function AuthPage() {
 
   const onSubmit = async (data: any) => {
     // منع الإرسال المتكرر
-    if (loginPending) return;
+    if (loginPending) {
+      console.log('Login already in progress, ignoring duplicate submission');
+      return;
+    }
     
     try {
       setLoginPending(true);
       setLoginSuccess(false);
+      
+      console.log('Submitting login form with username:', data.username);
       
       const result = await login({
         username: data.username,
@@ -64,14 +72,13 @@ export default function AuthPage() {
       });
       
       if (result) {
+        console.log('Login form submitted successfully');
         setLoginSuccess(true);
-        // إعادة التوجيه بعد تأخير قصير لإظهار رسالة النجاح
-        setTimeout(() => {
-          setLocation("/");
-        }, 1000);
+        // إعادة التوجيه فوراً عند النجاح
+        setLocation("/");
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Login form submission error:', error);
       setLoginSuccess(false);
       // الخطأ سيتم عرضه من خلال error في useAuth
     } finally {

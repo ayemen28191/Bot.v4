@@ -10,7 +10,10 @@ const getBaseURL = () => {
   }
 
   // في بيئة Replit، استخدم العنوان الحالي مع البروتوكول الصحيح
-  return `${window.location.protocol}//${window.location.host}`;
+  // تجنب استخدام 0.0.0.0 في العنوان
+  const protocol = window.location.protocol;
+  const host = window.location.host;
+  return `${protocol}//${host}`;
 };
 
 const baseURL = getBaseURL();
@@ -27,20 +30,32 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
-    method,
-    headers: {
-      ...(data ? { "Content-Type": "application/json" } : {}),
-      // إضافة هيدر CSRF إذا كان موجوداً
-      ...((window as any).csrfToken ? { 'X-CSRF-Token': (window as any).csrfToken } : {})
-    },
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include", // مهم لإرسال ملفات تعريف الارتباط
-    mode: 'same-origin' // تقييد الطلبات لنفس المصدر فقط
-  });
+  // التأكد من أن العنوان صحيح وليس 0.0.0.0
+  let requestUrl = url;
+  if (url.includes('0.0.0.0')) {
+    console.warn('🌐 Invalid URL detected:', url, 'fixing to use current origin');
+    requestUrl = url.replace(/https?:\/\/0\.0\.0\.0(:\d+)?/, window.location.origin);
+  }
 
-  await throwIfResNotOk(res);
-  return res;
+  try {
+    const res = await fetch(requestUrl, {
+      method,
+      headers: {
+        ...(data ? { "Content-Type": "application/json" } : {}),
+        // إضافة هيدر CSRF إذا كان موجوداً
+        ...((window as any).csrfToken ? { 'X-CSRF-Token': (window as any).csrfToken } : {})
+      },
+      body: data ? JSON.stringify(data) : undefined,
+      credentials: "include", // مهم لإرسال ملفات تعريف الارتباط
+      mode: 'same-origin' // تقييد الطلبات لنفس المصدر فقط
+    });
+
+    await throwIfResNotOk(res);
+    return res;
+  } catch (error) {
+    console.error('🌐 Fetch error:', { url: requestUrl, error: error instanceof Error ? error.message : 'Unknown error' });
+    throw error;
+  }
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
