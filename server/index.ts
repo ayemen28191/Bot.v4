@@ -1,4 +1,5 @@
 import express, { type Request, type Response, type NextFunction } from "express";
+import cors from 'cors';
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { setupAuth } from './auth';
@@ -23,6 +24,76 @@ console.log('Environment check:', {
 });
 
 const app = express();
+
+// إعدادات CORS شاملة
+const corsOptions = {
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    // السماح للطلبات بدون origin (مثل التطبيقات المحلية والبوتات)
+    if (!origin) return callback(null, true);
+    
+    // قائمة النطاقات المسموحة
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:5000',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:5000',
+      'http://0.0.0.0:5000',
+      /https:\/\/.*\.replit\.dev$/,
+      /https:\/\/.*\.repl\.co$/,
+      /https:\/\/.*\.replit\.app$/,
+    ];
+    
+    // فحص إذا كان المصدر مسموح
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (typeof allowed === 'string') {
+        return origin === allowed;
+      } else if (allowed instanceof RegExp) {
+        return allowed.test(origin);
+      }
+      return false;
+    });
+    
+    if (isAllowed || env.NODE_ENV === 'development') {
+      callback(null, true);
+    } else {
+      console.log('🚫 CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'), false);
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: [
+    'Origin',
+    'X-Requested-With',
+    'Content-Type',
+    'Accept',
+    'Authorization',
+    'X-CSRF-Token',
+    'Cache-Control',
+    'Pragma'
+  ],
+  credentials: true, // دعم ملفات تعريف الارتباط
+  optionsSuccessStatus: 200, // دعم المتصفحات القديمة
+  maxAge: 86400 // تخزين preflight لمدة 24 ساعة
+};
+
+// تطبيق إعدادات CORS
+app.use(cors(corsOptions));
+
+// إضافة رؤوس CORS إضافية للأمان
+app.use((req: Request, res: Response, next: NextFunction) => {
+  // السماح بالطلبات من أي مصدر في بيئة التطوير
+  if (env.NODE_ENV === 'development') {
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  }
+  
+  // إضافة رؤوس إضافية للأمان
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.header('Cross-Origin-Embedder-Policy', 'unsafe-none');
+  res.header('X-Content-Type-Options', 'nosniff');
+  
+  next();
+});
 
 // إعداد الوسائط الأساسية
 app.use(express.json());

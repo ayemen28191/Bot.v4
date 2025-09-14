@@ -81,35 +81,65 @@ window.addEventListener('offline', () => {
   localStorage.setItem('last_offline_time', Date.now().toString());
 });
 
-// Override fetch to catch all network errors
-  const originalFetch = window.fetch;
-  window.fetch = function(...args) {
-    const url = args[0]?.toString();
+// إضافة دالة مساعدة لإرسال الأخطاء
+function reportError(errorData: any) {
+  if (window.navigator.onLine) {
+    try {
+      fetch('/api/errors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...errorData,
+          userAgent: navigator.userAgent,
+          timestamp: new Date().toISOString()
+        })
+      }).catch(() => {
+        // تجاهل أخطاء إرسال الأخطاء لتجنب حلقة لا نهائية
+      });
+    } catch (e) {
+      // تجاهل أخطاء إرسال الأخطاء
+    }
+  }
+}
 
-    // تجنب طلبات fetch إلى عناوين غير صالحة في Replit
-    if (url && (url.includes('0.0.0.0:443') || url.includes('https://0.0.0.0'))) {
-      console.warn('🚫 منع طلب fetch إلى عنوان غير صالح:', url);
-      return Promise.reject(new Error('Invalid URL blocked: ' + url));
+// Override fetch to catch all network errors
+const originalFetch = window.fetch;
+window.fetch = function(...args) {
+  const url = args[0]?.toString();
+
+  // تجنب طلبات fetch إلى عناوين غير صالحة في Replit
+  const blockedPatterns = [
+    '0.0.0.0:443',
+    'https://0.0.0.0',
+    'localhost:443',
+    '127.0.0.1:443',
+    'http://localhost:80',
+    'http://127.0.0.1:80'
+  ];
+
+  if (url && blockedPatterns.some(pattern => url.includes(pattern))) {
+    console.warn('🚫 منع طلب fetch إلى عنوان غير صالح:', url);
+    return Promise.reject(new Error('Invalid URL blocked: ' + url));
+  }
+
+  return originalFetch.apply(this, args).catch((error) => {
+    // تجنب طباعة أخطاء العناوين المحظورة بشكل متكرر
+    if (!url || !blockedPatterns.some(pattern => url.includes(pattern))) {
+      console.error('🌐 Fetch error:', {
+        url: args[0],
+        error: error.message
+      });
+
+      // Report fetch errors (exclude blocked URLs)
+      reportError({
+        type: 'fetch_error',
+        message: error.message,
+        url: url
+      });
     }
 
-    return originalFetch.apply(this, args).catch((error) => {
-      // تجنب طباعة أخطاء العناوين المحظورة بشكل متكرر
-      if (!url || !url.includes('0.0.0.0:443')) {
-        console.error('🌐 Fetch error:', {
-          url: args[0],
-          error: error.message
-        });
-
-        // Report fetch errors (exclude blocked URLs)
-        reportError({
-          type: 'fetch_error',
-          message: error.message,
-          url: url
-        });
-      }
-
-      throw error;
-    });
-  };
+    throw error;
+  });
+};
 
 export {};

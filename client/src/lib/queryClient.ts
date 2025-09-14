@@ -17,15 +17,44 @@ export async function apiRequest(
     headers: {
       ...(data ? { "Content-Type": "application/json" } : {}),
       // إضافة هيدر CSRF إذا كان موجوداً
-      ...((window as any).csrfToken ? { 'X-CSRF-Token': (window as any).csrfToken } : {})
+      ...((window as any).csrfToken ? { 'X-CSRF-Token': (window as any).csrfToken } : {}),
+      // إضافة رؤوس CORS إضافية
+      'Accept': 'application/json, text/plain, */*',
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache'
     },
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include", // مهم لإرسال ملفات تعريف الارتباط
-    mode: 'same-origin' // تقييد الطلبات لنفس المصدر فقط
+    mode: 'cors' // تغيير إلى cors للسماح بطلبات cross-origin
   });
 
   await throwIfResNotOk(res);
   return res;
+}
+
+// دالة مساعدة للطلبات الخارجية عبر الوكيل
+export async function proxyRequest(
+  url: string,
+  options?: {
+    method?: string;
+    headers?: Record<string, string>;
+    data?: unknown;
+  }
+): Promise<any> {
+  const response = await apiRequest('POST', '/api/proxy/fetch', {
+    url,
+    method: options?.method || 'GET',
+    headers: options?.headers || {},
+    data: options?.data
+  });
+
+  const result = await response.json();
+  
+  if (!result.success) {
+    throw new Error(result.message || 'Proxy request failed');
+  }
+  
+  return result.data;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";

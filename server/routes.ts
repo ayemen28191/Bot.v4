@@ -8,6 +8,7 @@ import priceRouter from "./routes/price";
 import { updateRouter } from "./routes/update";
 import { deploymentRouter } from "./routes/deployment";
 import { heatmapRouter } from "./routes/heatmap";
+import { proxyRouter } from "./routes/proxy";
 
 // التأكد من أن المستخدم مُسجل الدخول
 function isAuthenticated(req: express.Request, res: express.Response, next: express.NextFunction) {
@@ -28,37 +29,40 @@ function isAdmin(req: express.Request, res: express.Response, next: express.Next
 export async function registerRoutes(app: Express): Promise<Server> {
   console.log('Creating HTTP server...');
   const httpServer = createServer(app);
-  
+
   // تسجيل مسارات مفاتيح API
   app.use('/api/config-keys', apiKeysRouter);
-  
+
   // تسجيل مسارات الاختبار
-  app.use('/api/test', testRouter);
-  
+  app.use("/api/test", testRouter);
+
   // تسجيل مسارات السعر
   app.use(priceRouter);
-  
+
   // تسجيل مسارات التحديث
-  app.use('/api/update', updateRouter);
-  
+  app.use("/api/update", updateRouter);
+
   // تسجيل مسارات النشر
-  app.use('/api/deployment', deploymentRouter);
-  
+  app.use("/api/deployment", deploymentRouter);
+
   // تسجيل مسارات الخريطة الحرارية
   app.use('/api/heatmap', heatmapRouter);
 
+  // تسجيل مسارات الوكيل
+  app.use("/api/proxy", proxyRouter);
+
   // ===== مسارات إعدادات المستخدم =====
-  
+
   // جلب إعدادات المستخدم الحالي
   app.get('/api/user/settings', isAuthenticated, async (req, res) => {
     try {
       const userId = req.user!.id;
       const user = await storage.getUser(userId);
-      
+
       if (!user) {
         return res.status(404).json({ error: 'المستخدم غير موجود' });
       }
-      
+
       // إرجاع إعدادات المستخدم (بدون معلومات حساسة)
       res.json({
         preferredLanguage: user.preferredLanguage || 'en',
@@ -75,16 +79,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user!.id;
       const { preferredLanguage, preferredTheme } = req.body;
-      
+
       // إعداد كائن التحديث
       const updateData: any = {};
-      
+
       // التحقق من صحة اللغة المطلوبة
       if (preferredLanguage) {
         if (typeof preferredLanguage !== 'string') {
           return res.status(400).json({ error: 'اللغة المفضلة يجب أن تكون نص' });
         }
-        
+
         // قائمة باللغات المدعومة (متطابقة مع الواجهة الأمامية)
         const supportedLanguages = ['ar', 'en', 'hi'];
         if (!supportedLanguages.includes(preferredLanguage)) {
@@ -93,16 +97,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             supportedLanguages 
           });
         }
-        
+
         updateData.preferredLanguage = preferredLanguage.trim().toLowerCase();
       }
-      
+
       // التحقق من صحة السمة المطلوبة
       if (preferredTheme) {
         if (typeof preferredTheme !== 'string') {
           return res.status(400).json({ error: 'السمة المفضلة يجب أن تكون نص' });
         }
-        
+
         // قائمة بالسمات المدعومة
         const supportedThemes = ['light', 'dark', 'system'];
         if (!supportedThemes.includes(preferredTheme)) {
@@ -111,18 +115,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
             supportedThemes 
           });
         }
-        
+
         updateData.preferredTheme = preferredTheme.trim().toLowerCase();
       }
-      
+
       // التحقق من وجود بيانات للتحديث
       if (Object.keys(updateData).length === 0) {
         return res.status(400).json({ error: 'لا توجد إعدادات للتحديث' });
       }
-      
+
       // تحديث إعدادات المستخدم
       const updatedUser = await storage.updateUser(userId, updateData);
-      
+
       // إرجاع الإعدادات المحدثة
       res.json({
         preferredLanguage: updatedUser.preferredLanguage,
@@ -168,12 +172,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const supportedLanguages = ['en', 'ar', 'hi'];
       const preferredLanguage = req.body.preferredLanguage && supportedLanguages.includes(req.body.preferredLanguage) 
         ? req.body.preferredLanguage : 'en';
-      
+
       const validatedUser = insertUserSchema.parse({
         ...req.body,
         preferredLanguage
       });
-      
+
       const newUser = await storage.createUser({
         ...validatedUser,
         // التأكد من صحة البيانات
@@ -181,17 +185,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: validatedUser.email.trim().toLowerCase(),
         preferredLanguage
       });
-      
+
       // إزالة كلمة المرور من الاستجابة لأسباب أمنية
       const { password, ...safeUser } = newUser;
       res.status(201).json(safeUser);
     } catch (error: any) {
       console.error('Error creating user:', error);
-      
+
       if (error.code === 'SQLITE_CONSTRAINT') {
         return res.status(400).json({ error: 'اسم المستخدم أو البريد الإلكتروني مستخدم بالفعل' });
       }
-      
+
       res.status(400).json({ error: error.message || 'فشل في إنشاء المستخدم' });
     }
   });
@@ -199,17 +203,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // تحديث معلومات مستخدم - للمشرفين فقط
   app.put('/api/users/:id', isAdmin, async (req, res) => {
     const userId = parseInt(req.params.id);
-    
+
     if (isNaN(userId)) {
       return res.status(400).json({ error: 'معرف المستخدم غير صالح' });
     }
-    
+
     try {
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ error: 'المستخدم غير موجود' });
       }
-      
+
       const result = await storage.updateUser(userId, req.body);
       // إزالة كلمة المرور من الاستجابة لأسباب أمنية
       const { password, ...safeResult } = result;
@@ -219,30 +223,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ error: error.message || 'فشل في تحديث المستخدم' });
     }
   });
-  
+
   // تحديث معلومات مستخدم - طريقة PATCH (للدعم مع معظم متصفحات الإنترنت)
   app.patch('/api/users/:id', isAdmin, async (req, res) => {
     const userId = parseInt(req.params.id);
-    
+
     if (isNaN(userId)) {
       return res.status(400).json({ error: 'معرف المستخدم غير صالح' });
     }
-    
+
     try {
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ error: 'المستخدم غير موجود' });
       }
-      
+
       // إذا كان هناك كلمة مرور في الطلب، قم بتشفيرها قبل التحديث
       const requestData = {...req.body};
-      
+
       if (requestData.password) {
         try {
           // استيراد وظيفة تشفير كلمة المرور
           // استخدام وظيفة تشفير كلمة المرور من ملف auth.ts
           const { hashPassword: hashPasswordInline } = await import('./auth');
-          
+
           // تشفير كلمة المرور
           requestData.password = await hashPasswordInline(requestData.password);
           console.log('Password hashed successfully for update');
@@ -251,7 +255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(500).json({ error: 'حدث خطأ أثناء تشفير كلمة المرور' });
         }
       }
-      
+
       // استخدام SQL مباشر لتحديث كلمة المرور إذا كانت موجودة
       if (requestData.password) {
         return new Promise((resolve, reject) => {
@@ -298,26 +302,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ error: error.message || 'فشل في تحديث المستخدم' });
     }
   });
-  
+
   // إعادة تعيين كلمة مرور المسؤول
   app.post('/api/admin/reset-password', isAdmin, async (req, res) => {
     try {
       const { password } = req.body;
-      
+
       if (!password || password.length < 6) {
         return res.status(400).json({ error: 'كلمة المرور يجب أن تكون أطول من 6 أحرف' });
       }
-      
+
       // استيراد وظيفة تشفير كلمة المرور
       const auth = await import('./auth');
-      
+
       // تشفير كلمة المرور
       const hashedPassword = await auth.hashPassword(password);
-      
+
       // تحديث كلمة المرور مباشرة في قاعدة البيانات
       const sqliteDb = storage.getDatabase();
       const now = new Date().toISOString();
-      
+
       return new Promise((resolve, reject) => {
         sqliteDb.run(
           'UPDATE users SET password = ?, updated_at = ? WHERE username = ?',
@@ -356,22 +360,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // حذف مستخدم - للمشرفين فقط
   app.delete('/api/users/:id', isAdmin, async (req, res) => {
     const userId = parseInt(req.params.id);
-    
+
     if (isNaN(userId)) {
       return res.status(400).json({ error: 'معرف المستخدم غير صالح' });
     }
-    
+
     try {
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ error: 'المستخدم غير موجود' });
       }
-      
+
       // لا يمكن حذف المشرف الرئيسي (المستخدم رقم 1)
       if (userId === 1) {
         return res.status(403).json({ error: 'لا يمكن حذف المشرف الرئيسي' });
       }
-      
+
       await storage.deleteUser(userId);
       res.status(204).send();
     } catch (error: any) {
@@ -391,16 +395,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // مسار حالة السوق - يعطي معلومات عن ساعات التداول
   app.get('/api/market-status', (req, res) => {
     const { market, timezone } = req.query;
-    
+
     try {
       const currentTime = new Date();
       const currentHour = currentTime.getHours();
-      
+
       // منطق بسيط لتحديد حالة السوق (يمكن تطويره لاحقاً)
       let isOpen = false;
       let nextOpenTime = null;
       let nextCloseTime = null;
-      
+
       if (market === 'forex') {
         // سوق الفوركس مفتوح 24/5 (من الاثنين إلى الجمعة)
         const dayOfWeek = currentTime.getDay();
@@ -412,7 +416,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // الأسهم عادة مفتوحة من 9 صباحاً إلى 4 مساءً
         isOpen = currentHour >= 9 && currentHour < 16;
       }
-      
+
       res.json({
         market: market || 'unknown',
         isOpen,
@@ -431,7 +435,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/errors', (req, res) => {
     try {
       const { type, message, filename, line, column, stack, userAgent, timestamp } = req.body;
-      
+
       // طباعة الخطأ في السجلات (يمكن حفظه في قاعدة البيانات لاحقاً)
       console.error('Frontend Error Report:', {
         type,
@@ -445,7 +449,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ip: req.ip,
         url: req.get('Referer')
       });
-      
+
       res.json({ success: true, message: 'Error reported successfully' });
     } catch (error) {
       console.error('Error processing error report:', error);
