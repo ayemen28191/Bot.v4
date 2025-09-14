@@ -464,17 +464,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // New route added for checking user session
   app.get("/api/user", (req, res) => {
+    // إضافة Cache-Control headers لمنع التخزين المؤقت
+    res.set({
+      'Cache-Control': 'no-store, no-cache, must-revalidate, private',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
+
     // تسجيل هادئ للمطورين فقط
     if (process.env.NODE_ENV === 'development' && req.isAuthenticated()) {
       console.log('🔐 Session check: User', req.user?.username, 'authenticated');
     }
 
     if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "غير مسجل الدخول" });
+      return res.status(401).json({ 
+        message: "غير مسجل الدخول",
+        authenticated: false 
+      });
     }
     // إزالة كلمة المرور من الاستجابة لأسباب أمنية
     const { password, ...safeUser } = req.user!;
-    res.json(safeUser);
+    res.json({ ...safeUser, authenticated: true });
   });
 
   app.use('/api', marketStatusRoutes);

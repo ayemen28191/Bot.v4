@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
-import { Redirect, Route, RouteProps } from "wouter";
+import { Redirect, Route, RouteProps, useLocation } from "wouter";
 import { useEffect, useState } from "react";
 
 interface ProtectedRouteProps extends RouteProps {
@@ -10,12 +10,21 @@ interface ProtectedRouteProps extends RouteProps {
 export function ProtectedRoute({ path, component: Component }: ProtectedRouteProps) {
   const { user, isLoading } = useAuth();
   const [hasChecked, setHasChecked] = useState(false);
+  const [location, setLocation] = useLocation();
 
   useEffect(() => {
     if (!isLoading) {
       setHasChecked(true);
     }
   }, [isLoading]);
+
+  // منع إعادة التوجيه إذا كنا بالفعل في صفحة تسجيل الدخول
+  useEffect(() => {
+    if (!isLoading && !user && hasChecked && location !== '/auth') {
+      console.log('🔓 Redirecting to auth page without reload');
+      setLocation('/auth');
+    }
+  }, [user, isLoading, hasChecked, location, setLocation]);
 
   // إظهار شاشة التحميل أثناء التحقق الأولي
   if (isLoading || !hasChecked) {
@@ -32,7 +41,7 @@ export function ProtectedRoute({ path, component: Component }: ProtectedRoutePro
   if (!user) {
     return (
       <Route path={path}>
-        <Redirect to="/auth" />
+        <Redirect to="/auth" replace />
       </Route>
     );
   }

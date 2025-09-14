@@ -39,6 +39,8 @@ export default function AuthPage() {
     if (user && !isLoading && !loginPending && !hasRedirected) {
       console.log('✅ User already authenticated, redirecting to dashboard...');
       setHasRedirected(true); // Set the flag to prevent multiple redirects
+      // استخدام replace لمنع إعادة التحميل
+      window.history.replaceState(null, '', '/');
       setLocation("/");
     }
   }, [user, isLoading, loginPending, hasRedirected, setLocation]);

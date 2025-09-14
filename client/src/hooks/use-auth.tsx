@@ -73,9 +73,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
       return failureCount < 2;
     },
-    staleTime: 5 * 60 * 1000, // 5 دقائق بدلاً من Infinity
+    staleTime: 10 * 60 * 1000, // 10 دقائق
     refetchInterval: false, // منع التحديث التلقائي المتكرر
     refetchOnWindowFocus: false, // منع التحديث عند العودة للنافذة
+    refetchOnMount: false, // منع إعادة التحميل عند تحميل المكون
+    refetchOnReconnect: false, // منع إعادة التحميل عند إعادة الاتصال
   });
 
   // Update user state when query data changes

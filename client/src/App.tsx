@@ -107,18 +107,25 @@ function Router() {
     <Suspense fallback={<LoadingScreen message="جاري تحميل الصفحة..." />}>
       <HTTPSHandler />
       <Switch>
+        {/* صفحة تسجيل الدخول أولاً لمنع التداخل */}
+        <Route path="/auth" component={AuthPage} />
+        
+        {/* المسارات المحمية */}
         <ProtectedRoute path="/" component={TradingSignalPage} />
         <ProtectedRoute path="/settings" component={SettingsPage} />
         <ProtectedRoute path="/group-chat" component={GroupChatPage} />
         <ProtectedRoute path="/indicators" component={IndicatorsPage} />
+        <ProtectedRoute path="/bot-info" component={BotInfoPage} />
+        
+        {/* مسارات المشرف */}
         <ProtectedAdminRoute path="/admin" component={AdminDashboard} />
         <ProtectedAdminRoute path="/admin/users" component={UserManagement} />
         <ProtectedAdminRoute path="/admin/api-keys" component={ApiKeysManagement} />
         <ProtectedAdminRoute path="/admin/deployment" component={DeploymentPage} />
         <ProtectedAdminRoute path="/admin/system-test" component={SystemTestPage} />
         <ProtectedAdminRoute path="/admin/reset-password" component={AdminResetPassword} />
-        <ProtectedRoute path="/bot-info" component={BotInfoPage} />
-        <Route path="/auth" component={AuthPage} />
+        
+        {/* صفحة 404 في النهاية */}
         <Route component={NotFound} />
       </Switch>
     </Suspense>
