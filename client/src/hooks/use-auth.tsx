@@ -1,10 +1,12 @@
 import { useContext } from 'react';
-import React from 'react';
 
-// AuthContext definition
-const AuthContext = React.createContext<any>(null);
+// AuthContext will be created in App.tsx
+let AuthContext: React.Context<any>;
 
-export { AuthContext };
+// Set AuthContext after it's created
+export const setAuthContext = (context: React.Context<any>) => {
+  AuthContext = context;
+};
 
 export function useAuth() {
   const context = useContext(AuthContext);

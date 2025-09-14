@@ -5,7 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import LoadingScreen from "@/components/LoadingScreen";
-import { useAuth } from "@/hooks/use-auth";
+// import { useAuth } from "@/hooks/use-auth"; // سنحذف هذا ونستخدم useAuth محلياً
 import { t, getCurrentLanguage } from "@/lib/i18n";
 
 // Lazy load pages to improve performance
@@ -132,14 +132,30 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   );
 };
 
-// إنشاء AuthContext
-const AuthContext = React.createContext<any>(null);
-
 // المكون الداخلي الذي يستخدم useAuth
 function AppContent() {
-  const { user, isLoading: authLoading } = useAuth();
+  const authContext = useAuth();
+  const { user, isLoading: authLoading } = authContext;
   const [appReady, setAppReady] = useState(false);
   const [appError, setAppError] = useState<string | null>(null);
+
+  // في حالة عدم وجود AuthContext، عرض خطأ
+  if (!authContext) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-destructive mb-4">خطأ في تهيئة التطبيق</h1>
+          <p className="text-muted-foreground mb-4">فشل في تحميل نظام المصادقة</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+          >
+            إعادة تحميل الصفحة
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   useEffect(() => {
     // تهيئة التطبيق مع معالجة الأخطاء
@@ -182,8 +198,11 @@ function AppContent() {
 
   // عرض شاشة التحميل فقط أثناء تحميل المصادقة
   if (authLoading || !appReady) {
+    console.log('App loading state:', { authLoading, appReady });
     return <LoadingScreen message={t('initializing_app')} />;
   }
+
+  console.log('App ready, user:', user ? 'authenticated' : 'not authenticated');
 
   return (
     <div className="trading-app min-h-screen">
@@ -230,6 +249,29 @@ function AppContent() {
     </div>
   );
 }
+
+// إنشاء AuthContext في أعلى الملف
+export const AuthContext = React.createContext<any>(null);
+
+// hook useAuth محلي
+const useAuth = () => {
+  const context = React.useContext(AuthContext);
+  
+  if (!context) {
+    console.warn('useAuth called outside AuthProvider');
+    return {
+      user: null,
+      isLoading: false,
+      error: null,
+      login: async () => { throw new Error('Not authenticated'); },
+      logout: async () => { throw new Error('Not authenticated'); },
+      register: async () => { throw new Error('Not authenticated'); },
+      setUser: () => {},
+    };
+  }
+  
+  return context;
+};
 
 // المكون الرئيسي
 function App() {
