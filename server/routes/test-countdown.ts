@@ -12,9 +12,13 @@ router.get('/test-countdown', (req, res) => {
     let nextOpenTime: Date;
     
     switch (testType) {
+      case 'very-short':
+        // 10 ثواني من الآن
+        nextOpenTime = new Date(now.getTime() + 10 * 1000);
+        break;
       case 'short':
-        // 30 ثانية من الآن
-        nextOpenTime = new Date(now.getTime() + 30 * 1000);
+        // 60 ثانية من الآن
+        nextOpenTime = new Date(now.getTime() + 60 * 1000);
         break;
       case 'medium':
         // 5 دقائق من الآن
@@ -25,7 +29,7 @@ router.get('/test-countdown', (req, res) => {
         nextOpenTime = new Date(now.getTime() + 60 * 60 * 1000);
         break;
       default:
-        nextOpenTime = new Date(now.getTime() + 30 * 1000);
+        nextOpenTime = new Date(now.getTime() + 60 * 1000);
     }
     
     const displayTime = nextOpenTime.toLocaleString('ar-SA', { 
