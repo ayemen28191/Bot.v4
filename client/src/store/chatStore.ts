@@ -29,6 +29,9 @@ interface ChatState {
   disableOfflineMode: () => void;
   syncMessages: () => Promise<void>;
   clearMessages: () => void;
+  wsFailedAttempts: number; // إضافة عداد للمحاولات الفاشلة
+  handleConnectionFailure: (reason: string) => void; // دالة مساعدة للتعامل مع فشل الاتصال
+  addMessage: (message: Message) => void; // دالة مساعدة لإضافة الرسائل
 }
 
 // دالة مساعدة لحفظ البيانات في التخزين المحلي مع معلومات الصلاحية
@@ -120,232 +123,188 @@ export const useStore = create<ChatState>((set, get) => {
     ),
     pendingMessages: [],
     lastSyncTimestamp: null,
+    wsFailedAttempts: 0, // تهيئة عداد المحاولات الفاشلة
+
+    // دالة مساعدة لإضافة الرسائل إلى الحالة
+    addMessage: (message: Message) => {
+      set(state => {
+        // تجنب تكرار الرسائل عن طريق فحص المعرف الفريد
+        const isDuplicate = state.messages.some(msg => msg.id === message.id);
+        if (isDuplicate) {
+          return state; // لا تغيير إذا كانت الرسالة مكررة
+        }
+
+        const newMessages = [...state.messages, message];
+
+        // حفظ الرسائل في التخزين المحلي بكلا التنسيقين
+        try {
+          localStorage.setItem('chat_messages', JSON.stringify(newMessages));
+          saveToLocalStorage('chat_data', newMessages);
+        } catch (error) {
+          console.warn('Failed to save messages to local storage:', error);
+        }
+
+        // إرسال إشعار للمستخدم إذا كانت الرسالة من شخص آخر (ليست رسالة المستخدم نفسه)
+        try {
+          const currentUser = localStorage.getItem('current_user');
+          const isSelfMessage = currentUser && message.sender === currentUser;
+
+          // إرسال إشعار فقط إذا كانت الرسالة من شخص آخر وليست من نفس المستخدم
+          if (!isSelfMessage && message.sender !== 'System' && !document.hasFocus()) {
+            NotificationService.sendChatMessage({
+              sender: message.sender,
+              text: message.text
+            });
+          }
+        } catch (notifyError) {
+          console.warn('Could not send notification for new message:', notifyError);
+        }
+
+        return { messages: newMessages };
+      });
+    },
 
     initializeWebSocket: () => {
-      // إذا كان وضع عدم الاتصال مفعلاً، لا نحاول فتح اتصال
-      if (get().isOfflineMode || typeof window === 'undefined') {
-        console.log('🔄 في وضع عدم الاتصال، تجاهل WebSocket');
-        return;
-      }
-
       try {
-        // اختيار البروتوكول تلقائياً بناء على البيئة
-        const isHTTPS = window.location.protocol === 'https:';
-        const isReplit = window.location.hostname.includes('replit') ||
-                        window.location.hostname.includes('repl.co');
-
-        // في بيئة Replit HTTPS، تفعيل وضع عدم الاتصال تلقائياً
-        if (isHTTPS && isReplit) {
-          console.log('🔒 بيئة Replit HTTPS - تفعيل وضع عدم الاتصال تلقائياً');
-          get().enableOfflineMode();
-
-          // إظهار إشعار للمستخدم
-          try {
-            const event = new CustomEvent('autoOfflineMode', {
-              detail: {
-                reason: 'replit_https',
-                message: 'تم تفعيل وضع عدم الاتصال تلقائياً في بيئة Replit HTTPS'
-              }
-            });
-            window.dispatchEvent(event);
-          } catch (e) {
-            console.warn('Could not dispatch auto offline mode event');
-          }
+        const isOfflineMode = get().isOfflineMode;
+        if (isOfflineMode) {
+          console.log('🔄 وضع عدم الاتصال مفعل، تخطي إنشاء WebSocket');
+          set({ isConnected: false, socket: null });
           return;
         }
 
-        // للبيئات الأخرى، السماح بـ WebSocket العادي
-        console.log(`🌐 بيئة ${isHTTPS ? 'HTTPS' : 'HTTP'} عادية - محاولة اتصال WebSocket`);
-
-        // التحقق من عدم وجود اتصال WebSocket بسبب HTTPS في Replit
-        if (isHTTPS && isReplit) {
-          console.warn('HTTPS detected in Replit environment. WebSocket is not supported. Enabling offline mode.');
-          get().enableOfflineMode();
-
-          // عرض تنبيه للمستخدم
-          try {
-            const { toast } = require('@/hooks/use-toast');
-            toast({
-              title: "Offline Mode Enabled",
-              description: "WebSocket cannot be used from HTTPS in Replit. Offline mode has been enabled automatically.",
-              variant: "default",
-              duration: 5000
-            });
-          } catch (toastError) {
-            console.warn('Failed to display offline mode notification:', toastError);
-          }
-
-          return;
+        // إغلاق الاتصال السابق إن وُجد
+        const existingSocket = get().socket;
+        if (existingSocket && existingSocket.readyState !== WebSocket.CLOSED) {
+          console.log('إغلاق اتصال WebSocket السابق...');
+          existingSocket.close();
         }
 
-        // للبيئات الأخرى، نستمر بالمنطق العادي
-        const useOfflineMode = localStorage.getItem('ws_failed_attempts') &&
-                              parseInt(localStorage.getItem('ws_failed_attempts') || '0') > 1;
+        console.log('تهيئة اتصال WebSocket جديد...');
+        const wsUrl = getWebSocketUrl('/ws');
 
-        if (useOfflineMode) {
-          console.log('Previous failed connection attempts detected - enabling offline mode');
+        // التحقق من صحة URL قبل إنشاء الاتصال
+        if (wsUrl.includes('offline') || wsUrl.includes('replit-https-offline')) {
+          console.log('🔄 تم اكتشاف وضع عدم الاتصال من URL، تفعيل وضع عدم الاتصال');
           get().enableOfflineMode();
           return;
         }
-      } catch (error) {
-        console.error('Error setting up initial WebSocket checks:', error);
-      }
 
-      // الحصول على عنوان URL آمن للـ WebSocket باستخدام الدالة المساعدة
-      const wsUrl = getWebSocketUrl('/ws');
-      console.log(`Attempting to connect to WebSocket at: ${wsUrl}`);
+        console.log('🔗 محاولة الاتصال بـ:', wsUrl);
+        const ws = new WebSocket(wsUrl);
 
-      // محاولة إنشاء اتصال WebSocket
-      const ws = new WebSocket(wsUrl);
-
-      // إعداد مهلة زمنية للاتصال
-      const connectionTimeout = setTimeout(() => {
-        // إذا لم يتم الاتصال خلال 5 ثوانٍ، نعتبر أن هناك مشكلة
-        if (ws.readyState !== WebSocket.OPEN) {
-          console.error('WebSocket connection timeout after 5 seconds');
-          ws.close();
-          // عدم تعيين حالة الاتصال على true
-          set({ isConnected: false });
-
-          // تفعيل وضع عدم الاتصال تلقائياً عند فشل محاولة الاتصال
-          get().enableOfflineMode();
-        }
-      }, 5000);
-
-      ws.onopen = () => {
-        clearTimeout(connectionTimeout);
-        console.log('WebSocket connection established');
-        set({ isConnected: true, socket: ws });
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          // Handle message types...
-          if (data.type === 'message') {
-            let processedMessage = data.message;
-
-            // فك تشفير الرسالة إذا كانت مشفرة
-            if (data.message.encrypted) {
-              try {
-                const decryptedText = decodeURIComponent(atob(data.message.text));
-                processedMessage = {
-                  ...data.message,
-                  text: decryptedText,
-                  encrypted: false
-                };
-              } catch (decryptError) {
-                console.warn('Error decrypting message:', decryptError);
-                // استخدام النص الأصلي في حالة فشل فك التشفير
-              }
-            }
-
-            // إرسال إشعار للمستخدم إذا كانت الرسالة من شخص آخر (ليست رسالة المستخدم نفسه)
-            try {
-              const currentUser = localStorage.getItem('current_user');
-              const isSelfMessage = currentUser && processedMessage.sender === currentUser;
-
-              // إرسال إشعار فقط إذا كانت الرسالة من شخص آخر وليست من نفس المستخدم
-              if (!isSelfMessage && processedMessage.sender !== 'System') {
-                // محاولة إرسال إشعار إذا كانت الصفحة غير نشطة أو في الخلفية
-                if (!document.hasFocus()) {
-                  NotificationService.sendChatMessage({
-                    sender: processedMessage.sender,
-                    text: processedMessage.text
-                  });
-                }
-              }
-            } catch (notifyError) {
-              console.warn('Could not send notification for new message:', notifyError);
-            }
-
-            // منع تكرار الرسائل عن طريق فحص معرف الرسالة
-            set(state => {
-              // تجنب تكرار الرسائل عن طريق فحص المعرف الفريد
-              const isDuplicate = state.messages.some(msg => msg.id === processedMessage.id);
-              if (isDuplicate) {
-                return state; // لا تغيير إذا كانت الرسالة مكررة
-              }
-
-              const newMessages = [...state.messages, processedMessage];
-
-              // حفظ الرسائل في التخزين المحلي بكلا التنسيقين
-              try {
-                localStorage.setItem('chat_messages', JSON.stringify(newMessages));
-                saveToLocalStorage('chat_data', newMessages);
-              } catch (error) {
-                console.warn('Failed to save messages to local storage:', error);
-              }
-
-              return { messages: newMessages };
-            });
+        // تعيين timeout للاتصال
+        const connectionTimeout = setTimeout(() => {
+          if (ws.readyState === WebSocket.CONNECTING) {
+            console.warn('⏰ انتهت مهلة الاتصال بـ WebSocket');
+            ws.close();
+            get().handleConnectionFailure('timeout');
           }
-        } catch (error) {
-          console.error('Error processing WebSocket message:', error);
-        }
-      };
+        }, 10000); // 10 ثواني timeout
 
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        set({ isConnected: false, socket: null });
+        ws.onopen = () => {
+          console.log('✅ تم الاتصال بـ WebSocket بنجاح');
+          clearTimeout(connectionTimeout);
+          set({ isConnected: true, socket: ws, wsFailedAttempts: 0 });
 
-        // عرض تنبيه للمستخدم حول خطأ الاتصال
-        try {
-          const { toast } = require('@/hooks/use-toast');
-          toast({
-            title: "Connection Error",
-            description: "Failed to connect to the server. Offline mode will be enabled automatically.",
-            variant: "destructive",
-            duration: 5000
-          });
-        } catch (toastError) {
-          console.warn('Failed to display error notification:', toastError);
-        }
+          // زيادة عدد المستخدمين المتصلين (محاكاة)
+          set(state => ({ onlineUsers: state.onlineUsers + Math.floor(Math.random() * 3) + 1 }));
+        };
 
-        // تفعيل وضع عدم الاتصال تلقائياً بعد 3 محاولات فاشلة
-        const failedAttempts = parseInt(localStorage.getItem('ws_failed_attempts') || '0');
-        localStorage.setItem('ws_failed_attempts', (failedAttempts + 1).toString());
-
-        if (failedAttempts >= 2) { // بعد 3 محاولات (0, 1, 2)
-          console.log('3 connection attempts failed, enabling offline mode automatically');
-          get().enableOfflineMode();
-        }
-      };
-
-      ws.onclose = () => {
-        console.log('WebSocket connection closed');
-        set({ isConnected: false, socket: null });
-
-        // تحقق إذا كان الإغلاق بسبب خطأ في الاتصال
-        if (!get().isOfflineMode) {
-          // إظهار إشعار فقط إذا كان الاتصال قد تم بالفعل من قبل
+        ws.onmessage = (event) => {
+          console.log('📨 رسالة واردة عبر WebSocket:', event.data);
           try {
-            const { toast } = require('@/hooks/use-toast');
-            toast({
-              title: "Connection Interrupted",
-              description: "The connection to the server has been closed. Attempting to reconnect...",
-              variant: "default",
-              duration: 3000
-            });
-          } catch (toastError) {
-            console.warn('Failed to display connection interrupted notification:', toastError);
-          }
-
-          // محاولة إعادة الاتصال بعد تأخير
-          setTimeout(() => {
-            if (!get().isConnected && !get().isOfflineMode) {
-              get().initializeWebSocket();
+            const data = JSON.parse(event.data);
+            if (data.type === 'message') {
+              get().addMessage(data.message);
             }
-          }, 5000);
-        }
-      };
+          } catch (error) {
+            console.error('خطأ في تحليل رسالة WebSocket:', error);
+          }
+        };
 
-      // محاولة تعيين السوكيت داخل try/catch آمنة
-      try {
+        ws.onerror = (error) => {
+          console.error('❌ خطأ في WebSocket:', error);
+          clearTimeout(connectionTimeout);
+          get().handleConnectionFailure('error');
+        };
+
+        ws.onclose = (event) => {
+          console.log('❌ تم إغلاق اتصال WebSocket:', event.code, event.reason);
+          clearTimeout(connectionTimeout);
+          set({ isConnected: false, socket: null });
+
+          // تقليل عدد المستخدمين المتصلين
+          set(state => ({ 
+            onlineUsers: Math.max(1, state.onlineUsers - Math.floor(Math.random() * 2) - 1) 
+          }));
+
+          // التعامل مع رموز الأخطاء المختلفة
+          if (event.code === 1006 || event.code === 502) {
+            console.warn('🚫 خطأ 502 أو فشل الاتصال - قد تكون مشكلة في بيئة HTTPS');
+            get().handleConnectionFailure('502_or_connection_failed');
+          } else if (!get().isOfflineMode) {
+            get().handleConnectionFailure('normal_close');
+          }
+        };
+
         set({ socket: ws });
       } catch (error) {
         console.error('Failed to initialize WebSocket:', error);
-        set({ isConnected: false, socket: null });
+        get().handleConnectionFailure('exception');
+      }
+    },
+
+    // دالة مساعدة للتعامل مع فشل الاتصال
+    handleConnectionFailure: (reason: string) => {
+      const currentAttempts = get().wsFailedAttempts || 0;
+      const newAttempts = currentAttempts + 1;
+      set({ wsFailedAttempts: newAttempts });
+
+      console.log(`🔄 فشل الاتصال (${reason}), المحاولة: ${newAttempts}`);
+
+      // إذا فشل الاتصال أكثر من 3 مرات أو كان السبب 502، قم بتفعيل وضع عدم الاتصال
+      if (newAttempts >= 3 || reason === '502_or_connection_failed' || reason === 'timeout') {
+        console.log('🔄 تفعيل وضع عدم الاتصال بسبب فشل الاتصال المتكرر');
+
+        try {
+          const { toast } = require('@/hooks/use-toast');
+          toast({
+            title: "Connection Issues Detected",
+            description: "Switching to offline mode for better stability. You can switch back to online mode later.",
+            variant: "default",
+            duration: 5000
+          });
+        } catch (toastError) {
+          console.warn('Failed to display offline mode notification:', toastError);
+        }
+
+        get().enableOfflineMode();
+        return;
+      }
+
+      // إعادة المحاولة مع تأخير تدريجي
+      if (!get().isOfflineMode) {
+        const delay = Math.min(2000 * Math.pow(1.5, newAttempts), 15000);
+        console.log(`🔄 إعادة محاولة الاتصال خلال ${delay}ms`);
+
+        try {
+          const { toast } = require('@/hooks/use-toast');
+          toast({
+            title: "Connection Interrupted",
+            description: `Reconnecting in ${Math.round(delay/1000)} seconds... (Attempt ${newAttempts})`,
+            variant: "default",
+            duration: 3000
+          });
+        } catch (toastError) {
+          console.warn('Failed to display reconnection notification:', toastError);
+        }
+
+        setTimeout(() => {
+          if (!get().isConnected && !get().isOfflineMode) {
+            get().initializeWebSocket();
+          }
+        }, delay);
       }
     },
 
@@ -566,7 +525,7 @@ export const useStore = create<ChatState>((set, get) => {
         const { socket, pendingMessages, messages, isConnected } = get();
 
         // التحقق من وجود اتصال نشط
-        if (!isConnected || !socket || !('send' in socket) || typeof socket.send !== 'function') {
+        if (!isConnected || !socket || !('send' in socket) || typeof socket.send === 'function') {
           console.warn('Cannot sync messages: no active server connection');
           return;
         }

@@ -51,18 +51,18 @@ export async function apiRequest(
       }
       throw error;
     }
-    
+
     // إذا كان خطأ شبكة مؤقت وما زال لدينا محاولات، أعد المحاولة
     if (retryCount < maxRetries && 
         (error?.message?.includes('Failed to fetch') ||
          error?.message?.includes('NetworkError') ||
          error?.message?.includes('timeout'))) {
-      
+
       console.warn(`🔄 إعادة المحاولة ${retryCount + 1}/${maxRetries} للطلب: ${url}`);
-      
+
       // انتظار قبل إعادة المحاولة
       await new Promise(resolve => setTimeout(resolve, retryDelay));
-      
+
       return apiRequest(method, url, data, retryCount + 1);
     }
 
@@ -87,11 +87,11 @@ export async function proxyRequest(
   });
 
   const result = await response.json();
-  
+
   if (!result.success) {
     throw new Error(result.message || 'Proxy request failed');
   }
-  
+
   return result.data;
 }
 
@@ -135,7 +135,7 @@ export const queryClient = new QueryClient({
         if (error instanceof Error && error.message.startsWith('401:')) {
           return false;
         }
-        
+
         // عدم إعادة المحاولة للأخطاء الدائمة
         if (error instanceof Error && (
           error.message.includes('404:') ||
@@ -144,7 +144,7 @@ export const queryClient = new QueryClient({
         )) {
           return false;
         }
-        
+
         // إعادة المحاولة للأخطاء المؤقتة فقط
         return failureCount < 3;
       },
@@ -153,7 +153,7 @@ export const queryClient = new QueryClient({
         const baseDelay = 1000;
         const maxDelay = 30000;
         const delay = Math.min(baseDelay * Math.pow(2, attemptIndex), maxDelay);
-        
+
         // إضافة jitter عشوائي لتجنب thundering herd
         const jitter = Math.random() * 0.1 * delay;
         return delay + jitter;
@@ -179,7 +179,7 @@ export const queryClient = new QueryClient({
   },
 });
 
-// إضافة دالة مساعدة للحصول على عنوان WebSocket مع اختيار البروتوكول التلقائي
+// إضافة دالة مساعدة للحصول على عنوان WebSocket مع اكتشاف البيئة المحسن
 export function getWebSocketUrl(path: string = '/ws'): string {
   if (typeof window === 'undefined') {
     // إذا كان كود الخادم، فقط استخدم مسار نسبي
@@ -190,35 +190,58 @@ export function getWebSocketUrl(path: string = '/ws'): string {
     // التحقق إذا كان وضع عدم الاتصال مفعل بالفعل
     const isOfflineMode = localStorage.getItem('offlineMode') === 'enabled' || 
                           localStorage.getItem('offline_mode') === 'enabled';
-    
+
     if (isOfflineMode) {
       console.log('🔄 وضع عدم الاتصال مفعل، تجاهل WebSocket');
       return 'wss://offline-mode-enabled.local/ws';
     }
 
-    // اختيار البروتوكول تلقائياً بناء على بروتوكول الصفحة
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host;
-    
-    // في بيئة Replit HTTPS، تفعيل وضع عدم الاتصال تلقائياً
-    const isReplitHTTPS = window.location.protocol === 'https:' && 
-                          (window.location.hostname.includes('replit') || 
-                           window.location.hostname.includes('repl.co'));
-    
-    if (isReplitHTTPS) {
-      console.log('🔒 بيئة Replit HTTPS - تفعيل وضع عدم الاتصال تلقائياً');
-      localStorage.setItem('offline_mode', 'enabled');
-      localStorage.setItem('offline_reason', 'replit_https_auto');
-      return 'wss://replit-https-offline.local/ws';
+    // اكتشاف البيئة المحسن
+    const isReplit = window.location.hostname.includes('replit') || 
+                     window.location.hostname.includes('repl.co') ||
+                     window.location.hostname.endsWith('.replit.app') ||
+                     window.location.hostname.endsWith('.repl.co');
+
+    const isHTTPS = window.location.protocol === 'https:';
+    const isDevelopment = window.location.hostname === 'localhost' || 
+                         window.location.hostname === '127.0.0.1' ||
+                         window.location.hostname.includes('0.0.0.0');
+
+    // تحديد البروتوكول المناسب
+    const socketProtocol = isHTTPS ? 'wss' : 'ws';
+
+    let socketUrl: string;
+
+    if (isReplit && isHTTPS) {
+      // في بيئة Replit HTTPS، استخدم WSS مع المضيف الحالي
+      const host = window.location.host;
+      socketUrl = `wss://${host}${path}`;
+      console.log('🔒 بيئة Replit HTTPS - استخدام WSS:', socketUrl);
+
+      // تحذير من إمكانية حدوث مشاكل WebSocket في بيئة HTTPS
+      console.warn('⚠️ WebSocket over HTTPS في Replit قد يواجه مشاكل، يُنصح بتفعيل وضع عدم الاتصال للاستقرار');
+
+    } else if (isDevelopment) {
+      // في بيئة التطوير المحلي
+      const port = window.location.port || '5000';
+      socketUrl = `${socketProtocol}://0.0.0.0:${port}${path}`;
+      console.log('🛠️ بيئة التطوير المحلي:', socketUrl);
+
+    } else {
+      // البيئات الأخرى - استخدم المضيف والبروتوكول الحاليين
+      const host = window.location.host;
+      socketUrl = `${socketProtocol}://${host}${path}`;
+      console.log('🌐 بيئة عامة - اختيار البروتوكول التلقائي:', socketUrl);
     }
 
-    const websocketUrl = `${protocol}//${host}${path}`;
-    console.log(`🌐 اختيار البروتوكول التلقائي: ${websocketUrl}`);
-    return websocketUrl;
+    return socketUrl;
+
   } catch (error) {
-    console.error('خطأ في إنشاء عنوان WebSocket:', error);
-    // في حالة الخطأ، أرجع عنوان آمن افتراضي
-    return 'wss://fallback-offline-mode.local/ws';
+    console.error('خطأ في تحديد عنوان WebSocket:', error);
+    // العودة إلى قيمة افتراضية آمنة
+    const fallbackProtocol = (typeof window !== 'undefined' && window.location.protocol === 'https:') ? 'wss' : 'ws';
+    const fallbackHost = (typeof window !== 'undefined') ? window.location.host : 'localhost:5000';
+    return `${fallbackProtocol}://${fallbackHost}${path}`;
   }
 }
 
