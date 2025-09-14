@@ -39,12 +39,25 @@ export default function MarketClosedAlert({ nextOpenTime, nextCloseTime, marketT
     try {
       // تحسين تحليل التاريخ
       let openTime: Date;
+      let timestamp: number | null = null;
       
       if (nextOpenTime.includes('||')) {
-        // إذا كان التنسيق مركب (displayString||ISOString)
-        const [displayTime, isoTime] = nextOpenTime.split('||');
-        console.log('📊 تحليل تاريخ مركب - عرض:', displayTime, '، ISO:', isoTime);
-        openTime = new Date(isoTime);
+        // إذا كان التنسيق مركب (displayString||ISOString||timestamp)
+        const parts = nextOpenTime.split('||');
+        const displayTime = parts[0];
+        const isoTime = parts[1];
+        timestamp = parts[2] ? parseInt(parts[2]) : null;
+        
+        console.log('📊 تحليل تاريخ مركب:', { displayTime, isoTime, timestamp });
+        
+        // استخدام timestamp إذا كان متوفراً، وإلا استخدم ISO string
+        if (timestamp && !isNaN(timestamp)) {
+          openTime = new Date(timestamp);
+          console.log('⏱️ استخدام timestamp:', timestamp);
+        } else {
+          openTime = new Date(isoTime);
+          console.log('📅 استخدام ISO string:', isoTime);
+        }
       } else {
         // محاولة تحليل التاريخ مباشرة
         console.log('📊 تحليل تاريخ مباشر:', nextOpenTime);
@@ -59,14 +72,17 @@ export default function MarketClosedAlert({ nextOpenTime, nextCloseTime, marketT
       }
       
       console.log('✅ تاريخ الفتح المحلل:', openTime.toISOString());
+      console.log('🔢 timestamp المحلل:', openTime.getTime());
       
       const now = new Date();
       const initialTimeDiff = openTime.getTime() - now.getTime();
       
-      console.log('⏰ الوقت الحالي:', now.toISOString());
-      console.log('🎯 وقت الفتح المستهدف:', openTime.toISOString());
+      console.log('⏰ الوقت الحالي:', now.toISOString(), 'timestamp:', now.getTime());
+      console.log('🎯 وقت الفتح المستهدف:', openTime.toISOString(), 'timestamp:', openTime.getTime());
       console.log('⏳ الفرق الزمني الأولي:', initialTimeDiff, 'مللي ثانية');
       console.log('📊 الفرق بالساعات:', (initialTimeDiff / (1000 * 60 * 60)).toFixed(2));
+      console.log('📊 الفرق بالدقائق:', (initialTimeDiff / (1000 * 60)).toFixed(2));
+      console.log('📊 الفرق بالثواني:', (initialTimeDiff / 1000).toFixed(2));
       
       if (initialTimeDiff <= 0 || isNaN(initialTimeDiff)) {
         // إذا كان وقت الفتح في الماضي أو غير صالح، نعرض رسالة مختلفة وإعادة تحميل
@@ -126,11 +142,24 @@ export default function MarketClosedAlert({ nextOpenTime, nextCloseTime, marketT
         console.log('📊 نسبة التقدم:', progressValue.toFixed(2), '%');
         
         // تحويل الفرق الزمني إلى مكونات (ساعات، دقائق، ثواني)
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        const totalSeconds = Math.floor(diff / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
         
-        console.log('⏰ مكونات الوقت:', { hours, minutes, seconds });
+        console.log('⏰ حساب مكونات الوقت:');
+        console.log('  - إجمالي الثواني:', totalSeconds);
+        console.log('  - الساعات:', hours);
+        console.log('  - الدقائق:', minutes);
+        console.log('  - الثواني:', seconds);
+        
+        // التحقق من صحة القيم
+        if (totalSeconds < 0) {
+          console.warn('⚠️ الوقت سالب، إعادة تعيين إلى صفر');
+          setTimeComponents({ hours: 0, minutes: 0, seconds: 0 });
+          setTimeLeft('0s');
+          return;
+        }
         
         // تحديث مكونات الوقت لاستخدامها في العرض التفصيلي
         setTimeComponents({ hours, minutes, seconds });

@@ -131,11 +131,23 @@ function MarketStatus(props: MarketStatusProps) {
           
           // تحسين تحليل التاريخ
           if (nextOpenTime.includes('||')) {
-            const [displayTime, isoTime] = nextOpenTime.split('||');
-            console.log('🔗 تحليل تاريخ مركب:', { displayTime, isoTime });
-            openTime = new Date(isoTime);
+            const parts = nextOpenTime.split('||');
+            const displayTime = parts[0];
+            const isoTime = parts[1];
+            const timestamp = parts[2] ? parseInt(parts[2]) : null;
+            
+            console.log('🔗 تحليل تاريخ مركب:', { displayTime, isoTime, timestamp });
+            
+            // استخدام timestamp إذا كان متوفراً
+            if (timestamp && !isNaN(timestamp)) {
+              openTime = new Date(timestamp);
+              console.log('⏱️ استخدام timestamp في MarketStatus:', timestamp);
+            } else {
+              openTime = new Date(isoTime);
+              console.log('📅 استخدام ISO string في MarketStatus:', isoTime);
+            }
           } else {
-            console.log('📊 تحليل تاريخ مباشر:', nextOpenTime);
+            console.log('📊 تحليل تاريخ مباشر في MarketStatus:', nextOpenTime);
             openTime = new Date(nextOpenTime);
           }
           
@@ -178,8 +190,17 @@ function MarketStatus(props: MarketStatusProps) {
           
           // تحسين تحليل التاريخ
           if (nextCloseTime.includes('||')) {
-            const [displayTime, isoTime] = nextCloseTime.split('||');
-            closeTime = new Date(isoTime);
+            const parts = nextCloseTime.split('||');
+            const displayTime = parts[0];
+            const isoTime = parts[1];
+            const timestamp = parts[2] ? parseInt(parts[2]) : null;
+            
+            // استخدام timestamp إذا كان متوفراً
+            if (timestamp && !isNaN(timestamp)) {
+              closeTime = new Date(timestamp);
+            } else {
+              closeTime = new Date(isoTime);
+            }
           } else {
             closeTime = new Date(nextCloseTime);
           }

@@ -155,14 +155,20 @@ function formatDateForClient(date: Date, timezone: string) {
     const formatted = new Intl.DateTimeFormat('ar-SA', options).format(date);
     const isoString = date.toISOString();
     
-    const result = `${formatted}||${isoString}`;
+    // إضافة timestamp للتتبع
+    const timestamp = date.getTime();
+    
+    const result = `${formatted}||${isoString}||${timestamp}`;
     console.log(`✅ التاريخ المنسق: ${result}`);
+    console.log(`🔢 Timestamp: ${timestamp}`);
+    console.log(`⏰ الوقت المحلي: ${date.toLocaleString('ar-SA', { timeZone: timezone })}`);
     
     return result;
   } catch (error) {
     console.error(`❌ خطأ في تنسيق التاريخ:`, error);
     // استخدام تنسيق احتياطي
-    return `${date.toLocaleString()}||${date.toISOString()}`;
+    const timestamp = date.getTime();
+    return `${date.toLocaleString()}||${date.toISOString()}||${timestamp}`;
   }
 }
 

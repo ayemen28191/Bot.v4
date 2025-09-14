@@ -9,6 +9,9 @@ import { updateRouter } from "./routes/update";
 import { deploymentRouter } from "./routes/deployment";
 import { heatmapRouter } from "./routes/heatmap";
 import { proxyRouter } from "./routes/proxy";
+import marketStatusRoutes from './routes/market-status';
+import testCountdownRoutes from './routes/test-countdown';
+
 
 // التأكد من أن المستخدم مُسجل الدخول
 function isAuthenticated(req: express.Request, res: express.Response, next: express.NextFunction) {
@@ -456,6 +459,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Failed to process error report' });
     }
   });
+
+  app.use('/api', marketStatusRoutes);
+  app.use('/api', deploymentRoutes);
+  app.use('/api', heatmapRoutes);
+  app.use('/api', priceRoutes);
+  app.use('/api', testRoutes);
+  app.use('/api', testCountdownRoutes);
+  app.use('/api', proxyRoutes);
+  app.use('/api', updateRoutes);
+  app.use('/api', apiKeysRoutes);
 
   return httpServer;
 }
