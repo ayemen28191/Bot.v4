@@ -463,14 +463,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.use('/api', marketStatusRoutes);
-  app.use('/api', deploymentRoutes);
-  app.use('/api', heatmapRoutes);
-  app.use('/api', priceRoutes);
-  app.use('/api', testRoutes);
+  app.use('/api/deployment', deploymentRouter);
+  app.use('/api/heatmap', heatmapRouter);
+  app.use('/api', priceRouter);
+  app.use('/api/test', testRouter);
   app.use('/api', testCountdownRoutes);
-  app.use('/api', proxyRoutes);
-  app.use('/api', updateRoutes);
-  app.use('/api', apiKeysRoutes);
+  app.use('/api/proxy', proxyRouter);
+  app.use('/api/update', updateRouter);
+  app.use('/api/config-keys', apiKeysRouter);
 
   return httpServer;
 }
