@@ -36,7 +36,7 @@ export default defineConfig({
   server: {
     host: true, // يسمح بالوصول من أي IP
     port: 5000,
-    allowedHosts: [
+    allowedHosts: "all",
       "binarjoinanelytic.info", // أضف الدومين الذي تريد السماح له
       "localhost",
       "127.0.0.1",
