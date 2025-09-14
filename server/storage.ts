@@ -1013,6 +1013,20 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
+  async clearAllLogs(): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      sqliteDb.run('DELETE FROM deployment_logs', [], (err) => {
+        if (err) {
+          console.error('Error clearing deployment logs:', err);
+          reject(err);
+        } else {
+          console.log('All deployment logs cleared successfully');
+          resolve();
+        }
+      });
+    });
+  }
+
   async updateLog(id: number, status: string, message?: string, details?: string, endTime?: string): Promise<DeploymentLog> {
     return new Promise<DeploymentLog>(async (resolve, reject) => {
       try {

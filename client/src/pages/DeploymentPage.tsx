@@ -117,7 +117,7 @@ export default function DeploymentPage() {
         'GET',
         '/api/deployment/servers'
       );
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log("Fetched servers:", data);
@@ -149,7 +149,7 @@ export default function DeploymentPage() {
         'GET',
         '/api/deployment/logs'
       );
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log("Fetched deployment logs:", data);
@@ -252,7 +252,7 @@ export default function DeploymentPage() {
   // حذف خادم
   const handleDeleteServer = async () => {
     if (!serverToDelete) return;
-    
+
     try {
       setIsSubmitting(true);
       await apiRequest(
@@ -285,21 +285,21 @@ export default function DeploymentPage() {
   // اختبار الاتصال بالخادم
   const testServerConnection = async (serverId: number) => {
     setTestingServer(serverId);
-    
+
     try {
       console.log("Testing connection to server ID:", serverId);
       const response = await apiRequest(
         'POST',
         `/api/deployment/test-connection/${serverId}`
       );
-      
+
       if (!response.ok) {
         throw new Error(`Server returned ${response.status}: ${response.statusText}`);
       }
-      
+
       const result = await response.json();
       console.log("Connection test result:", result);
-      
+
       if (result.success) {
         toast({
           title: "تم الاتصال بنجاح",
@@ -327,21 +327,21 @@ export default function DeploymentPage() {
   // النشر إلى الخادم
   const deployToServer = async (serverId: number) => {
     setIsDeploying(serverId);
-    
+
     try {
       console.log("Deploying to server ID:", serverId);
       const response = await apiRequest(
         'POST',
         `/api/deployment/deploy/${serverId}`
       );
-      
+
       if (!response.ok) {
         throw new Error(`Server returned ${response.status}: ${response.statusText}`);
       }
-      
+
       const result = await response.json();
       console.log("Deployment result:", result);
-      
+
       if (result.success) {
         toast({
           title: "تم النشر بنجاح",
@@ -371,10 +371,10 @@ export default function DeploymentPage() {
   // فتح نافذة تحرير خادم
   const openEditDialog = (server: DeploymentServer) => {
     setEditingServer(server);
-    
+
     // تعيين نوع المصادقة المناسب بناءً على البيانات المتاحة
     const authType = server.authType || "password";
-    
+
     form.reset({
       name: server.name,
       host: server.host,
@@ -485,7 +485,7 @@ export default function DeploymentPage() {
                     <Plus className="h-4 w-4 mr-1" /> إضافة خادم
                   </Button>
                 </div>
-                
+
                 {loading ? (
                   <div className="flex justify-center items-center py-8">
                     <Loader2 className="h-8 w-8 text-primary animate-spin" />
@@ -610,7 +610,7 @@ export default function DeploymentPage() {
                     <Loader2 className="h-4 w-4 mr-1" /> تحديث
                   </Button>
                 </div>
-                
+
                 {deploymentLogs.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     لا توجد سجلات نشر حاليًا
@@ -655,7 +655,7 @@ export default function DeploymentPage() {
               {editingServer ? "تعديل الخادم" : "إضافة خادم"}
             </DialogTitle>
           </DialogHeader>
-          
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(editingServer ? handleUpdateServer : handleAddServer)} className="space-y-4">
               <FormField
@@ -675,7 +675,7 @@ export default function DeploymentPage() {
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="host"
@@ -693,7 +693,7 @@ export default function DeploymentPage() {
                   </FormItem>
                 )}
               />
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -712,7 +712,7 @@ export default function DeploymentPage() {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="port"
@@ -732,7 +732,7 @@ export default function DeploymentPage() {
                   )}
                 />
               </div>
-              
+
               {/* طريقة المصادقة */}
               <FormField
                 control={form.control}
@@ -772,7 +772,7 @@ export default function DeploymentPage() {
                   </FormItem>
                 )}
               />
-              
+
               {/* حقل كلمة المرور - يظهر عند اختيار كلمة المرور كطريقة مصادقة */}
               {form.watch("authType") === "password" && (
                 <FormField
@@ -807,7 +807,7 @@ export default function DeploymentPage() {
                   )}
                 />
               )}
-              
+
               {/* حقل المفتاح الخاص - يظهر عند اختيار المفتاح الخاص كطريقة مصادقة */}
               {form.watch("authType") === "key" && (
                 <FormField
@@ -842,7 +842,7 @@ export default function DeploymentPage() {
                   )}
                 />
               )}
-              
+
               <FormField
                 control={form.control}
                 name="deployPath"
@@ -860,7 +860,7 @@ export default function DeploymentPage() {
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="isActive"
@@ -879,7 +879,7 @@ export default function DeploymentPage() {
                   </FormItem>
                 )}
               />
-              
+
               <DialogFooter>
                 <Button 
                   type="button" 
@@ -905,43 +905,43 @@ export default function DeploymentPage() {
 
       {/* نافذة تأكيد الحذف */}
       <Dialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
-        <DialogContent className="bg-card text-foreground border-border max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-center text-primary">
-              تأكيد الحذف
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="py-3">
-            <p className="text-foreground text-center mb-2">
-              هل أنت متأكد من رغبتك في حذف هذا الخادم؟
-            </p>
-            <p className="text-primary text-center font-semibold">
-              {serverToDelete?.name}
-            </p>
-            <p className="text-red-400 text-center text-sm mt-4">
-              تحذير: لا يمكن التراجع عن هذا الإجراء.
-            </p>
-          </div>
-          
-          <DialogFooter className="flex justify-between">
-            <Button 
-              onClick={() => setConfirmDeleteOpen(false)}
-              className="border-border text-muted-foreground hover:bg-muted flex-1 mr-2"
-            >
-              <X className="h-4 w-4 mr-2" />
-              إلغاء
-            </Button>
-            <Button 
-              onClick={handleDeleteServer}
-              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground flex-1"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Trash className="h-4 w-4 mr-2" />}
-              حذف
-            </Button>
-          </DialogFooter>
-        </DialogContent>
+          <DialogContent className="bg-card text-foreground border-border max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-center text-primary">
+                تأكيد الحذف
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="py-3">
+              <p className="text-foreground text-center mb-2">
+                هل أنت متأكد من رغبتك في حذف هذا الخادم؟
+              </p>
+              <p className="text-primary text-center font-semibold">
+                {serverToDelete?.name}
+              </p>
+              <p className="text-red-400 text-center text-sm mt-4">
+                تحذير: لا يمكن التراجع عن هذا الإجراء.
+              </p>
+            </div>
+
+            <DialogFooter className="flex justify-between">
+              <Button 
+                onClick={() => setConfirmDeleteOpen(false)}
+                className="border-border text-muted-foreground hover:bg-muted flex-1 mr-2"
+              >
+                <X className="h-4 w-4 mr-2" />
+                إلغاء
+              </Button>
+              <Button 
+                onClick={handleDeleteServer}
+                className="bg-destructive hover:bg-destructive/90 text-destructive-foreground flex-1"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Trash className="h-4 w-4 mr-2" />}
+                حذف
+              </Button>
+            </DialogFooter>
+          </DialogContent>
       </Dialog>
     </AdminLayout>
   );

@@ -1,0 +1,39 @@
+
+{
+  "testServers": [
+    {
+      "name": "خادم التطوير",
+      "host": "dev.example.com",
+      "port": 22,
+      "username": "developer",
+      "authType": "password",
+      "password": "dev123",
+      "deployPath": "/var/www/dev",
+      "isActive": true,
+      "environment": "development"
+    },
+    {
+      "name": "خادم الإنتاج",
+      "host": "prod.example.com", 
+      "port": 22,
+      "username": "deployer",
+      "authType": "key",
+      "privateKey": "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA...\n-----END RSA PRIVATE KEY-----",
+      "deployPath": "/var/www/production",
+      "isActive": true,
+      "environment": "production",
+      "commands": "npm install && npm run build && pm2 restart all"
+    },
+    {
+      "name": "خادم التجريب",
+      "host": "staging.example.com",
+      "port": 2222,
+      "username": "staging",
+      "authType": "password", 
+      "password": "staging456",
+      "deployPath": "/var/www/staging",
+      "isActive": false,
+      "environment": "staging"
+    }
+  ]
+}

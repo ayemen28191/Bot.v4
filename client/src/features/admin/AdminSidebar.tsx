@@ -13,7 +13,8 @@ import {
   Server, 
   Settings, 
   UserCog,
-  Users
+  Users,
+  TestTube
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
@@ -31,7 +32,7 @@ export function AdminSidebar({ collapsed = false, onToggle, className }: AdminSi
   const { user, logoutMutation } = useAuth();
   const isRTL = getCurrentLanguage() === 'ar';
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
+
   // التعامل مع تغيير حجم النافذة
   useEffect(() => {
     const handleResize = () => {
@@ -39,7 +40,7 @@ export function AdminSidebar({ collapsed = false, onToggle, className }: AdminSi
         setIsMobileMenuOpen(false);
       }
     };
-    
+
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -90,6 +91,11 @@ export function AdminSidebar({ collapsed = false, onToggle, className }: AdminSi
       label: t('settings'),
       isActive: isActive("/settings")
     },
+    { 
+      icon: TestTube, 
+      label: 'اختبار النظام', 
+      path: '/admin/system-test' 
+    },
   ];
 
   return (
@@ -133,7 +139,7 @@ export function AdminSidebar({ collapsed = false, onToggle, className }: AdminSi
                 </Button>
               </div>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto py-4">
               <div className="space-y-1 px-2">
                 {menuItems.map((item) => (
@@ -155,7 +161,7 @@ export function AdminSidebar({ collapsed = false, onToggle, className }: AdminSi
                 ))}
               </div>
             </div>
-            
+
             <div className="p-4 border-t border-gray-700/50">
               <Button
                 variant="ghost"
@@ -195,7 +201,7 @@ export function AdminSidebar({ collapsed = false, onToggle, className }: AdminSi
             )}
           </Button>
         </div>
-        
+
         <div className="flex-1 py-4">
           <div className="space-y-1 px-2">
             {menuItems.map((item) => (
@@ -226,7 +232,7 @@ export function AdminSidebar({ collapsed = false, onToggle, className }: AdminSi
             ))}
           </div>
         </div>
-        
+
         <div className="p-4 border-t border-gray-700/50">
           <Button
             variant="ghost"

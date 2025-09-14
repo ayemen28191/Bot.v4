@@ -251,3 +251,14 @@ deploymentRouter.get("/servers/:id/logs", isAdmin, async (req, res) => {
     res.status(500).json({ error: "خطأ في جلب سجلات النشر للخادم" });
   }
 });
+
+// حذف جميع سجلات النشر
+deploymentRouter.delete("/logs", isAdmin, async (req, res) => {
+  try {
+    await storage.clearAllLogs();
+    res.json({ success: true, message: "تم حذف جميع سجلات النشر بنجاح" });
+  } catch (error) {
+    console.error("Error clearing logs:", error);
+    res.status(500).json({ error: "خطأ في حذف سجلات النشر" });
+  }
+});
