@@ -97,9 +97,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // قائمة باللغات المدعومة (متطابقة مع الواجهة الأمامية)
         const supportedLanguages = ['ar', 'en', 'hi'];
         if (!supportedLanguages.includes(preferredLanguage)) {
-          return res.status(400).json({ 
+          return res.status(400).json({
             error: 'اللغة غير مدعومة',
-            supportedLanguages 
+            supportedLanguages
           });
         }
 
@@ -115,9 +115,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // قائمة بالسمات المدعومة
         const supportedThemes = ['light', 'dark', 'system'];
         if (!supportedThemes.includes(preferredTheme)) {
-          return res.status(400).json({ 
+          return res.status(400).json({
             error: 'السمة غير مدعومة',
-            supportedThemes 
+            supportedThemes
           });
         }
 
@@ -140,8 +140,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error('Error saving user settings:', error);
-      res.status(500).json({ 
-        error: error.message || 'فشل في حفظ إعدادات المستخدم' 
+      res.status(500).json({
+        error: error.message || 'فشل في حفظ إعدادات المستخدم'
       });
     }
   });
@@ -175,7 +175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // إضافة whitelist validation للغة المفضلة
       const supportedLanguages = ['en', 'ar', 'hi'];
-      const preferredLanguage = req.body.preferredLanguage && supportedLanguages.includes(req.body.preferredLanguage) 
+      const preferredLanguage = req.body.preferredLanguage && supportedLanguages.includes(req.body.preferredLanguage)
         ? req.body.preferredLanguage : 'en';
 
       const validatedUser = insertUserSchema.parse({
@@ -282,8 +282,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     res.status(500).json({ error: 'حدث خطأ أثناء تحديث كلمة المرور' });
                   } else if (row && row.changes && row.changes > 0) {
                     console.log(`Password updated directly for user ID ${userId}`);
-                    res.json({ 
-                      success: true, 
+                    res.json({
+                      success: true,
                       message: 'تم تحديث المستخدم بنجاح',
                       id: userId
                     });
@@ -344,8 +344,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   res.status(500).json({ error: 'حدث خطأ أثناء تحديث كلمة المرور' });
                 } else if (row && row.changes && row.changes > 0) {
                   console.log('Admin password has been reset');
-                  res.json({ 
-                    success: true, 
+                  res.json({
+                    success: true,
                     message: 'تم إعادة تعيين كلمة مرور المسؤول بنجاح'
                   });
                 } else {
@@ -391,7 +391,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // مسار للتحقق من حالة الخادم
   app.get('/api/status', (_, res) => {
-    res.json({ 
+    res.json({
       status: 'ok',
       timestamp: new Date().toISOString()
     });
