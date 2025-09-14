@@ -3,20 +3,34 @@ import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
 
-// قيم افتراضية جديدة لقاعدة بيانات SQLite المحلية
+// ⚠️ SECURITY WARNING - تحذير أمني ⚠️
+// هذه القيم هي قيم افتراضية آمنة للتطوير المحلي فقط
+// لا تستخدم مفاتيح API حقيقية في الكود المصدري أبداً
+// في الإنتاج، يجب تعيين المفاتيح الحقيقية في متغيرات البيئة
+// WARNING: These are safe default values for local development only
+// Never use real API keys in source code!
+// In production, set real keys in environment variables
+
+// قيم افتراضية آمنة لقاعدة بيانات SQLite المحلية
 const DEFAULT_DATABASE_URL = 'file:./data/database.sqlite';
 const DEFAULT_PGDATABASE = 'local';
 const DEFAULT_PGHOST = 'localhost';
 const DEFAULT_PGPORT = '0';
 const DEFAULT_PGUSER = 'local';
 const DEFAULT_PGPASSWORD = 'local';
-const DEFAULT_SESSION_SECRET = '5cf1627c29d43876aa577e3d40c2b9e857d0a51e5f5acb00de81d26f898036cefd56552a028c2e7e2e5b377695103267502ff84fb57f64e49fa78133a63daa64';
-const DEFAULT_MARKET_API_KEY = '6KCFn5wGm4Litnw1akWUDICnZQjdli5LZ68B70TJ54edbf75';
-const DEFAULT_BACKUP_API_KEYS = 'CWMHAEQ94V4ON26B,PXI11JF8693EGC2R,ZJQ9ZTAM618ZOOQA';
-const DEFAULT_PRIMARY_API_KEY = 'CWMHAEQ94V4ON26B';
-const DEFAULT_TWELVEDATA_API_KEY = '820e25efeb6e445183486276ba98d496';
-const DEFAULT_BINANCE_API_KEY = 'GtePZkeqyJEylXk7JFQUZfjV9YWel44kEcnRy4KltHUQgL9MqJtVzi4xNlbqeb62';
-const DEFAULT_BINANCE_SECRET_KEY = '0cRzirxgsOXy1QtvTYYdZYS5oNmF2q5zzjUiDYnam8wEXNaDoHnDfxIOf5wy5noe';
+
+// ⚠️ استخدام مولد عشوائي آمن لمفتاح الجلسة بدلاً من القيمة الثابتة
+// Generate random session secret instead of hardcoded value
+const DEFAULT_SESSION_SECRET = generateRandomSecret(64);
+
+// ⚠️ قيم وهمية آمنة لمفاتيح API - يجب استبدالها بالمفاتيح الحقيقية في الإنتاج
+// Safe dummy values for API keys - replace with real keys in production
+const DEFAULT_MARKET_API_KEY = 'YOUR_MARKET_API_KEY_HERE';
+const DEFAULT_BACKUP_API_KEYS = 'YOUR_BACKUP_API_KEY_1,YOUR_BACKUP_API_KEY_2,YOUR_BACKUP_API_KEY_3';
+const DEFAULT_PRIMARY_API_KEY = 'YOUR_ALPHA_VANTAGE_API_KEY_HERE';
+const DEFAULT_TWELVEDATA_API_KEY = 'YOUR_TWELVEDATA_API_KEY_HERE';
+const DEFAULT_BINANCE_API_KEY = 'YOUR_BINANCE_API_KEY_HERE';
+const DEFAULT_BINANCE_SECRET_KEY = 'YOUR_BINANCE_SECRET_KEY_HERE';
 
 // تعريف هيكل المتغيرات البيئية
 interface EnvStructure {
@@ -145,8 +159,7 @@ const env: EnvVars = {
   },
 
   get SESSION_SECRET(): string {
-    return process.env.SESSION_SECRET || 
-      '5cf1627c29d43876aa577e3d40c2b9e857d0a51e5f5acb00de81d26f898036cefd56552a028c2e7e2e5b377695103267502ff84fb57f64e49fa78133a63daa64';
+    return process.env.SESSION_SECRET || DEFAULT_SESSION_SECRET;
   },
 
   get PORT(): number {
@@ -235,25 +248,36 @@ function extractPassword(url: string): string {
 
 // التحقق من وجود متغيرات البيئة الأساسية وإظهار رسائل تحذير إذا كانت غائبة
 function validateEnv() {
+  console.log('🔒 التحقق من الأمان والمتغيرات البيئية...');
+  
   if (!process.env.DATABASE_URL) {
     console.log('📊 استخدام قاعدة بيانات SQLite المحلية، لا حاجة لمتغيرات قاعدة بيانات خارجية.');
   }
 
   if (!process.env.SESSION_SECRET) {
-    console.warn('⚠️ لم يتم تحديد SESSION_SECRET. سيتم استخدام القيمة الافتراضية.');
+    console.warn('⚠️ لم يتم تحديد SESSION_SECRET. سيتم استخدام مفتاح عشوائي مولد تلقائياً.');
+    console.warn('🔐 للإنتاج: يرجى تعيين SESSION_SECRET في متغيرات البيئة');
   }
 
-  // التحقق من مفاتيح API
-  if (!process.env.PRIMARY_API_KEY) {
-    console.warn('⚠️ لم يتم تحديد PRIMARY_API_KEY. سيتم استخدام القيمة الافتراضية.');
+  // التحقق من مفاتيح API مع تحذيرات أمنية
+  const apiKeys = ['PRIMARY_API_KEY', 'TWELVEDATA_API_KEY', 'BINANCE_API_KEY', 'BINANCE_SECRET_KEY', 'MARKET_API_KEY'];
+  
+  apiKeys.forEach(key => {
+    if (!process.env[key]) {
+      console.warn(`⚠️ ${key} غير محدد. سيتم استخدام القيمة الوهمية للتطوير المحلي.`);
+      console.warn(`🔑 للإنتاج: يرجى تعيين ${key} في متغيرات البيئة`);
+    } else if (process.env[key]?.startsWith('YOUR_')) {
+      console.error(`❌ ${key} يحتوي على قيمة وهمية! يجب استبدالها بمفتاح حقيقي في الإنتاج.`);
+    } else {
+      console.log(`✅ ${key} تم تحديده بنجاح`);
+    }
+  });
+  
+  // تحذير عام للأمان
+  if (process.env.NODE_ENV === 'production') {
+    console.log('🚨 تحذير الإنتاج: تأكد من تعيين جميع مفاتيح API الحقيقية في متغيرات البيئة');
   } else {
-    console.log('✅ مفتاح Alpha Vantage API جاهز للاستخدام');
-  }
-
-  if (!process.env.TWELVEDATA_API_KEY) {
-    console.warn('⚠️ لم يتم تحديد TWELVEDATA_API_KEY. سيتم استخدام القيمة الافتراضية.');
-  } else {
-    console.log('✅ مفتاح TwelveData API جاهز للاستخدام');
+    console.log('🛠️ وضع التطوير: يمكن استخدام القيم الافتراضية للاختبار المحلي');
   }
 }
 
