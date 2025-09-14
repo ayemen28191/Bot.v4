@@ -2530,39 +2530,61 @@ function applyDirection(lang: Language): void {
 
 export function initializeLanguageSystem() {
   try {
-    // قراءة اللغة من localStorage
-    const storedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
-    console.log('Language from localStorage:', storedLanguage);
-
+    console.log('🌐 Starting language system initialization...');
+    
+    // قراءة اللغة من localStorage مع تنظيف الإعدادات المتضاربة
     let targetLanguage = DEFAULT_LANGUAGE;
-
-    if (storedLanguage && supportedLanguages.some(lang => lang.id === storedLanguage)) {
-      targetLanguage = storedLanguage as Language;
-    } else {
-      // إذا لم توجد لغة صحيحة، احفظ الافتراضية
-      localStorage.setItem(LANGUAGE_STORAGE_KEY, DEFAULT_LANGUAGE);
+    
+    try {
+      const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+      const storedLanguage = settings.language || localStorage.getItem(LANGUAGE_STORAGE_KEY);
+      
+      if (storedLanguage && supportedLanguages.some(lang => lang.id === storedLanguage)) {
+        targetLanguage = storedLanguage as Language;
+      }
+      
+      console.log('Selected language:', targetLanguage);
+    } catch (error) {
+      console.warn('Error reading stored language, using default:', error);
     }
+
+    // إزالة جميع الفئات المتعلقة باللغة والاتجاه أولاً
+    document.documentElement.classList.remove('ar', 'en', 'hi', 'rtl', 'ltr');
+    document.body.classList.remove('font-arabic');
 
     // تطبيق اللغة والاتجاه
     setCurrentLanguage(targetLanguage);
     applyDirection(targetLanguage);
 
-    // تحديث document attributes للتأكد من التطابق
+    // تحديث document attributes
     document.documentElement.setAttribute('lang', targetLanguage);
     document.documentElement.setAttribute('dir', targetLanguage === 'ar' ? 'rtl' : 'ltr');
 
-    console.log('🌐 Language system initialized:', {
+    // حفظ اللغة في localStorage
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, targetLanguage);
+    
+    // تحديث الإعدادات
+    const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+    settings.language = targetLanguage;
+    localStorage.setItem('settings', JSON.stringify(settings));
+
+    console.log('✅ Language system initialized successfully:', {
       language: targetLanguage,
-      direction: targetLanguage === 'ar' ? 'rtl' : 'ltr'
+      direction: targetLanguage === 'ar' ? 'rtl' : 'ltr',
+      htmlLang: document.documentElement.getAttribute('lang'),
+      htmlDir: document.documentElement.getAttribute('dir')
     });
+
   } catch (error) {
-    console.warn('Error initializing language system:', error);
-    // في حالة الخطأ، استخدم الافتراضية وطبقها بقوة
-    setCurrentLanguage(DEFAULT_LANGUAGE);
-    applyDirection(DEFAULT_LANGUAGE);
-    localStorage.setItem(LANGUAGE_STORAGE_KEY, DEFAULT_LANGUAGE);
+    console.error('❌ Critical error in language initialization:', error);
+    // في حالة الخطأ الحرج، استخدم إعدادات آمنة
+    document.documentElement.classList.remove('ar', 'en', 'hi', 'rtl', 'ltr');
+    document.body.classList.remove('font-arabic');
+    document.documentElement.classList.add('ltr');
     document.documentElement.setAttribute('lang', DEFAULT_LANGUAGE);
-    document.documentElement.setAttribute('dir', DEFAULT_LANGUAGE === 'ar' ? 'rtl' : 'ltr');
+    document.documentElement.setAttribute('dir', 'ltr');
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, DEFAULT_LANGUAGE);
+    currentLanguage = DEFAULT_LANGUAGE;
   }
 }
 

@@ -1,17 +1,22 @@
+
 import React, { useEffect, useState, useRef } from "react";
 import { t } from "@/lib/i18n";
 
 interface LoadingScreenProps {
   message?: string;
+  error?: string | null;
+  onRetry?: () => void;
 }
 
-const LoadingScreen: React.FC<LoadingScreenProps> = ({ message }) => {
+const LoadingScreen: React.FC<LoadingScreenProps> = ({ message, error, onRetry }) => {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [loadingText, setLoadingText] = useState(t('loading'));
   const progressTimerRef = useRef<number | null>(null);
   const textTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
+    if (error) return; // لا نظهر التحميل إذا كان هناك خطأ
+
     const progressInterval = window.setInterval(() => {
       setLoadingProgress(prev => {
         if (prev >= 98) {
@@ -50,8 +55,38 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ message }) => {
         window.clearInterval(textTimerRef.current);
       }
     };
-  }, []);
+  }, [error]);
 
+  // عرض شاشة الخطأ
+  if (error) {
+    return (
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-background z-50">
+        <div className="flex flex-col items-center max-w-md mx-auto px-4 text-center">
+          <div className="text-6xl mb-4">❌</div>
+          <h1 className="text-2xl font-bold mb-4 text-destructive">خطأ في التحميل</h1>
+          <p className="text-sm mb-6 text-muted-foreground">{error}</p>
+          
+          {onRetry && (
+            <button
+              onClick={onRetry}
+              className="px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+            >
+              إعادة المحاولة
+            </button>
+          )}
+          
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-3 px-6 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition-colors"
+          >
+            إعادة تحميل الصفحة
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // عرض شاشة التحميل العادية
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center bg-background z-50">
       <div className="flex flex-col items-center max-w-md mx-auto px-4">
