@@ -131,7 +131,7 @@ export const useStore = create<ChatState>((set, get) => {
       try {
         // اختيار البروتوكول تلقائياً بناء على البيئة
         const isHTTPS = window.location.protocol === 'https:';
-        const isReplit = window.location.hostname.includes('replit') || 
+        const isReplit = window.location.hostname.includes('replit') ||
                         window.location.hostname.includes('repl.co');
 
         // في بيئة Replit HTTPS، تفعيل وضع عدم الاتصال تلقائياً
@@ -142,7 +142,7 @@ export const useStore = create<ChatState>((set, get) => {
           // إظهار إشعار للمستخدم
           try {
             const event = new CustomEvent('autoOfflineMode', {
-              detail: { 
+              detail: {
                 reason: 'replit_https',
                 message: 'تم تفعيل وضع عدم الاتصال تلقائياً في بيئة Replit HTTPS'
               }
@@ -387,7 +387,7 @@ export const useStore = create<ChatState>((set, get) => {
           type: 'message',
           message: {
             ...message,
-            // تشفير بسيط للنص (ليس آمناً للغاية ولكنه يضيف طبقة بسيطة من الأمان)
+            // تشفير بسيط للعرض فقط
             encrypted: true,
             text: btoa(encodeURIComponent(text)) // تشفير بسيط للعرض فقط
           }
