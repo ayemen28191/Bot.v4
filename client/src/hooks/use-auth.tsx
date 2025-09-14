@@ -1,42 +1,117 @@
-import { useContext } from 'react';
+import { useContext, createContext, useState, ReactNode, useEffect } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { queryClient, apiRequest, getQueryFn } from '@/lib/queryClient';
+import { User } from '@shared/schema';
 
-// AuthContext will be created in App.tsx
-let AuthContext: React.Context<any> | null = null;
+interface AuthContextValue {
+  user: User | null;
+  isLoading: boolean;
+  error: string | null;
+  login: (credentials: { username: string; password: string }) => Promise<User>;
+  logout: () => Promise<void>;
+  register: (credentials: { username: string; password: string }) => Promise<User>;
+  setUser: (user: User | null) => void;
+}
 
-// Set AuthContext after it's created
-export const setAuthContext = (context: React.Context<any>) => {
-  AuthContext = context;
-};
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export function AuthProvider({ children }: AuthProviderProps) {
+  const [user, setUser] = useState<User | null>(null);
+
+  // Query to get current user
+  const meQuery = useQuery({
+    queryKey: ['/api/user'],
+    queryFn: getQueryFn({ on401: 'returnNull' }),
+    retry: false,
+    staleTime: 60000,
+  });
+
+  // Update user state when query data changes
+  useEffect(() => {
+    if (meQuery.data && typeof meQuery.data === 'object') {
+      setUser(meQuery.data as User);
+    } else {
+      setUser(null);
+    }
+  }, [meQuery.data]);
+
+  // Login mutation
+  const loginMutation = useMutation({
+    mutationFn: async (credentials: { username: string; password: string }): Promise<User> => {
+      const response = await apiRequest('POST', '/api/login', credentials);
+      return await response.json();
+    },
+    onSuccess: (userData) => {
+      setUser(userData);
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+    },
+  });
+
+  // Logout mutation  
+  const logoutMutation = useMutation({
+    mutationFn: async (): Promise<void> => {
+      await apiRequest('POST', '/api/logout');
+    },
+    onSuccess: () => {
+      setUser(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+    },
+  });
+
+  // Register mutation
+  const registerMutation = useMutation({
+    mutationFn: async (credentials: { username: string; password: string }): Promise<User> => {
+      const response = await apiRequest('POST', '/api/register', credentials);
+      return await response.json();
+    },
+    onSuccess: (userData) => {
+      setUser(userData);
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+    },
+  });
+
+  // Derive loading state
+  const isLoading = meQuery.isLoading || loginMutation.isPending || logoutMutation.isPending || registerMutation.isPending;
+
+  // Derive error state
+  const error = meQuery.error 
+    ? String(meQuery.error)
+    : loginMutation.error
+    ? String(loginMutation.error) 
+    : logoutMutation.error
+    ? String(logoutMutation.error)
+    : registerMutation.error
+    ? String(registerMutation.error)
+    : null;
+
+  const value: AuthContextValue = {
+    user,
+    isLoading,
+    error,
+    login: loginMutation.mutateAsync,
+    logout: logoutMutation.mutateAsync,
+    register: registerMutation.mutateAsync,
+    setUser,
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
 
 export function useAuth() {
-  if (!AuthContext) {
-    console.warn('AuthContext not set, returning default values');
-    return {
-      user: null,
-      isLoading: false,
-      error: null,
-      login: async () => { throw new Error('Authentication not initialized'); },
-      logout: async () => { throw new Error('Authentication not initialized'); },
-      register: async () => { throw new Error('Authentication not initialized'); },
-      setUser: () => {},
-    };
-  }
-
   const context = useContext(AuthContext);
-
-  if (!context) {
-    console.warn('useAuth called outside AuthProvider, returning default values');
-    return {
-      user: null,
-      isLoading: false,
-      error: null,
-      login: async () => { throw new Error('Not authenticated'); },
-      logout: async () => { throw new Error('Not authenticated'); },
-      register: async () => { throw new Error('Not authenticated'); },
-      setUser: () => {},
-    };
+  
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
   }
-
+  
   return context;
 }
 
