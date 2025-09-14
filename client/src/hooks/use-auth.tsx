@@ -23,17 +23,62 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
 
   // Query to get current user
-  const meQuery = useQuery({
-    queryKey: ['/api/user'],
-    queryFn: getQueryFn({ on401: 'returnNull' }),
-    retry: false,
-    staleTime: 60000,
+  const {
+    data: user,
+    isLoading,
+    error,
+    refetch: refetchUser,
+  } = useQuery({
+    queryKey: ["/api/user"],
+    queryFn: async () => {
+      try {
+        const response = await fetch("/api/user", {
+          credentials: "include",
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            // في بيئة HTTPS، قد نحتاج إلى معالجة خاصة للمصادقة
+            console.log('User not authenticated (401)');
+            return null;
+          }
+          throw new Error(`Failed to fetch user: ${response.statusText}`);
+        }
+
+        const userData = await response.json();
+        console.log('User data fetched successfully:', userData.username);
+        return userData;
+      } catch (fetchError) {
+        console.error('Error fetching user data:', fetchError);
+        if (fetchError instanceof TypeError && fetchError.message.includes('fetch')) {
+          // مشكلة في الشبكة - قد تكون بسبب HTTPS/Mixed Content
+          console.log('Network error in user fetch, possibly due to HTTPS restrictions');
+          return null;
+        }
+        throw fetchError;
+      }
+    },
+    retry: (failureCount, error) => {
+      // لا نحاول إعادة المحاولة للأخطاء 401 أو أخطاء الشبكة في HTTPS
+      if (error instanceof Error && 
+          (error.message.includes('401') || 
+           error.message.includes('Failed to fetch') ||
+           error instanceof TypeError)) {
+        return false;
+      }
+      return failureCount < 2;
+    },
+    staleTime: Infinity,
   });
 
   // Update user state when query data changes
   useEffect(() => {
-    if (meQuery.data && typeof meQuery.data === 'object') {
-      const userData = meQuery.data as User;
+    if (user && typeof user === 'object') {
+      const userData = user as User;
       setUser(userData);
 
       // Apply user's preferred language from database with priority
@@ -62,7 +107,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         console.error('Error clearing language on logout:', error);
       }
     }
-  }, [meQuery.data]);
+  }, [user]);
 
   // Login mutation
   const loginMutation = useMutation({

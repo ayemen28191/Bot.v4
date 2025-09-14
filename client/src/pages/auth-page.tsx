@@ -52,9 +52,30 @@ export default function AuthPage() {
       setForceRerender(prev => prev + 1); // Force component re-render
     };
 
+    // معالجة أخطاء Mixed Content في بيئة HTTPS
+    const handleMixedContentError = () => {
+      if (window.location.protocol === 'https:') {
+        console.log('HTTPS environment detected in auth page - preparing for offline-friendly authentication');
+        
+        // تفعيل وضع عدم الاتصال إذا كان هناك مشاكل في الشبكة
+        try {
+          localStorage.setItem('offline_mode', 'enabled');
+          localStorage.setItem('offline_reason', 'https_mixed_content');
+        } catch (e) {
+          console.warn('Could not set offline mode in localStorage');
+        }
+      }
+    };
+
     window.addEventListener('languageChanged', handleLanguageChange);
+    window.addEventListener('beforeunload', handleMixedContentError);
+    
+    // تشغيل فورا للتحقق من البيئة
+    handleMixedContentError();
+
     return () => {
       window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('beforeunload', handleMixedContentError);
     };
   }, []);
 

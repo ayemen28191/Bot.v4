@@ -84,7 +84,6 @@ export async function proxyRequest(
   return result.data;
 }
 
-type UnauthorizedBehavior = "returnNull" | "throw";
 export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
@@ -198,7 +197,8 @@ export function getWebSocketUrl(path: string = '/ws'): string {
       const isReplitApp = window.location.hostname.endsWith('.replit.app') || 
                           window.location.hostname.endsWith('.repl.co') ||
                           window.location.hostname === 'replit.com' ||
-                          window.location.hostname.includes('.replit.dev');
+                          window.location.hostname.includes('.replit.dev') ||
+                          window.location.hostname.includes('.pike.replit.dev');
       
       if (isReplitApp) {
         console.log('تم اكتشاف بيئة Replit HTTPS - تفعيل وضع عدم الاتصال تلقائيًا');
@@ -229,15 +229,17 @@ export function getWebSocketUrl(path: string = '/ws'): string {
         // إرجاع URL خاص للإشارة إلى وضع عدم الاتصال
         return 'wss://offline-mode-enabled-in-replit-https.local/ws';
       }
+
+      // للمواقع الأخرى التي تستخدم HTTPS، استخدم WSS
+      return `wss://${host}${path}`;
+    } else {
+      // للمواقع التي تستخدم HTTP، استخدم WS
+      return `ws://${host}${path}`;
     }
-    
-    // استخدام البروتوكول المناسب بناءً على بروتوكول الصفحة
-    const protocol = isSecure ? 'wss:' : 'ws:';
-    return `${protocol}//${host}${path}`;
   } catch (error) {
-    console.error('خطأ في getWebSocketUrl:', error);
-    // في حالة الخطأ، إرجاع URL آمن
-    return 'wss://error-fallback.local/ws';
+    console.error('خطأ في إنشاء عنوان WebSocket:', error);
+    // في حالة الخطأ، أرجع عنوان آمن افتراضي
+    return 'wss://fallback-offline-mode.local/ws';
   }
 }
 
