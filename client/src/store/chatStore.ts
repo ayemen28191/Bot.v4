@@ -124,29 +124,40 @@ export const useStore = create<ChatState>((set, get) => {
     initializeWebSocket: () => {
       // إذا كان وضع عدم الاتصال مفعلاً، لا نحاول فتح اتصال
       if (get().isOfflineMode || typeof window === 'undefined') {
-        console.log('In offline mode, skipping WebSocket connection');
+        console.log('🔄 في وضع عدم الاتصال، تجاهل WebSocket');
         return;
       }
 
       try {
-        // تفعيل وضع عدم الاتصال تلقائياً في بيئة Replit HTTPS
-        if (window.location.protocol === 'https:') {
-          console.log('HTTPS connection detected - checking security for WebSocket');
+        // اختيار البروتوكول تلقائياً بناء على البيئة
+        const isHTTPS = window.location.protocol === 'https:';
+        const isReplit = window.location.hostname.includes('replit') || 
+                        window.location.hostname.includes('repl.co');
 
-          // في بيئة Replit، التحول تلقائياً لوضع عدم الاتصال لتجنب أخطاء WebSocket
-          const isReplitApp = window.location.hostname.endsWith('.replit.app') ||
-                              window.location.hostname.endsWith('.repl.co') ||
-                              window.location.hostname === 'replit.com';
+        // في بيئة Replit HTTPS، تفعيل وضع عدم الاتصال تلقائياً
+        if (isHTTPS && isReplit) {
+          console.log('🔒 بيئة Replit HTTPS - تفعيل وضع عدم الاتصال تلقائياً');
+          get().enableOfflineMode();
+          
+          // إظهار إشعار للمستخدم
+          try {
+            const event = new CustomEvent('autoOfflineMode', {
+              detail: { 
+                reason: 'replit_https',
+                message: 'تم تفعيل وضع عدم الاتصال تلقائياً في بيئة Replit HTTPS'
+              }
+            });
+            window.dispatchEvent(event);
+          } catch (e) {
+            console.warn('Could not dispatch auto offline mode event');
+          }
+          return;
+        }
 
-          if (isReplitApp) {
-            console.log('Replit HTTPS environment detected - enabling offline mode automatically');
-            // تفعيل وضع عدم الاتصال لتجنب أخطاء أمنية مع WebSocket
-            get().enableOfflineMode();
-
-            // إنشاء حدث نظام
-            try {
-              const { toast } = require('@/hooks/use-toast');
-              toast({
+        // للبيئات الأخرى، السماح بـ WebSocket العادي
+        console.log(`🌐 بيئة ${isHTTPS ? 'HTTPS' : 'HTTP'} عادية - محاولة اتصال WebSocket`);
+        
+        // هنا يمكن إضافة منطق WebSocket العادي إذا لزم الأمر
                 title: "Offline Mode Enabled",
                 description: "WebSocket cannot be used from HTTPS in Replit. Offline mode has been enabled automatically.",
                 variant: "default",

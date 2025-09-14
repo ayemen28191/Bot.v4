@@ -179,7 +179,7 @@ export const queryClient = new QueryClient({
   },
 });
 
-// إضافة دالة مساعدة للحصول على عنوان WebSocket الآمن مع تحسينات
+// إضافة دالة مساعدة للحصول على عنوان WebSocket مع اختيار البروتوكول التلقائي
 export function getWebSocketUrl(path: string = '/ws'): string {
   if (typeof window === 'undefined') {
     // إذا كان كود الخادم، فقط استخدم مسار نسبي
@@ -187,24 +187,34 @@ export function getWebSocketUrl(path: string = '/ws'): string {
   }
 
   try {
-    // تحديد البروتوكول بناء على بروتوكول الموقع
-    const isSecure = window.location.protocol === 'https:';
-    const host = window.location.host;
-    
     // التحقق إذا كان وضع عدم الاتصال مفعل بالفعل
     const isOfflineMode = localStorage.getItem('offlineMode') === 'enabled' || 
                           localStorage.getItem('offline_mode') === 'enabled';
     
     if (isOfflineMode) {
-      console.log('وضع عدم الاتصال مفعل، إعادة مسار WebSocket غير قابل للاتصال');
-      return 'wss://offline-mode-enabled-do-not-connect.local/ws';
+      console.log('🔄 وضع عدم الاتصال مفعل، تجاهل WebSocket');
+      return 'wss://offline-mode-enabled.local/ws';
     }
+
+    // اختيار البروتوكول تلقائياً بناء على بروتوكول الصفحة
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host;
     
-    // إذا التطبيق على HTTPS في بيئة Replit
-    if (isSecure) {
-      console.log('HTTPS طريقة الاتصال - التحقق من بيئة التشغيل');
-      
-      // التحقق إذا كنا في بيئة Replit
+    // في بيئة Replit HTTPS، تفعيل وضع عدم الاتصال تلقائياً
+    const isReplitHTTPS = window.location.protocol === 'https:' && 
+                          (window.location.hostname.includes('replit') || 
+                           window.location.hostname.includes('repl.co'));
+    
+    if (isReplitHTTPS) {
+      console.log('🔒 بيئة Replit HTTPS - تفعيل وضع عدم الاتصال تلقائياً');
+      localStorage.setItem('offline_mode', 'enabled');
+      localStorage.setItem('offline_reason', 'replit_https_auto');
+      return 'wss://replit-https-offline.local/ws';
+    }
+
+    const websocketUrl = `${protocol}//${host}${path}`;
+    console.log(`🌐 اختيار البروتوكول التلقائي: ${websocketUrl}`);
+    return websocketUrl;ق إذا كنا في بيئة Replit
       const isReplitApp = window.location.hostname.endsWith('.replit.app') || 
                           window.location.hostname.endsWith('.repl.co') ||
                           window.location.hostname === 'replit.com' ||

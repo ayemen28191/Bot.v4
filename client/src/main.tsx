@@ -109,7 +109,7 @@ async function initializeApp() {
         originalError.apply(console, args);
       };
 
-      // تفعيل وضع عدم الاتصال مسبقاً في بيئة HTTPS
+      // تحديث إعدادات الاتصال تلقائياً في بيئة HTTPS الاتصال مسبقاً في بيئة HTTPS
       try {
         localStorage.setItem('offline_mode', 'enabled');
         localStorage.setItem('offline_reason', 'https_environment');

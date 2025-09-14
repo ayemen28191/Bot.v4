@@ -44,11 +44,11 @@ function HTTPSHandler() {
       // التعامل مع مشاكل Vite WebSocket في بيئة HTTPS
       if (isSecure) {
         console.log('🔒 HTTPS environment detected - Setting up WebSocket error handling');
-        
+
         // قمع أخطاء WebSocket console المتكررة
         const originalConsoleWarn = console.warn;
         const originalConsoleError = console.error;
-        
+
         console.warn = (...args) => {
           const message = args.join(' ');
           // تجاهل رسائل Vite WebSocket الشائعة
@@ -74,24 +74,8 @@ function HTTPSHandler() {
           originalConsoleError.apply(console, args);
         };
 
-        // منع إعادة التحميل التلقائي المتكرر بطريقة آمنة
-        let reloadCount = 0;
-        const maxReloads = 3;
-        
-        // اعتراض استدعاءات reload بدلاً من إعادة تعيين الخاصية
-        const preventExcessiveReload = () => {
-          reloadCount++;
-          if (reloadCount > maxReloads) {
-            console.log('🛑 Prevented excessive page reload - stabilizing app');
-            return false;
-          }
-          return true;
-        };
-        
-        // تخزين مرجع للاستخدام المستقبلي
-        (window as any).__preventReload = preventExcessiveReload;
-
-        console.log('✅ Offline mode pre-enabled for HTTPS environment');
+        // تسجيل معلومات البيئة فقط
+            console.log('🔒 HTTPS environment - WebSocket errors will be handled gracefully');
       }
 
       if (isSecure && isReplitApp && !isOfflineMode) {
