@@ -221,49 +221,6 @@ export function getWebSocketUrl(path: string = '/ws'): string {
     return 'wss://fallback-offline-mode.local/ws';
   }
 }
-      
-      if (isReplitApp) {
-        console.log('تم اكتشاف بيئة Replit HTTPS - تفعيل وضع عدم الاتصال تلقائيًا');
-        
-        // تفعيل وضع عدم الاتصال بشكل فوري
-        try {
-          // إنشاء حدث مخصص لتفعيل وضع عدم الاتصال
-          const event = new CustomEvent('enableOfflineMode', { 
-            detail: { 
-              reason: 'https_websocket_limitation',
-              message: 'لا يمكن الاتصال بـ WebSocket من صفحة HTTPS في Replit. تم تفعيل وضع عدم الاتصال تلقائيًا.' 
-            } 
-          });
-          window.dispatchEvent(event);
-          console.log('تم تفعيل وضع عدم الاتصال تلقائيًا');
-          
-          // تخزين حالة وضع عدم الاتصال
-          try {
-            localStorage.setItem('offlineMode', 'enabled');
-            localStorage.setItem('offlineModeReason', 'https_websocket_limitation');
-          } catch (storageErr) {
-            console.warn('فشل في تخزين حالة وضع عدم الاتصال:', storageErr);
-          }
-        } catch (e) {
-          console.error('فشل في تفعيل وضع عدم الاتصال:', e);
-        }
-        
-        // إرجاع URL خاص للإشارة إلى وضع عدم الاتصال
-        return 'wss://offline-mode-enabled-in-replit-https.local/ws';
-      }
-
-      // للمواقع الأخرى التي تستخدم HTTPS، استخدم WSS
-      return `wss://${host}${path}`;
-    } else {
-      // للمواقع التي تستخدم HTTP، استخدم WS
-      return `ws://${host}${path}`;
-    }
-  } catch (error) {
-    console.error('خطأ في إنشاء عنوان WebSocket:', error);
-    // في حالة الخطأ، أرجع عنوان آمن افتراضي
-    return 'wss://fallback-offline-mode.local/ws';
-  }
-}
 
 // إضافة دالة مساعدة لاختبار اتصال WebSocket
 export function testWebSocketConnection(url: string, timeout: number = 5000): Promise<boolean> {
