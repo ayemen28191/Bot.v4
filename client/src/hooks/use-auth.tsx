@@ -35,7 +35,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (meQuery.data && typeof meQuery.data === 'object') {
       const userData = meQuery.data as User;
       setUser(userData);
-      
+
       // Only apply user's preferred language if user hasn't explicitly set a language locally
       try {
         const hasLocalLanguageSettings = localStorage.getItem('settings') || localStorage.getItem('language');
@@ -122,11 +122,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  
+
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
-  
+
   return context;
 }
 

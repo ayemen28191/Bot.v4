@@ -85,7 +85,7 @@ export class DeploymentService {
       return result;
     } catch (error) {
       console.error('خطأ في عملية النشر:', error);
-      
+
       // تحديث سجل النشر بالخطأ
       let updatedLog: DeploymentLog;
       try {
@@ -116,18 +116,19 @@ export class DeploymentService {
   private static async prepareDeploymentPackage(sourceDir: string, excludeFiles: string[] = []): Promise<string> {
     const tempDir = await mkdtemp(path.join(os.tmpdir(), 'deploy-'));
     const outputFile = path.join(tempDir, 'deployment.tar.gz');
-    
+
     // بناء قائمة الملفات المستثناة
     const excludeArgs = excludeFiles.map(file => `--exclude="${file}"`).join(' ');
-    
+
     // تنفيذ أمر tar لإنشاء الأرشيف
     const tarCommand = `tar -czf "${outputFile}" -C "${sourceDir}" ${excludeArgs} .`;
-    
+
     try {
       await exec(tarCommand);
       return outputFile;
     } catch (error) {
-      throw new Error(`فشل في إنشاء حزمة النشر: ${error.message}`);
+      console.error('Error in deployment command:', error);
+      throw error as Error;
     }
   }
 
@@ -140,22 +141,22 @@ export class DeploymentService {
     deploymentLog: DeploymentLog
   ): Promise<DeploymentResult> {
     const { host, port, username, deployPath } = server;
-    
+
     // إنشاء ملف مؤقت للمفتاح الخاص
     const tempKeyFile = path.join(os.tmpdir(), `ssh-key-${crypto.randomBytes(8).toString('hex')}`);
     try {
       await writeFile(tempKeyFile, server.privateKey || '', { mode: 0o600 });
-      
+
       const ssh = new SSHClient();
-      
+
       // قراءة المفتاح الخاص
       const privateKeyContent = await readFile(tempKeyFile);
-      
+
       // انتظار اتصال SSH
       await new Promise<void>((resolve, reject) => {
         ssh.on('ready', () => {
           resolve();
-        }).on('error', (err) => {
+        }).on('error', (err: any) => {
           reject(new Error(`فشل في الاتصال بالخادم: ${err.message}`));
         }).connect({
           host,
@@ -165,31 +166,35 @@ export class DeploymentService {
           readyTimeout: 30000
         });
       });
-      
+
       // إنشاء مجلد النشر إذا لم يكن موجوداً
       await this.executeSshCommand(ssh, `mkdir -p ${deployPath}`);
-      
+
       // رفع ملف النشر
       await this.uploadFile(ssh, packagePath, `${deployPath}/deployment.tar.gz`, server);
-      
+
       // فك ضغط الملف على الخادم
       await this.executeSshCommand(ssh, `cd ${deployPath} && tar -xzf deployment.tar.gz`);
-      
+
       // حذف ملف النشر المضغوط
       await this.executeSshCommand(ssh, `rm ${deployPath}/deployment.tar.gz`);
-      
+
       // تنفيذ أوامر ما بعد النشر
       let commandOutput = '';
       if (server.commands) {
         commandOutput = await this.executeSshCommand(ssh, `cd ${deployPath} && ${server.commands}`);
       }
-      
+
       // إغلاق الاتصال
       ssh.end();
-      
+
       // حذف ملف المفتاح المؤقت
-      await rm(tempKeyFile, { force: true });
-      
+      try {
+        await rm(tempKeyFile, { force: true });
+      } catch (error) {
+        console.error('خطأ في حذف ملف المفتاح المؤقت:', error);
+      }
+
       // تحديث سجل النشر بالنجاح
       const updatedLog = await storage.updateLog(
         deploymentLog.id,
@@ -198,7 +203,7 @@ export class DeploymentService {
         commandOutput,
         new Date().toISOString()
       );
-      
+
       return {
         success: true,
         message: 'تم النشر بنجاح',
@@ -212,7 +217,7 @@ export class DeploymentService {
       } catch (rmError) {
         console.error('خطأ في حذف ملف المفتاح المؤقت:', rmError);
       }
-      
+
       // تحديث سجل النشر بالفشل
       const updatedLog = await storage.updateLog(
         deploymentLog.id,
@@ -221,7 +226,7 @@ export class DeploymentService {
         error.stack,
         new Date().toISOString()
       );
-      
+
       return {
         success: false,
         message: `فشل في نشر التطبيق: ${error.message}`,
@@ -240,15 +245,15 @@ export class DeploymentService {
     deploymentLog: DeploymentLog
   ): Promise<DeploymentResult> {
     const { host, port, username, deployPath } = server;
-    
+
     const ssh = new SSHClient();
-    
+
     try {
       // انتظار اتصال SSH
       await new Promise<void>((resolve, reject) => {
         ssh.on('ready', () => {
           resolve();
-        }).on('error', (err) => {
+        }).on('error', (err: any) => {
           reject(new Error(`فشل في الاتصال بالخادم: ${err.message}`));
         }).connect({
           host,
@@ -258,28 +263,28 @@ export class DeploymentService {
           readyTimeout: 30000
         });
       });
-      
+
       // إنشاء مجلد النشر إذا لم يكن موجوداً
       await this.executeSshCommand(ssh, `mkdir -p ${deployPath}`);
-      
+
       // رفع ملف النشر
       await this.uploadFile(ssh, packagePath, `${deployPath}/deployment.tar.gz`, server);
-      
+
       // فك ضغط الملف على الخادم
       await this.executeSshCommand(ssh, `cd ${deployPath} && tar -xzf deployment.tar.gz`);
-      
+
       // حذف ملف النشر المضغوط
       await this.executeSshCommand(ssh, `rm ${deployPath}/deployment.tar.gz`);
-      
+
       // تنفيذ أوامر ما بعد النشر
       let commandOutput = '';
       if (server.commands) {
         commandOutput = await this.executeSshCommand(ssh, `cd ${deployPath} && ${server.commands}`);
       }
-      
+
       // إغلاق الاتصال
       ssh.end();
-      
+
       // تحديث سجل النشر بالنجاح
       const updatedLog = await storage.updateLog(
         deploymentLog.id,
@@ -288,7 +293,7 @@ export class DeploymentService {
         commandOutput,
         new Date().toISOString()
       );
-      
+
       return {
         success: true,
         message: 'تم النشر بنجاح',
@@ -304,7 +309,7 @@ export class DeploymentService {
         error.stack,
         new Date().toISOString()
       );
-      
+
       return {
         success: false,
         message: `فشل في نشر التطبيق: ${error.message}`,
@@ -324,18 +329,18 @@ export class DeploymentService {
     return new Promise<string>((resolve, reject) => {
       ssh.exec(command, (err, stream) => {
         if (err) return reject(err);
-        
+
         let output = '';
         let errorOutput = '';
-        
+
         stream.on('data', (data) => {
           output += data.toString();
         });
-        
+
         stream.stderr.on('data', (data) => {
           errorOutput += data.toString();
         });
-        
+
         stream.on('close', (code) => {
           if (code !== 0) {
             reject(new Error(`فشل تنفيذ الأمر (${code}): ${errorOutput || output}`));
@@ -359,19 +364,19 @@ export class DeploymentService {
     return new Promise<void>((resolve, reject) => {
       ssh.sftp((err, sftp) => {
         if (err) return reject(err);
-        
+
         const readStream = fs.createReadStream(localPath);
         const writeStream = sftp.createWriteStream(remotePath);
-        
+
         // معالجة الأحداث
         writeStream.on('close', () => {
           resolve();
         });
-        
+
         writeStream.on('error', (err) => {
           reject(new Error(`فشل في رفع الملف: ${err.message}`));
         });
-        
+
         // بدء عملية الرفع
         readStream.pipe(writeStream);
       });
@@ -383,24 +388,24 @@ export class DeploymentService {
    */
   static async testConnection(server: DeploymentServer): Promise<{ success: boolean; message: string }> {
     const { host, port, username, authType } = server;
-    
+
     const ssh = new SSHClient();
-    
+
     try {
       // محاولة الاتصال
       await new Promise<void>((resolve, reject) => {
         ssh.on('ready', () => {
           resolve();
-        }).on('error', (err) => {
+        }).on('error', (err: any) => {
           reject(new Error(`فشل في الاتصال بالخادم: ${err.message}`));
         });
-        
+
         // الاتصال بناءً على نوع المصادقة
         if (authType === 'key' && server.privateKey) {
           // إنشاء ملف مؤقت للمفتاح الخاص
           const tempKeyFile = path.join(os.tmpdir(), `ssh-key-${crypto.randomBytes(8).toString('hex')}`);
           fs.writeFileSync(tempKeyFile, server.privateKey, { mode: 0o600 });
-          
+
           ssh.connect({
             host,
             port: port || 22,
@@ -408,7 +413,7 @@ export class DeploymentService {
             privateKey: fs.readFileSync(tempKeyFile),
             readyTimeout: 10000
           });
-          
+
           // حذف ملف المفتاح المؤقت
           setTimeout(() => {
             try {
@@ -429,10 +434,10 @@ export class DeploymentService {
           reject(new Error('طريقة المصادقة غير صالحة أو ناقصة'));
         }
       });
-      
+
       // إغلاق الاتصال
       ssh.end();
-      
+
       return {
         success: true,
         message: `تم الاتصال بنجاح بالخادم ${server.name}`
@@ -444,7 +449,7 @@ export class DeploymentService {
       } catch (e) {
         // تجاهل الخطأ
       }
-      
+
       return {
         success: false,
         message: `فشل الاتصال: ${error.message}`
