@@ -42,24 +42,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         if (!response.ok) {
           if (response.status === 401) {
-            // في بيئة HTTPS، قد نحتاج إلى معالجة خاصة للمصادقة
-            console.log('User not authenticated (401)');
+            // تسجيل هادئ للمطورين فقط
+            if (process.env.NODE_ENV === 'development') {
+              console.debug('🔓 No authenticated session found (expected before login)');
+            }
             return null;
           }
           throw new Error(`Failed to fetch user: ${response.statusText}`);
         }
 
         const userData = await response.json();
-        console.log('User data fetched successfully:', userData.username);
+        // تسجيل نجاح المصادقة فقط
+        console.log('✅ User authenticated:', userData.username);
         return userData;
       } catch (fetchError) {
-        console.error('Error fetching user data:', fetchError);
-        if (fetchError instanceof TypeError && fetchError.message.includes('fetch')) {
-          // مشكلة في الشبكة - قد تكون بسبب HTTPS/Mixed Content
-          console.log('Network error in user fetch, possibly due to HTTPS restrictions');
-          return null;
+        // تسجيل الأخطاء الحقيقية فقط
+        if (!(fetchError instanceof TypeError && fetchError.message.includes('fetch'))) {
+          console.error('Error fetching user data:', fetchError);
         }
-        throw fetchError;
+        return null;
       }
     },
     retry: (failureCount, error) => {
@@ -72,7 +73,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
       return failureCount < 2;
     },
-    staleTime: Infinity,
+    staleTime: 5 * 60 * 1000, // 5 دقائق بدلاً من Infinity
+    refetchInterval: false, // منع التحديث التلقائي المتكرر
+    refetchOnWindowFocus: false, // منع التحديث عند العودة للنافذة
   });
 
   // Update user state when query data changes

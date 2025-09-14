@@ -1,6 +1,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { Redirect, Route, RouteProps } from "wouter";
+import { useEffect, useState } from "react";
 
 interface ProtectedRouteProps extends RouteProps {
   component: React.ComponentType;
@@ -8,8 +9,16 @@ interface ProtectedRouteProps extends RouteProps {
 
 export function ProtectedRoute({ path, component: Component }: ProtectedRouteProps) {
   const { user, isLoading } = useAuth();
+  const [hasChecked, setHasChecked] = useState(false);
 
-  if (isLoading) {
+  useEffect(() => {
+    if (!isLoading) {
+      setHasChecked(true);
+    }
+  }, [isLoading]);
+
+  // إظهار شاشة التحميل أثناء التحقق الأولي
+  if (isLoading || !hasChecked) {
     return (
       <Route path={path}>
         <div className="flex items-center justify-center min-h-screen">
@@ -19,6 +28,7 @@ export function ProtectedRoute({ path, component: Component }: ProtectedRoutePro
     );
   }
 
+  // إعادة التوجيه إلى صفحة تسجيل الدخول إذا لم يكن المستخدم مسجلاً
   if (!user) {
     return (
       <Route path={path}>

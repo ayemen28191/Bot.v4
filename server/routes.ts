@@ -462,6 +462,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // New route added for checking user session
+  app.get("/api/user", (req, res) => {
+    // تسجيل هادئ للمطورين فقط
+    if (process.env.NODE_ENV === 'development' && req.isAuthenticated()) {
+      console.log('🔐 Session check: User', req.user?.username, 'authenticated');
+    }
+
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "غير مسجل الدخول" });
+    }
+    // إزالة كلمة المرور من الاستجابة لأسباب أمنية
+    const { password, ...safeUser } = req.user!;
+    res.json(safeUser);
+  });
+
   app.use('/api', marketStatusRoutes);
   app.use('/api/deployment', deploymentRouter);
   app.use('/api/heatmap', heatmapRouter);

@@ -37,7 +37,7 @@ export default function AuthPage() {
   // Redirect if already logged in - with protection against duplication
   useEffect(() => {
     if (user && !isLoading && !loginPending && !hasRedirected) {
-      console.log('User authenticated, redirecting to home...');
+      console.log('✅ User already authenticated, redirecting to dashboard...');
       setHasRedirected(true); // Set the flag to prevent multiple redirects
       setLocation("/");
     }
@@ -55,14 +55,17 @@ export default function AuthPage() {
     // معالجة أخطاء Mixed Content في بيئة HTTPS
     const handleMixedContentError = () => {
       if (window.location.protocol === 'https:') {
-        console.log('HTTPS environment detected in auth page - preparing for offline-friendly authentication');
+        // تسجيل هادئ للمطورين فقط
+        if (process.env.NODE_ENV === 'development') {
+          console.debug('🔒 HTTPS environment - authentication optimized');
+        }
         
         // تفعيل وضع عدم الاتصال إذا كان هناك مشاكل في الشبكة
         try {
           localStorage.setItem('offline_mode', 'enabled');
           localStorage.setItem('offline_reason', 'https_mixed_content');
         } catch (e) {
-          console.warn('Could not set offline mode in localStorage');
+          // تجاهل الأخطاء الصامتة
         }
       }
     };
