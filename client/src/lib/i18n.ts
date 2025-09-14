@@ -570,7 +570,6 @@ const translations: Translations = {
     
     // Auth messages
     login_successful: 'تم تسجيل الدخول بنجاح',
-    login_failed: 'فشل تسجيل الدخول',
     account_created_successfully: 'تم إنشاء الحساب بنجاح',
     account_creation_failed: 'فشل إنشاء الحساب',
     logout_successful: 'تم تسجيل الخروج بنجاح',
@@ -2014,7 +2013,6 @@ const translations: Translations = {
     
     // Auth messages
     login_successful: 'लॉगिन सफल',
-    login_failed: 'लॉगिन विफल',
     account_created_successfully: 'खाता सफलतापूर्वक बनाया गया',
     account_creation_failed: 'खाता बनाने में विफल',
     logout_successful: 'लॉगआउट सफल',
