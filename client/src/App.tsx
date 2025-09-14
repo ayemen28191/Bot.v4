@@ -30,31 +30,22 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
   useEffect(() => {
     let isMounted = true;
-    let authCheckCompleted = false;
     
     const checkAuth = async () => {
-      if (!isMounted || authCheckCompleted) return;
+      if (!isMounted) return;
       
       try {
         console.log('Checking authentication...');
         setError(null);
         
-        // تحديد العنوان الصحيح للـ API
-        const baseUrl = window.location.origin;
-        const apiUrl = `${baseUrl}/api/user`;
-        
-        // محاولة الحصول على معلومات المستخدم
-        const response = await fetch(apiUrl, {
+        const response = await fetch('/api/user', {
           credentials: 'include',
           headers: {
             'Accept': 'application/json',
-            'Content-Type': 'application/json',
           },
         });
 
         if (!isMounted) return;
-
-        authCheckCompleted = true;
 
         if (response.ok) {
           const userData = await response.json();
@@ -71,7 +62,6 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         if (!isMounted) return;
         console.error('Auth check error:', error);
         setUser(null);
-        authCheckCompleted = true;
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -79,13 +69,12 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
       }
     };
 
-    // فحص المصادقة مرة واحدة فقط عند التحميل
     checkAuth();
     
     return () => {
       isMounted = false;
     };
-  }, []); // تشغيل مرة واحدة فقط عند التحميل
+  }, []);
 
   const contextValue = {
     user,
@@ -95,13 +84,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     login: async (credentials: any) => {
       try {
         setError(null);
-        const apiUrl = window.location.protocol === 'https:' 
-          ? `${window.location.origin}/api/login`
-          : `http://localhost:5000/api/login`;
-          
-        console.log('Attempting login to:', apiUrl);
         
-        const response = await fetch(apiUrl, {
+        const response = await fetch('/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -130,11 +114,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     },
     logout: async () => {
       try {
-        const apiUrl = window.location.protocol === 'https:' 
-          ? `${window.location.origin}/api/logout`
-          : `http://localhost:5000/api/logout`;
-          
-        await fetch(apiUrl, {
+        await fetch('/api/logout', {
           method: 'POST',
           credentials: 'include',
         });
@@ -142,7 +122,6 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         setError(null);
       } catch (error) {
         console.error('Logout error:', error);
-        // نستكمل تسجيل الخروج حتى لو فشل الطلب
         setUser(null);
         setError(null);
       }

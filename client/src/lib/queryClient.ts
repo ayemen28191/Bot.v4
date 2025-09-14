@@ -4,16 +4,13 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 const getBaseURL = () => {
   if (typeof window === 'undefined') return '';
 
-  // في بيئة التطوير، استخدم العنوان الحالي
+  // في بيئة التطوير المحلية
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     return `http://localhost:5000`;
   }
 
-  // في بيئة Replit، استخدم العنوان الحالي مع البروتوكول الصحيح
-  // تجنب استخدام 0.0.0.0 في العنوان
-  const protocol = window.location.protocol;
-  const host = window.location.host;
-  return `${protocol}//${host}`;
+  // في بيئة Replit أو الإنتاج، استخدم العنوان الحالي
+  return window.location.origin;
 };
 
 const baseURL = getBaseURL();
@@ -33,15 +30,9 @@ export async function apiRequest(
   // بناء URL صحيح
   let requestUrl = url;
   
-  // إذا كان URL يحتوي على 0.0.0.0، استبدله بالعنوان الحالي
-  if (url.includes('0.0.0.0')) {
-    console.warn('🌐 Invalid URL detected:', url, 'fixing to use current origin');
-    requestUrl = url.replace(/https?:\/\/0\.0\.0\.0(:\d+)?/, window.location.origin);
-  }
-  
   // إذا كان URL نسبياً، أضف العنوان الأساسي
   if (!requestUrl.startsWith('http')) {
-    const baseUrl = baseURL || window.location.origin;
+    const baseUrl = baseURL;
     requestUrl = `${baseUrl}${requestUrl.startsWith('/') ? '' : '/'}${requestUrl}`;
   }
 
@@ -51,17 +42,19 @@ export async function apiRequest(
       headers: {
         'Accept': 'application/json',
         ...(data ? { "Content-Type": "application/json" } : {}),
-        ...((window as any).csrfToken ? { 'X-CSRF-Token': (window as any).csrfToken } : {})
       },
       body: data ? JSON.stringify(data) : undefined,
-      credentials: "include",
-      mode: 'same-origin'
+      credentials: "include"
     });
 
     await throwIfResNotOk(res);
     return res;
   } catch (error) {
-    console.error('🌐 Fetch error:', { url: requestUrl, error: error instanceof Error ? error.message : 'Unknown error' });
+    console.error('🌐 API Request Error:', { 
+      url: requestUrl, 
+      method,
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
     throw error;
   }
 }
@@ -75,23 +68,15 @@ export const getQueryFn: <T>(options: {
     try {
       let url = queryKey[0] as string;
       
-      // إصلاح URL إذا كان يحتوي على 0.0.0.0
-      if (url.includes('0.0.0.0')) {
-        url = url.replace(/https?:\/\/0\.0\.0\.0(:\d+)?/, window.location.origin);
-      }
-      
       // إضافة العنوان الأساسي للمسارات النسبية
       if (!url.startsWith('http')) {
-        const base = baseURL || window.location.origin;
-        url = `${base}${url.startsWith('/') ? '' : '/'}${url}`;
+        url = `${baseURL}${url.startsWith('/') ? '' : '/'}${url}`;
       }
 
       const res = await fetch(url, {
         credentials: "include",
-        mode: 'same-origin',
         headers: {
           'Accept': 'application/json',
-          ...((window as any).csrfToken ? { 'X-CSRF-Token': (window as any).csrfToken } : {})
         }
       });
 
