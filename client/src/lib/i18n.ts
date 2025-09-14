@@ -902,7 +902,6 @@ const translations: Translations = {
     
     // Auth messages
     login_successful: 'Login successful',
-    login_failed: 'Login failed',
     account_created_successfully: 'Account created successfully',
     account_creation_failed: 'Account creation failed',
     logout_successful: 'Logout successful',
