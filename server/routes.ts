@@ -24,9 +24,6 @@ function isAdmin(req: express.Request, res: express.Response, next: express.Next
     return next();
 
 import { storage } from './storage';
-
-// مسار لحفظ إعدادات المستخدم (اللغة والموضوع)
-app.put('/api/user/settings', async (req, res) => {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ error: 'غير مسجل الدخول' });
   }
