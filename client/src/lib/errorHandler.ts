@@ -1,46 +1,113 @@
 
-/**
- * معالج الأخطاء العام للتطبيق
- */
+// معالج الأخطاء العام للتطبيق
+console.log('🔧 Error handler initialized');
 
-import { toast } from '@/hooks/use-toast';
-import { extractErrorMessage } from './errorTranslator';
-
-// معالج الأخطاء العام
-export const globalErrorHandler = (error: any, context?: string) => {
-  console.error(`Error in ${context || 'application'}:`, error);
-  
-  const errorMessage = extractErrorMessage(error);
-  
-  // عرض رسالة خطأ للمستخدم
-  toast({
-    title: 'حدث خطأ',
-    description: errorMessage || 'حدث خطأ غير متوقع',
-    variant: 'destructive',
+// معالجة الأخطاء غير المعالجة في JavaScript
+window.addEventListener('error', (event) => {
+  console.error('🚨 Unhandled error:', {
+    message: event.message,
+    filename: event.filename,
+    lineno: event.lineno,
+    colno: event.colno,
+    error: event.error
   });
-};
-
-// معالج أخطاء الشبكة
-export const networkErrorHandler = (error: any) => {
-  if (error.name === 'NetworkError' || error.code === 'NETWORK_ERROR') {
-    toast({
-      title: 'خطأ في الشبكة',
-      description: 'تحقق من اتصالك بالإنترنت وحاول مرة أخرى',
-      variant: 'destructive',
-    });
-    return;
+  
+  // إرسال الخطأ لنظام المراقبة إذا كان متاحاً
+  if (window.navigator.onLine) {
+    try {
+      fetch('/api/errors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'javascript_error',
+          message: event.message,
+          filename: event.filename,
+          line: event.lineno,
+          column: event.colno,
+          stack: event.error?.stack,
+          userAgent: navigator.userAgent,
+          timestamp: new Date().toISOString()
+        })
+      }).catch(() => {
+        // تجاهل أخطاء إرسال الأخطاء لتجنب حلقة لا نهائية
+      });
+    } catch (e) {
+      // تجاهل أخطاء إرسال الأخطاء
+    }
   }
+});
+
+// معالجة Promise rejections غير المعالجة
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('🚨 Unhandled promise rejection:', event.reason);
   
-  globalErrorHandler(error, 'network');
+  if (window.navigator.onLine) {
+    try {
+      fetch('/api/errors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'promise_rejection',
+          message: event.reason?.message || 'Promise rejection',
+          stack: event.reason?.stack,
+          userAgent: navigator.userAgent,
+          timestamp: new Date().toISOString()
+        })
+      }).catch(() => {
+        // تجاهل أخطاء الإرسال
+      });
+    } catch (e) {
+      // تجاهل أخطاء الإرسال
+    }
+  }
+});
+
+// مراقبة حالة الاتصال
+window.addEventListener('online', () => {
+  console.log('🌐 Connection restored');
+  // إعادة تحميل الصفحة إذا كان هناك انقطاع طويل
+  const lastOffline = localStorage.getItem('last_offline_time');
+  if (lastOffline) {
+    const offlineTime = Date.now() - parseInt(lastOffline);
+    if (offlineTime > 30000) { // 30 ثانية
+      console.log('🔄 Long offline period detected, reloading...');
+      window.location.reload();
+    }
+    localStorage.removeItem('last_offline_time');
+  }
+});
+
+window.addEventListener('offline', () => {
+  console.log('📱 Connection lost');
+  localStorage.setItem('last_offline_time', Date.now().toString());
+});
+
+// مراقبة أخطاء الشبكة
+const originalFetch = window.fetch;
+window.fetch = async (...args) => {
+  try {
+    const response = await originalFetch(...args);
+    
+    // إذا كان الرد غير ناجح، سجل الخطأ
+    if (!response.ok && !args[0].toString().includes('/api/errors')) {
+      console.warn('🌐 Network error:', {
+        url: args[0],
+        status: response.status,
+        statusText: response.statusText
+      });
+    }
+    
+    return response;
+  } catch (error) {
+    // أخطاء الشبكة (انقطاع الاتصال، مهلة زمنية، إلخ)
+    if (!args[0].toString().includes('/api/errors')) {
+      console.error('🌐 Fetch error:', {
+        url: args[0],
+        error: error.message
+      });
+    }
+    throw error;
+  }
 };
 
-// إعداد معالج الأخطاء العام للنافذة
-if (typeof window !== 'undefined') {
-  window.addEventListener('error', (event) => {
-    globalErrorHandler(event.error, 'window');
-  });
-  
-  window.addEventListener('unhandledrejection', (event) => {
-    globalErrorHandler(event.reason, 'promise');
-  });
-}
+export {};

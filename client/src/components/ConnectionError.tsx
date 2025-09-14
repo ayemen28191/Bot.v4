@@ -1,228 +1,118 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from './ui/button';
-import { AlertTriangle, RefreshCw, WifiOff, CloudOff, Check, Clock } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card';
-import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import { useStore as useChatStore } from '@/store/chatStore';
-import { Progress } from './ui/progress';
-import { Separator } from './ui/separator';
+
+import { useState, useEffect } from 'react';
+import { AlertCircle, Wifi, WifiOff, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { t } from '@/lib/i18n';
 
 interface ConnectionErrorProps {
-  message?: string;
   onRetry?: () => void;
-  autoRetry?: boolean;
-  retryInterval?: number; // بالثواني
-  className?: string;
-  onEnableOfflineMode?: () => void;
-  showOfflineModeOption?: boolean;
+  error?: Error | null;
+  type?: 'network' | 'server' | 'websocket';
 }
 
-const ConnectionError: React.FC<ConnectionErrorProps> = ({
-  message = t('data_analysis_update_message'),
-  onRetry,
-  autoRetry = true,
-  retryInterval = 30,
-  className = '',
-  onEnableOfflineMode,
-  showOfflineModeOption = true,
-}) => {
-  const { toast } = useToast();
-  const enableOfflineMode = useChatStore(state => state.enableOfflineMode);
-  const [retryCount, setRetryCount] = useState(0);
-  const [countdown, setCountdown] = useState(0);
+export default function ConnectionError({ onRetry, error, type = 'network' }: ConnectionErrorProps) {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isRetrying, setIsRetrying] = useState(false);
-  const [showEnableOfflineButton, setShowEnableOfflineButton] = useState(false);
 
-  // إعادة ضبط العداد التنازلي عند التغيير في فترة إعادة المحاولة
   useEffect(() => {
-    if (autoRetry) {
-      setCountdown(retryInterval);
-    }
-  }, [retryInterval, autoRetry]);
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
 
-  // عداد تنازلي لإعادة المحاولة التلقائية
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    
-    if (autoRetry && countdown > 0 && !isRetrying) {
-      timer = setInterval(() => {
-        setCountdown((prev) => prev - 1);
-      }, 1000);
-    } else if (countdown === 0 && autoRetry && !isRetrying) {
-      handleRetry();
-    }
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
 
     return () => {
-      if (timer) clearInterval(timer);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
     };
-  }, [countdown, autoRetry, isRetrying]);
+  }, []);
 
   const handleRetry = async () => {
-    if (isRetrying) return;
-    
     setIsRetrying(true);
-    setRetryCount((prev) => prev + 1);
-    
     try {
-      if (onRetry && typeof onRetry === 'function') {
+      if (onRetry) {
         await onRetry();
       } else {
-        console.warn('onRetry function not provided or not a function');
+        // محاولة إعادة تحميل الصفحة
+        window.location.reload();
       }
-      
-      // إعادة ضبط العداد التنازلي بعد المحاولة
-      if (autoRetry) {
-        setCountdown(retryInterval);
-      }
-      
-      toast({
-        title: t('reconnection_successful'),
-        description: t('connection_restored_data_updated'),
-        variant: "default",
-      });
     } catch (error) {
-      toast({
-        title: t('data_update_in_progress'),
-        description: t('fetching_latest_data_auto_retry'),
-        variant: "default",
-      });
-      
-      // فشلت المحاولة، تقليل وقت الانتظار للمحاولة القادمة
-      if (autoRetry) {
-        const newInterval = Math.max(5, Math.floor(retryInterval / 2));
-        setCountdown(newInterval);
-      }
+      console.error('Retry failed:', error);
     } finally {
       setIsRetrying(false);
     }
   };
 
-  // إظهار زر وضع عدم الاتصال بعد عدد محدد من المحاولات
-  useEffect(() => {
-    if (retryCount >= 2 && showOfflineModeOption) {
-      setShowEnableOfflineButton(true);
-    }
-  }, [retryCount, showOfflineModeOption]);
-
-  // تصميم حسب عدد المحاولات
-  const getRetryButtonVariant = () => {
-    if (retryCount > 5) return "destructive";
-    if (retryCount > 2) return "outline";
-    return "default";
+  const getErrorIcon = () => {
+    if (!isOnline) return <WifiOff className="h-8 w-8 text-red-500" />;
+    if (type === 'websocket') return <Wifi className="h-8 w-8 text-orange-500" />;
+    return <AlertCircle className="h-8 w-8 text-red-500" />;
   };
 
-  // تفعيل وضع عدم الاتصال
-  const handleEnableOfflineMode = () => {
-    try {
-      // استخدام الدالة من المخزن
-      enableOfflineMode();
-      
-      // استدعاء الدالة من الخارج إذا كانت متاحة
-      if (onEnableOfflineMode) {
-        onEnableOfflineMode();
-      }
-      
-      toast({
-        title: t('offline_mode_enabled_success'),
-        description: t('offline_mode_enabled_description'),
-        variant: "default",
-      });
-    } catch (error) {
-      console.error('فشل في تفعيل وضع عدم الاتصال:', error);
-      toast({
-        title: t('offline_mode_enable_failed'),
-        description: t('offline_mode_enable_error'),
-        variant: "destructive",
-      });
-    }
+  const getErrorTitle = () => {
+    if (!isOnline) return t('no_internet_connection');
+    if (type === 'websocket') return t('websocket_connection_error');
+    if (type === 'server') return t('server_connection_error');
+    return t('connection_error');
+  };
+
+  const getErrorMessage = () => {
+    if (!isOnline) return t('check_internet_connection');
+    if (type === 'websocket') return t('websocket_connection_description');
+    if (type === 'server') return t('server_unavailable');
+    return error?.message || t('connection_error_description');
   };
 
   return (
-    <Card className={`w-full max-w-md mx-auto shadow-lg border-destructive ${className}`}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-destructive">
-          <WifiOff className="h-5 w-5" />
-{t('data_update_title')}
-        </CardTitle>
-      </CardHeader>
-      
-      <CardContent>
-        <Alert variant="destructive" className="mb-4">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>{t('data_update_in_progress')}</AlertTitle>
-          <AlertDescription>{message}</AlertDescription>
-        </Alert>
-        
-        {autoRetry && (
-          <>
-            <Progress 
-              value={(countdown / retryInterval) * 100} 
-              className="h-1 my-2"
-              indicatorClassName="bg-primary"
-            />
-            <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-              <Clock className="h-3 w-3" />
-              {t('retry_attempt')}{" "}
-              <span className="font-bold">{countdown}</span> {t('seconds')}
-              {countdown !== 1 && ""}...
-            </div>
-          </>
-        )}
-        
-        {/* عرض خيار وضع عدم الاتصال بعد عدد من المحاولات الفاشلة */}
-        {showEnableOfflineButton && showOfflineModeOption && (
-          <>
-            <Separator className="my-3" />
-            <div className="mt-3 space-y-2">
-              <p className="text-sm">
-                {t('offline_mode_connection_issue')}
-              </p>
-              <div className="flex items-center gap-2 bg-muted p-2 rounded-md text-xs">
-                <CloudOff className="h-4 w-4 text-yellow-500" />
-                <span>
-                  {t('offline_mode_data_storage')}
-                </span>
-              </div>
-            </div>
-          </>
-        )}
-      </CardContent>
-      
-      <CardFooter className="flex flex-col gap-2">
-        <div className="flex justify-between w-full items-center">
-          <p className="text-xs text-muted-foreground">
-            {retryCount > 0 && `${t('retry_count')} ${retryCount}`}
-          </p>
-          
-          <Button
-            variant={getRetryButtonVariant()}
-            size="sm"
-            onClick={handleRetry}
-            disabled={isRetrying}
-            className="gap-1"
-          >
-            <RefreshCw className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
-            {isRetrying ? t('retrying_attempt') : t('retry_attempt')}
-          </Button>
-        </div>
-        
-        {/* زر تفعيل وضع عدم الاتصال */}
-        {showEnableOfflineButton && showOfflineModeOption && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleEnableOfflineMode}
-            className="w-full gap-1 mt-2 border-yellow-500 hover:bg-yellow-500/10"
-          >
-            <CloudOff className="h-4 w-4" />
-            {t('enable_offline_mode')}
-          </Button>
-        )}
-      </CardFooter>
-    </Card>
-  );
-};
+    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            {getErrorIcon()}
+          </div>
+          <CardTitle className="text-xl">
+            {getErrorTitle()}
+          </CardTitle>
+          <CardDescription>
+            {getErrorMessage()}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* معلومات حالة الاتصال */}
+          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+            {isOnline ? (
+              <>
+                <Wifi className="h-4 w-4 text-green-500" />
+                <span>{t('internet_connected')}</span>
+              </>
+            ) : (
+              <>
+                <WifiOff className="h-4 w-4 text-red-500" />
+                <span>{t('internet_disconnected')}</span>
+              </>
+            )}
+          </div>
 
-export default ConnectionError;
+          <Button 
+            onClick={handleRetry} 
+            disabled={isRetrying}
+            className="w-full"
+          >
+            {isRetrying ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                {t('retrying')}
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                {t('retry_connection')}
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

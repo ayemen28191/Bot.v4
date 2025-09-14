@@ -1,29 +1,28 @@
+
 import { createRoot } from "react-dom/client";
 import App from "./App";
-import "./styles/common.css"; // Load common styles first instead of index.css
+import "./styles/common.css";
 import { initializeLanguageSystem } from "./lib/i18n";
 import { initializeDefaultTheme, setupSystemThemeListener } from "./lib/themeSystem";
-import './lib/errorHandler'; // تحميل معالج الأخطاء العام
-// @ts-ignore - theme.json is read-only config
-import themeConfig from "../../theme.json";
+import './lib/errorHandler';
 
-// تطبيق إعدادات theme.json على DOM (للثيم الافتراضي فقط)
+// تطبيق إعدادات theme.json على DOM
 if (typeof window !== 'undefined') {
   try {
-    // تعيين بيانات theme config في DOM ليتمكن ThemeProvider من قراءتها
-    document.documentElement.setAttribute('data-theme-config', JSON.stringify(themeConfig));
+    // @ts-ignore - theme.json is read-only config
+    const themeConfig = await import("../../theme.json");
+    document.documentElement.setAttribute('data-theme-config', JSON.stringify(themeConfig.default));
   } catch (error) {
     console.warn('Theme config error:', error);
   }
 }
 
-// تهيئة اللغة باستخدام النظام الموحد الجديد (بدون بيانات المستخدم)
+// تهيئة النظام اللغوي
 if (typeof window !== 'undefined') {
   try {
-    console.log('🚀 main.tsx: Initializing language system without user context');
-    // التأكد من وجود الدالة قبل استدعائها
+    console.log('🚀 main.tsx: Initializing language system');
     if (typeof initializeLanguageSystem === 'function') {
-      initializeLanguageSystem(); // النظام الجديد الموحد - بدون user context
+      initializeLanguageSystem();
     } else {
       console.warn('⚠️ initializeLanguageSystem function not found');
     }
@@ -32,7 +31,7 @@ if (typeof window !== 'undefined') {
   }
 }
 
-// تهيئة نظام Theme الافتراضي
+// تهيئة نظام الثيم
 if (typeof window !== 'undefined') {
   try {
     initializeDefaultTheme();
