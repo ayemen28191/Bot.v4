@@ -1,20 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
-// إعداد العنوان الأساسي للـ API
-const getBaseURL = () => {
-  if (typeof window === 'undefined') return '';
-
-  // في بيئة التطوير المحلية
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    return `http://localhost:5000`;
-  }
-
-  // في بيئة Replit أو الإنتاج، استخدم العنوان الحالي
-  return window.location.origin;
-};
-
-const baseURL = getBaseURL();
-
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -27,36 +12,20 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  // بناء URL صحيح
-  let requestUrl = url;
+  const res = await fetch(url, {
+    method,
+    headers: {
+      ...(data ? { "Content-Type": "application/json" } : {}),
+      // إضافة هيدر CSRF إذا كان موجوداً
+      ...((window as any).csrfToken ? { 'X-CSRF-Token': (window as any).csrfToken } : {})
+    },
+    body: data ? JSON.stringify(data) : undefined,
+    credentials: "include", // مهم لإرسال ملفات تعريف الارتباط
+    mode: 'same-origin' // تقييد الطلبات لنفس المصدر فقط
+  });
 
-  // إذا كان URL نسبياً، أضف العنوان الأساسي
-  if (!requestUrl.startsWith('http')) {
-    const baseUrl = baseURL;
-    requestUrl = `${baseUrl}${requestUrl.startsWith('/') ? '' : '/'}${requestUrl}`;
-  }
-
-  try {
-    const res = await fetch(requestUrl, {
-      method,
-      headers: {
-        'Accept': 'application/json',
-        ...(data ? { "Content-Type": "application/json" } : {}),
-      },
-      body: data ? JSON.stringify(data) : undefined,
-      credentials: "include"
-    });
-
-    await throwIfResNotOk(res);
-    return res;
-  } catch (error) {
-    console.error('🌐 API Request Error:', { 
-      url: requestUrl, 
-      method,
-      error: error instanceof Error ? error.message : 'Unknown error' 
-    });
-    throw error;
-  }
+  await throwIfResNotOk(res);
+  return res;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
@@ -66,17 +35,12 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     try {
-      let url = queryKey[0] as string;
-
-      // إضافة العنوان الأساسي للمسارات النسبية
-      if (!url.startsWith('http')) {
-        url = `${baseURL}${url.startsWith('/') ? '' : '/'}${url}`;
-      }
-
-      const res = await fetch(url, {
+      const res = await fetch(queryKey[0] as string, {
         credentials: "include",
+        mode: 'same-origin',
         headers: {
           'Accept': 'application/json',
+          ...((window as any).csrfToken ? { 'X-CSRF-Token': (window as any).csrfToken } : {})
         }
       });
 
@@ -123,47 +87,59 @@ export function getWebSocketUrl(path: string = '/ws'): string {
     return path;
   }
 
-  // دالة مساعدة لتفعيل وضع عدم الاتصال
-  const enableOfflineMode = () => {
-    console.log('وضع عدم الاتصال مفعل');
-    try {
-      localStorage.setItem('offlineMode', 'enabled');
-      localStorage.setItem('offlineModeReason', 'https_websocket_limitation');
-    } catch (storageErr) {
-      console.warn('فشل في تخزين حالة وضع عدم الاتصال:', storageErr);
-    }
-  };
-
   // تحديد البروتوكول بناء على بروتوكول الموقع
   const isSecure = window.location.protocol === 'https:';
   const host = window.location.host;
-
+  
   // التحقق إذا كان وضع عدم الاتصال مفعل بالفعل
-  const isOfflineModeEnabled = localStorage.getItem('offlineMode') === 'enabled' || 
-                               localStorage.getItem('offline_mode') === 'enabled';
-
-  if (isOfflineModeEnabled) {
+  const isOfflineMode = localStorage.getItem('offlineMode') === 'enabled' || 
+                        localStorage.getItem('offline_mode') === 'enabled';
+  
+  if (isOfflineMode) {
     console.log('وضع عدم الاتصال مفعل، إعادة مسار WebSocket غير قابل للاتصال');
     return 'wss://offline-mode-enabled-do-not-connect.local/ws';
   }
-
-  // اكتشاف إذا كان التطبيق يعمل في بيئة Replit
-  const currentHost = window.location.hostname;
-  const isReplitApp = currentHost.endsWith('.repl.co') ||
-                      currentHost.endsWith('.replit.dev') ||
-                      currentHost.includes('replit') ||
-                      currentHost.includes('pike.replit.dev') ||
-                      // فحص أي عنوان Replit آخر
-                      /repl(it)?\./.test(currentHost);
-
-  // تجنب الاتصالات إلى 0.0.0.0:443 في بيئة Replit
-  if (isReplitApp && isSecure) {
-    console.log('تم اكتشاف بيئة Replit HTTPS - تفعيل وضع عدم الاتصال تلقائيًا');
-    console.log('Current host:', currentHost);
-    enableOfflineMode();
-    return 'wss://offline-mode-enabled-in-replit-https.local/ws';
+  
+  // إذا التطبيق على HTTPS في بيئة Replit
+  if (isSecure) {
+    console.log('HTTPS طريقة الاتصال - التحقق من بيئة التشغيل');
+    
+    // التحقق إذا كنا في بيئة Replit
+    const isReplitApp = window.location.hostname.endsWith('.replit.app') || 
+                        window.location.hostname.endsWith('.repl.co') ||
+                        window.location.hostname === 'replit.com';
+    
+    if (isReplitApp) {
+      console.log('تم اكتشاف بيئة Replit HTTPS - تفعيل وضع عدم الاتصال تلقائيًا');
+      
+      // تفعيل وضع عدم الاتصال بشكل فوري
+      try {
+        // إنشاء حدث مخصص لتفعيل وضع عدم الاتصال
+        const event = new CustomEvent('enableOfflineMode', { 
+          detail: { 
+            reason: 'https_websocket_limitation',
+            message: 'لا يمكن الاتصال بـ WebSocket من صفحة HTTPS في Replit. تم تفعيل وضع عدم الاتصال تلقائيًا.' 
+          } 
+        });
+        window.dispatchEvent(event);
+        console.log('تم تفعيل وضع عدم الاتصال تلقائيًا');
+        
+        // تخزين حالة وضع عدم الاتصال
+        try {
+          localStorage.setItem('offlineMode', 'enabled');
+          localStorage.setItem('offlineModeReason', 'https_websocket_limitation');
+        } catch (storageErr) {
+          console.warn('فشل في تخزين حالة وضع عدم الاتصال:', storageErr);
+        }
+      } catch (e) {
+        console.error('فشل في تفعيل وضع عدم الاتصال:', e);
+      }
+      
+      // إرجاع URL خاص للإشارة إلى وضع عدم الاتصال
+      return 'wss://offline-mode-enabled-in-replit-https.local/ws';
+    }
   }
-
+  
   // استخدام البروتوكول المناسب بناءً على بروتوكول الصفحة
   const protocol = isSecure ? 'wss:' : 'ws:';
   return `${protocol}//${host}${path}`;

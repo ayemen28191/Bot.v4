@@ -1,295 +1,103 @@
-
-import React, { Suspense, useEffect, useState } from "react";
-import { Router, Route, Switch } from "wouter";
+import { Suspense, lazy, useEffect } from 'react';
+import { Switch, Route } from "wouter";
+import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
-import LoadingScreen from "@/components/LoadingScreen";
-import { setAuthContext, useAuth } from "@/hooks/use-auth";
-import { t, getCurrentLanguage } from "@/lib/i18n";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import LoadingScreen from '@/components/LoadingScreen';
+import { AuthProvider } from "@/hooks/use-auth";
+import { ThemeProvider } from "@/hooks/use-theme";
+import { ProtectedRoute } from "@/lib/protected-route";
+import { ProtectedAdminRoute } from "@/lib/protected-admin-route";
+import { useStore as useChatStore } from './store/chatStore';
+import { useToast } from '@/hooks/use-toast';
 
-// Lazy load pages to improve performance
-const AuthPage = React.lazy(() => import("@/pages/auth-page"));
-const TradingSignalPage = React.lazy(() => import("@/pages/TradingSignalPage"));
-const ChatPage = React.lazy(() => import("@/pages/ChatPage"));
-const SettingsPage = React.lazy(() => import("@/pages/SettingsPage"));
-const IndicatorsPage = React.lazy(() => import("@/pages/IndicatorsPage"));
-const BotInfoPage = React.lazy(() => import("@/pages/BotInfoPage"));
-const AdminDashboardNew = React.lazy(() => import("@/pages/AdminDashboardNew"));
-const UserManagement = React.lazy(() => import("@/pages/UserManagement"));
-const ApiKeysManagement = React.lazy(() => import("@/pages/ApiKeysManagement"));
-const DeploymentPage = React.lazy(() => import("@/pages/DeploymentPage"));
-const AdminResetPassword = React.lazy(() => import("@/pages/AdminResetPassword"));
-const NotFoundPage = React.lazy(() => import("@/pages/not-found"));
+// التحميل المتأخر للصفحات
+const TradingSignalPage = lazy(() => import('@/pages/TradingSignalPage'));
+const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
+const GroupChatPage = lazy(() => import('@/pages/ChatPage')); 
+const IndicatorsPage = lazy(() => import('@/pages/IndicatorsPage'));
+const AdminDashboard = lazy(() => import('@/pages/AdminDashboardNew'));
+const UserManagement = lazy(() => import('@/pages/UserManagement'));
+const ApiKeysManagement = lazy(() => import('@/pages/ApiKeysManagement'));
+const DeploymentPage = lazy(() => import('@/pages/DeploymentPage'));
+const BotInfoPage = lazy(() => import('@/pages/BotInfoPage'));
+const AdminResetPassword = lazy(() => import('@/pages/AdminResetPassword'));
+const AuthPage = lazy(() => import('@/pages/auth-page'));
+const NotFound = lazy(() => import('@/pages/not-found'));
 
-// AuthProvider component - نحتاج لإنشاؤه أولاً
-const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
+// مكون للتعامل مع وضع HTTPS في Replit
+function HTTPSHandler() {
+  const enableOfflineMode = useChatStore(state => state.enableOfflineMode);
+  const isOfflineMode = useChatStore(state => state.isOfflineMode);
+  const { toast } = useToast();
+  
   useEffect(() => {
-    let isMounted = true;
-    
-    const checkAuth = async () => {
-      if (!isMounted) return;
+    // فحص إذا كان التطبيق يعمل على HTTPS في بيئة Replit
+    if (typeof window !== 'undefined') {
+      const isSecure = window.location.protocol === 'https:';
+      const isReplitApp = window.location.hostname.endsWith('.replit.app') || 
+                           window.location.hostname.endsWith('.repl.co') ||
+                           window.location.hostname === 'replit.com';
       
-      try {
-        console.log('Checking authentication...');
-        setError(null);
+      if (isSecure && isReplitApp && !isOfflineMode) {
+        console.log('تم اكتشاف HTTPS في بيئة Replit - تفعيل وضع عدم الاتصال تلقائيًا');
         
-        const response = await fetch('/api/user', {
-          credentials: 'include',
-          headers: {
-            'Accept': 'application/json',
-          },
-        });
-
-        if (!isMounted) return;
-
-        if (response.ok) {
-          const userData = await response.json();
-          console.log('User authenticated:', userData);
-          setUser(userData);
-        } else if (response.status === 401) {
-          console.log('No authenticated user');
-          setUser(null);
-        } else {
-          console.warn('Auth check failed with status:', response.status);
-          setUser(null);
-        }
-      } catch (error) {
-        if (!isMounted) return;
-        console.error('Auth check error:', error);
-        setUser(null);
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    checkAuth();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const contextValue = {
-    user,
-    isLoading,
-    error,
-    setUser,
-    login: async (credentials: any) => {
-      try {
-        setError(null);
+        // تفعيل وضع عدم الاتصال
+        enableOfflineMode();
         
-        const response = await fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify(credentials),
-        });
-
-        if (response.ok) {
-          const userData = await response.json();
-          console.log('Login successful:', userData);
-          setUser(userData);
-          setError(null);
-          return userData;
-        } else {
-          const errorData = await response.json().catch(() => ({}));
-          const errorMessage = errorData.message || 'فشل تسجيل الدخول';
-          console.warn('Login failed:', response.status, errorMessage);
-          setError(errorMessage);
-          throw new Error(errorMessage);
-        }
-      } catch (error) {
-        console.error('Login error:', error);
-        const errorMessage = error instanceof Error ? error.message : 'فشل تسجيل الدخول';
-        setError(errorMessage);
-        throw error;
+        // عرض إشعار للمستخدم
+        setTimeout(() => {
+          toast({
+            title: "تم تفعيل وضع عدم الاتصال تلقائيًا",
+            description: "تم تفعيل وضع عدم الاتصال تلقائيًا لتحسين الأداء في بيئة Replit HTTPS. ستعمل جميع ميزات التطبيق ولكن بدون اتصال مباشر بالخادم.",
+            duration: 8000
+          });
+        }, 2000);
+        
+        // تسجيل في سجل اجراء التحميل
+        console.info('تم تفعيل وضع عدم الاتصال تلقائيًا بسبب بيئة Replit HTTPS');
       }
-    },
-    logout: async () => {
-      try {
-        await fetch('/api/logout', {
-          method: 'POST',
-          credentials: 'include',
-        });
-        setUser(null);
-        setError(null);
-      } catch (error) {
-        console.error('Logout error:', error);
-        setUser(null);
-        setError(null);
-      }
-    },
-    register: async (userData: any) => {
-      try {
-        const response = await fetch('/api/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify(userData),
-        });
-
-        if (response.ok) {
-          const newUser = await response.json();
-          setUser(newUser);
-          return newUser;
-        } else {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'فشل إنشاء الحساب');
-        }
-      } catch (error) {
-        console.error('Registration error:', error);
-        throw error;
-      }
-    },
-  };
-
-  return (
-    <AuthContext.Provider value={contextValue}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-// المكون الداخلي الذي يستخدم useAuth
-function AppContent() {
-  const authContext = useAuth();
-  const { user, isLoading: authLoading } = authContext;
-  const [appReady, setAppReady] = useState(false);
-  const [appError, setAppError] = useState<string | null>(null);
-
-  // في حالة عدم وجود AuthContext، عرض خطأ
-  if (!authContext) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-destructive mb-4">خطأ في تهيئة التطبيق</h1>
-          <p className="text-muted-foreground mb-4">فشل في تحميل نظام المصادقة</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-          >
-            إعادة تحميل الصفحة
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  useEffect(() => {
-    // تهيئة التطبيق مع معالجة الأخطاء
-    try {
-      // تحقق من اللغة الحالية وتطبيقها
-      const currentLang = getCurrentLanguage();
-      console.log('App initializing with language:', currentLang);
-      
-      // تأخير قصير للتأكد من تحميل جميع الموارد
-      const timer = setTimeout(() => {
-        setAppReady(true);
-        console.log('App ready with language:', getCurrentLanguage());
-      }, 50);
-
-      return () => clearTimeout(timer);
-    } catch (error) {
-      console.error('Error during app initialization:', error);
-      setAppError('Failed to initialize app');
-      setAppReady(true);
     }
-  }, []);
+  }, [enableOfflineMode, isOfflineMode, toast]);
+  
+  return null;
+}
 
-  // معالجة الأخطاء
-  if (appError && !authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-destructive mb-4">تعذر تحميل التطبيق</h1>
-          <p className="text-muted-foreground mb-4">{appError}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-          >
-            إعادة المحاولة
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // عرض شاشة التحميل فقط أثناء تحميل المصادقة
-  if (authLoading || !appReady) {
-    console.log('App loading state:', { authLoading, appReady });
-    return <LoadingScreen message={t('initializing_app')} />;
-  }
-
-  console.log('App ready, user:', user ? 'authenticated' : 'not authenticated');
-
+// مكون التوجيه المحسن
+function Router() {
   return (
-    <div className="trading-app min-h-screen">
-      <Router>
-        <Suspense fallback={<LoadingScreen message={t('loading_page')} />}>
-          <Switch>
-            {/* مسارات المصادقة */}
-            {!user ? (
-              <>
-                <Route path="/login" component={AuthPage} />
-                <Route path="/register" component={AuthPage} />
-                <Route path="/" component={AuthPage} />
-                <Route path="*" component={AuthPage} />
-              </>
-            ) : (
-              <>
-                {/* مسارات المستخدمين العاديين */}
-                <Route path="/" component={TradingSignalPage} />
-                <Route path="/signals" component={TradingSignalPage} />
-                <Route path="/chat" component={ChatPage} />
-                <Route path="/group-chat" component={ChatPage} />
-                <Route path="/settings" component={SettingsPage} />
-                <Route path="/indicators" component={IndicatorsPage} />
-                <Route path="/bot" component={BotInfoPage} />
-                
-                {/* مسارات المشرفين */}
-                {user.role === 'admin' && (
-                  <>
-                    <Route path="/admin" component={AdminDashboardNew} />
-                    <Route path="/admin/users" component={UserManagement} />
-                    <Route path="/admin/api-keys" component={ApiKeysManagement} />
-                    <Route path="/admin/deployment" component={DeploymentPage} />
-                    <Route path="/admin/reset-password" component={AdminResetPassword} />
-                  </>
-                )}
-                
-                {/* صفحة 404 */}
-                <Route path="*" component={NotFoundPage} />
-              </>
-            )}
-          </Switch>
-        </Suspense>
-      </Router>
-      <Toaster />
-    </div>
+    <Suspense fallback={<LoadingScreen message="جاري تحميل الصفحة..." />}>
+      <HTTPSHandler />
+      <Switch>
+        <ProtectedRoute path="/" component={TradingSignalPage} />
+        <ProtectedRoute path="/settings" component={SettingsPage} />
+        <ProtectedRoute path="/group-chat" component={GroupChatPage} />
+        <ProtectedRoute path="/indicators" component={IndicatorsPage} />
+        <ProtectedAdminRoute path="/admin" component={AdminDashboard} />
+        <ProtectedAdminRoute path="/admin/users" component={UserManagement} />
+        <ProtectedAdminRoute path="/admin/api-keys" component={ApiKeysManagement} />
+        <ProtectedAdminRoute path="/admin/deployment" component={DeploymentPage} />
+        <ProtectedAdminRoute path="/admin/reset-password" component={AdminResetPassword} />
+        <ProtectedRoute path="/bot-info" component={BotInfoPage} />
+        <Route path="/auth" component={AuthPage} />
+        <Route component={NotFound} />
+      </Switch>
+    </Suspense>
   );
 }
 
-// إنشاء AuthContext في أعلى الملف
-export const AuthContext = React.createContext<any>(null);
-
-// تعيين AuthContext في الملف المنفصل
-setAuthContext(AuthContext);
-
-
-// المكون الرئيسي
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
+      <ThemeProvider defaultTheme="dark" storageKey="binar-theme">
+        <TooltipProvider>
+          <AuthProvider>
+            <Router />
+            <Toaster />
+          </AuthProvider>
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
