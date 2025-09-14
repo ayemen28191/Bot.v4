@@ -31,6 +31,9 @@ export interface IStorage {
   getAllConfigKeys(): Promise<ConfigKey[]>;
   setConfigKey(key: string, value: string, description?: string, isSecret?: boolean): Promise<ConfigKey>;
   deleteConfigKey(key: string): Promise<void>;
+  updateKeyUsage(keyId: number): Promise<void>;
+  markKeyFailed(keyId: number, failedUntil: string): Promise<void>;
+  resetDailyUsage(): Promise<void>;
 
   // Deployment server methods
   getServer(id: number): Promise<DeploymentServer | undefined>;
@@ -128,14 +131,19 @@ try {
     }
   });
 
-  // تأكد من إنشاء جدول مفاتيح التكوين
+  // تأكد من إنشاء جدول مفاتيح التكوين مع الحقول الجديدة
   sqliteDb.exec(`
     CREATE TABLE IF NOT EXISTS config_keys (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       key TEXT NOT NULL UNIQUE,
       value TEXT NOT NULL,
+      provider TEXT,
       description TEXT,
       is_secret INTEGER DEFAULT 1,
+      last_used_at TEXT,
+      failed_until TEXT,
+      usage_today INTEGER DEFAULT 0,
+      daily_quota INTEGER,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
@@ -144,6 +152,23 @@ try {
       console.error('Error creating config_keys table:', err);
     } else {
       console.log('Config_keys table created or already exists');
+      
+      // إضافة الحقول الجديدة للجدول الموجود إذا لم تكن موجودة
+      const addColumns = [
+        ['provider', 'TEXT'],
+        ['last_used_at', 'TEXT'],
+        ['failed_until', 'TEXT'],
+        ['usage_today', 'INTEGER DEFAULT 0'],
+        ['daily_quota', 'INTEGER']
+      ];
+      
+      addColumns.forEach(([columnName, columnType]) => {
+        sqliteDb.run(`ALTER TABLE config_keys ADD COLUMN ${columnName} ${columnType}`, (alterErr) => {
+          if (alterErr && alterErr.message.indexOf('duplicate column name') === -1) {
+            console.error(`Error adding ${columnName} column:`, alterErr);
+          }
+        });
+      });
     }
   });
 
@@ -495,8 +520,13 @@ export class DatabaseStorage implements IStorage {
               id: row.id,
               key: row.key,
               value: row.value,
+              provider: row.provider || null,
               description: row.description || null,
               isSecret: !!row.is_secret,
+              lastUsedAt: row.last_used_at || null,
+              failedUntil: row.failed_until || null,
+              usageToday: row.usage_today || 0,
+              dailyQuota: row.daily_quota || null,
               createdAt: row.created_at,
               updatedAt: row.updated_at
             };
@@ -519,8 +549,13 @@ export class DatabaseStorage implements IStorage {
             id: row.id,
             key: row.key,
             value: row.value,
+            provider: row.provider || null,
             description: row.description || null,
             isSecret: !!row.is_secret,
+            lastUsedAt: row.last_used_at || null,
+            failedUntil: row.failed_until || null,
+            usageToday: row.usage_today || 0,
+            dailyQuota: row.daily_quota || null,
             createdAt: row.created_at,
             updatedAt: row.updated_at
           }));
@@ -578,8 +613,13 @@ export class DatabaseStorage implements IStorage {
                   id: newKeyId,
                   key,
                   value,
+                  provider: null,
                   description: description || null,
                   isSecret,
+                  lastUsedAt: null,
+                  failedUntil: null,
+                  usageToday: 0,
+                  dailyQuota: null,
                   createdAt: now,
                   updatedAt: now
                 };
@@ -1088,6 +1128,66 @@ export class DatabaseStorage implements IStorage {
       } catch (error) {
         reject(error);
       }
+    });
+  }
+
+  // ========================= دوال إدارة المفاتيح المتقدمة =========================
+  
+  async updateKeyUsage(keyId: number): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      const now = new Date().toISOString();
+      
+      sqliteDb.run(
+        'UPDATE config_keys SET last_used_at = ?, usage_today = usage_today + 1 WHERE id = ?',
+        [now, keyId],
+        (err) => {
+          if (err) {
+            console.error('Error updating key usage:', err);
+            reject(err);
+          } else {
+            console.log(`تم تحديث استخدام المفتاح ${keyId}`);
+            resolve();
+          }
+        }
+      );
+    });
+  }
+
+  async markKeyFailed(keyId: number, failedUntil: string): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      sqliteDb.run(
+        'UPDATE config_keys SET failed_until = ? WHERE id = ?',
+        [failedUntil, keyId],
+        (err) => {
+          if (err) {
+            console.error('Error marking key as failed:', err);
+            reject(err);
+          } else {
+            console.log(`تم وسم المفتاح ${keyId} كفاشل حتى ${failedUntil}`);
+            resolve();
+          }
+        }
+      );
+    });
+  }
+
+  async resetDailyUsage(): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      const now = new Date().toISOString();
+      
+      sqliteDb.run(
+        'UPDATE config_keys SET usage_today = 0, failed_until = NULL, updated_at = ?',
+        [now],
+        (err) => {
+          if (err) {
+            console.error('Error resetting daily usage:', err);
+            reject(err);
+          } else {
+            console.log('تم إعادة تعيين الاستخدام اليومي للمفاتيح');
+            resolve();
+          }
+        }
+      );
     });
   }
 }

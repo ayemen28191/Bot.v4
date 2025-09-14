@@ -15,13 +15,18 @@ export const users = sqliteTable("users", {
   updatedAt: text("updated_at").notNull().default(new Date().toISOString()),
 });
 
-// جدول لتخزين مفاتيح API وإعدادات التكوين
+// جدول لتخزين مفاتيح API وإعدادات التكوين مع دعم التناوب الذكي
 export const configKeys = sqliteTable("config_keys", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   key: text("key").notNull().unique(), // اسم المفتاح (مثل MARKET_API_KEY)
   value: text("value").notNull(), // قيمة المفتاح
+  provider: text("provider"), // مزود الخدمة (twelvedata, alphavantage, binance)
   description: text("description"), // وصف الغرض من المفتاح
   isSecret: integer("is_secret", { mode: "boolean" }).default(true), // ما إذا كان المفتاح سرياً أم لا
+  lastUsedAt: text("last_used_at"), // آخر مرة تم استخدام المفتاح
+  failedUntil: text("failed_until"), // المفتاح فاشل حتى هذا التاريخ
+  usageToday: integer("usage_today").default(0), // عدد استخدامات اليوم
+  dailyQuota: integer("daily_quota"), // الحد الأقصى اليومي للاستخدام
   createdAt: text("created_at").notNull().default(new Date().toISOString()),
   updatedAt: text("updated_at").notNull().default(new Date().toISOString()),
 });
@@ -71,8 +76,10 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export const insertConfigKeySchema = createInsertSchema(configKeys).pick({
   key: true,
   value: true,
+  provider: true,
   description: true,
   isSecret: true,
+  dailyQuota: true,
 });
 
 // سكيما لإنشاء خادم جديد
