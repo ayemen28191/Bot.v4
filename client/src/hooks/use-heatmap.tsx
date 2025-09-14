@@ -1,12 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { HeatmapData, HeatmapCell } from '@/components/ProbabilityHeatmap';
+import { HeatmapData, HeatmapCell } from '@/features/trading/ProbabilityHeatmap';
 import { getQueryFn } from '@/lib/queryClient';
-import { useTranslation } from 'react-i18next';
+import { t } from '@/lib/i18n';
 
 // استدعاء بيانات الخريطة الحرارية من API
 const fetchHeatmapData = async (): Promise<HeatmapData> => {
-  // يتم استخدام hook الترجمة هنا
-  const { t } = useTranslation();
   try {
     const response = await fetch('/api/heatmap');
 
@@ -51,8 +49,6 @@ export function useHeatmap({
   refreshInterval = 300000, // 5 دقائق افتراضيًا
   offlineMode = false
 }: UseHeatmapOptions = {}): UseHeatmapReturn {
-  // يتم استخدام hook الترجمة هنا
-  const { t } = useTranslation();
   // حالة البيانات
   const [data, setData] = useState<HeatmapData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);

@@ -2186,11 +2186,19 @@ export function getBrowserLanguage(): string {
 let currentLanguage = 'en'; // English as default language
 
 // Normalize language codes to supported values
-const normalizeLanguage = (lang: string): 'ar' | 'en' => {
-  // Handle variations like 'ar-SA' -> 'ar', 'en-US' -> 'en'
+const normalizeLanguage = (lang: string): 'ar' | 'en' | 'hi' => {
+  // Handle variations like 'ar-SA' -> 'ar', 'en-US' -> 'en', 'hi-IN' -> 'hi'
   const langCode = lang.toLowerCase().split('-')[0];
-  console.log('Normalizing language:', lang, '=>', langCode === 'ar' ? 'ar' : 'en');
-  return langCode === 'ar' ? 'ar' : 'en';
+  if (langCode === 'ar') {
+    console.log('Normalizing language:', lang, '=>', 'ar');
+    return 'ar';
+  } else if (langCode === 'hi') {
+    console.log('Normalizing language:', lang, '=>', 'hi');
+    return 'hi';
+  } else {
+    console.log('Normalizing language:', lang, '=>', 'en');
+    return 'en';
+  }
 };
 
 // Function to change language with optional database save
