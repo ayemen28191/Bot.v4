@@ -30,12 +30,7 @@ export default defineConfig({
   },
   root: path.resolve(__dirname, "client"),
   build: {
-    outDir: path.resolve(__dirname, "client", "dist"),
+    outDir: path.resolve(__dirname, "dist/public"),
     emptyOutDir: true,
-  },
-    server: {
-    host: true, // يسمح بالوصول من أي IP
-    port: 5000,
-    allowedHosts: "all", // يسمح بجميع الـ hosts - الحل النهائي
   },
 });
