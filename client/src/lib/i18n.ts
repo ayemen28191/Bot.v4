@@ -2340,14 +2340,12 @@ export const getCurrentLanguage = (user?: any): string => {
     // Priority 2: check saved settings in localStorage
     const settings = JSON.parse(localStorage.getItem('settings') || '{}');
     if (settings.language && translations[settings.language]) {
-      console.log('Language from localStorage settings:', settings.language);
       return settings.language;
     }
 
     // Priority 3: check old localStorage
     const storedLang = localStorage.getItem('language');
     if (storedLang && translations[storedLang]) {
-      console.log('Language from old localStorage:', storedLang);
       return storedLang;
     }
   } catch (error) {
@@ -2355,7 +2353,6 @@ export const getCurrentLanguage = (user?: any): string => {
   }
 
   // Priority 4: Default to English (no browser language detection)
-  console.log('Using default language: en');
   return 'en';
 };
 
