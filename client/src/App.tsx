@@ -55,7 +55,9 @@ function HTTPSHandler() {
           if (message.includes('[vite] server connection lost') ||
               message.includes('WebSocket connection') ||
               message.includes('server connection lost') ||
-              message.includes('Polling for restart')) {
+              message.includes('Polling for restart') ||
+              message.includes('hmr update') ||
+              message.includes('vite:ws')) {
             // لا تعرض هذه الرسائل في console
             return;
           }
@@ -67,7 +69,10 @@ function HTTPSHandler() {
           // تجاهل أخطاء WebSocket المتكررة
           if (message.includes('WebSocket connection') ||
               message.includes('502') ||
-              message.includes('handshake')) {
+              message.includes('handshake') ||
+              message.includes('Failed to construct') ||
+              message.includes('SecurityError') ||
+              message.includes('ERR_SSL_PROTOCOL_ERROR')) {
             // لا تعرض هذه الأخطاء في console  
             return;
           }

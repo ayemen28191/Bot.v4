@@ -22,7 +22,7 @@ interface ChatState {
   onlineUsers: number;
   isOfflineMode: boolean;
   pendingMessages: Message[];
-  lastSyncTimestamp: number | null;
+  lastSyncTimestamp: null | number;
   sendMessage: (text: string, sender: string, avatar: string) => void;
   initializeWebSocket: () => void;
   enableOfflineMode: () => void;
@@ -235,8 +235,8 @@ export const useStore = create<ChatState>((set, get) => {
           set({ isConnected: false, socket: null });
 
           // تقليل عدد المستخدمين المتصلين
-          set(state => ({ 
-            onlineUsers: Math.max(1, state.onlineUsers - Math.floor(Math.random() * 2) - 1) 
+          set(state => ({
+            onlineUsers: Math.max(1, state.onlineUsers - Math.floor(Math.random() * 2) - 1)
           }));
 
           // التعامل مع رموز الأخطاء المختلفة
