@@ -7,6 +7,7 @@ The system includes features for real-time market data, technical indicators (RS
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
+Language preference: Arabic - all responses and communications should be in Arabic.
 
 # System Architecture
 
