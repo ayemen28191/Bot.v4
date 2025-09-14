@@ -1,4 +1,3 @@
-
 // معالج الأخطاء العام للتطبيق
 console.log('🔧 Error handler initialized');
 
@@ -11,7 +10,7 @@ window.addEventListener('error', (event) => {
     colno: event.colno,
     error: event.error
   });
-  
+
   // إرسال الخطأ لنظام المراقبة إذا كان متاحاً
   if (window.navigator.onLine) {
     try {
@@ -40,7 +39,7 @@ window.addEventListener('error', (event) => {
 // معالجة Promise rejections غير المعالجة
 window.addEventListener('unhandledrejection', (event) => {
   console.error('🚨 Unhandled promise rejection:', event.reason);
-  
+
   if (window.navigator.onLine) {
     try {
       fetch('/api/errors', {
@@ -82,32 +81,35 @@ window.addEventListener('offline', () => {
   localStorage.setItem('last_offline_time', Date.now().toString());
 });
 
-// مراقبة أخطاء الشبكة
-const originalFetch = window.fetch;
-window.fetch = async (...args) => {
-  try {
-    const response = await originalFetch(...args);
-    
-    // إذا كان الرد غير ناجح، سجل الخطأ
-    if (!response.ok && !args[0].toString().includes('/api/errors')) {
-      console.warn('🌐 Network error:', {
-        url: args[0],
-        status: response.status,
-        statusText: response.statusText
-      });
+// Override fetch to catch all network errors
+  const originalFetch = window.fetch;
+  window.fetch = function(...args) {
+    const url = args[0]?.toString();
+
+    // تجنب طلبات fetch إلى عناوين غير صالحة في Replit
+    if (url && (url.includes('0.0.0.0:443') || url.includes('https://0.0.0.0'))) {
+      console.warn('🚫 منع طلب fetch إلى عنوان غير صالح:', url);
+      return Promise.reject(new Error('Invalid URL blocked: ' + url));
     }
-    
-    return response;
-  } catch (error) {
-    // أخطاء الشبكة (انقطاع الاتصال، مهلة زمنية، إلخ)
-    if (!args[0].toString().includes('/api/errors')) {
-      console.error('🌐 Fetch error:', {
-        url: args[0],
-        error: error.message
-      });
-    }
-    throw error;
-  }
-};
+
+    return originalFetch.apply(this, args).catch((error) => {
+      // تجنب طباعة أخطاء العناوين المحظورة بشكل متكرر
+      if (!url || !url.includes('0.0.0.0:443')) {
+        console.error('🌐 Fetch error:', {
+          url: args[0],
+          error: error.message
+        });
+
+        // Report fetch errors (exclude blocked URLs)
+        reportError({
+          type: 'fetch_error',
+          message: error.message,
+          url: url
+        });
+      }
+
+      throw error;
+    });
+  };
 
 export {};

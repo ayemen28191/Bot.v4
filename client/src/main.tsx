@@ -1,4 +1,3 @@
-
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./styles/common.css";
@@ -11,17 +10,17 @@ function initializeEarlyLanguage() {
   try {
     const currentLang = getCurrentLanguage();
     const isRTL = currentLang === 'ar';
-    
+
     console.log('🚀 Early setup: Applying', currentLang, isRTL ? '(rtl)' : '(ltr)', 'to document');
-    
+
     // تطبيق الإعدادات الأساسية فوراً
     document.documentElement.setAttribute('lang', currentLang);
     document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
-    
+
     // إزالة جميع الفئات أولاً
     document.documentElement.classList.remove('ar', 'en', 'hi', 'rtl', 'ltr');
     document.body.classList.remove('font-arabic');
-    
+
     // تطبيق الفئات الصحيحة
     if (isRTL) {
       document.documentElement.classList.add('ar', 'rtl');
@@ -29,7 +28,7 @@ function initializeEarlyLanguage() {
     } else {
       document.documentElement.classList.add('ltr');
     }
-    
+
     return currentLang;
   } catch (error) {
     console.error('Error in early language setup:', error);
@@ -43,12 +42,12 @@ function initializeEarlyLanguage() {
 
 async function initializeApp() {
   console.log('🚀 Starting app initialization...');
-  
+
   try {
     // تطبيق اللغة مبكراً
     const currentLang = initializeEarlyLanguage();
     console.log('✅ Early language setup completed:', currentLang);
-    
+
     // تطبيق إعدادات theme.json على DOM
     try {
       // @ts-ignore - theme.json is read-only config
@@ -80,7 +79,7 @@ async function initializeApp() {
     // إضافة معالج لخطأ WebSocket في بيئة HTTPS
     if (window.location.protocol === 'https:') {
       console.log('🔒 HTTPS environment detected - Setting up WebSocket error handling');
-      
+
       // تجاهل أخطاء WebSocket في بيئة HTTPS
       const originalError = console.error;
       console.error = function(...args) {
@@ -91,12 +90,12 @@ async function initializeApp() {
             message.includes('ERR_SSL_PROTOCOL_ERROR') ||
             message.includes('net::ERR_CONNECTION_REFUSED')) {
           console.warn('🌐 WebSocket error suppressed in HTTPS environment:', ...args);
-          
+
           // تفعيل وضع عدم الاتصال تلقائياً
           try {
             localStorage.setItem('offline_mode', 'enabled');
             localStorage.setItem('offline_reason', 'websocket_security_error');
-            
+
             // إرسال إشعار للمستخدم
             const event = new CustomEvent('websocketError', {
               detail: { message: 'تم تفعيل وضع عدم الاتصال بسبب قيود HTTPS' }
@@ -109,7 +108,7 @@ async function initializeApp() {
         }
         originalError.apply(console, args);
       };
-      
+
       // تفعيل وضع عدم الاتصال مسبقاً في بيئة HTTPS
       try {
         localStorage.setItem('offline_mode', 'enabled');
@@ -131,10 +130,10 @@ async function initializeApp() {
     const root = createRoot(document.getElementById("root")!);
     root.render(<App />);
     console.log('✅ App rendered successfully with language:', finalLang);
-    
+
   } catch (error) {
     console.error('❌ App initialization failed:', error);
-    
+
     // عرض رسالة خطأ بدلاً من شاشة بيضاء
     document.body.innerHTML = `
       <div style="
