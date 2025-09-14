@@ -340,6 +340,8 @@ export const useStore = create<ChatState>((set, get) => {
         }
       };
 
+      set({ socket: ws });
+
     } catch (error) {
       console.error('Failed to initialize WebSocket:', error);
       set({ isConnected: false, socket: null });
