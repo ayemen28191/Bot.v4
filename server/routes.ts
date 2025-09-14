@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema } from "@shared/schema";
 import { apiKeysRouter } from "./routes/api-keys";
+import { apiKeysDebugRouter } from "./routes/api-keys-debug";
 import { testRouter } from "./routes/test";
 import priceRouter from "./routes/price";
 import { updateRouter } from "./routes/update";
@@ -33,8 +34,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   console.log('Creating HTTP server...');
   const httpServer = createServer(app);
 
-  // تسجيل مسارات مفاتيح API
-  app.use('/api/config-keys', apiKeysRouter);
+  // مسارات مفاتيح API
+  app.use("/api/config-keys", apiKeysRouter);
+  app.use("/api/config-keys-debug", apiKeysDebugRouter);
 
   // تسجيل مسارات الاختبار
   app.use("/api/test", testRouter);
