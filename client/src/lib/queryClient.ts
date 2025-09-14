@@ -109,11 +109,10 @@ export function getWebSocketUrl(path: string = '/ws'): string {
                         window.location.hostname.endsWith('.repl.co') ||
                         window.location.hostname === 'replit.com' ||
                         window.location.hostname.includes('replit.dev') ||
+                        window.location.hostname.includes('replit') ||
                         // فحص في بيئة التطوير المحلية في Replit
                         (isSecure && (window.location.host.includes('5000') || 
-                                     window.location.host.includes('8080')))ame.includes('replit') ||
-                        // فحص في بيئة التطوير المحلية في Replit
-                        (isSecure && window.location.host.includes('5000'));
+                                     window.location.host.includes('8080')));
     
     if (isReplitApp) {
       console.log('تم اكتشاف بيئة Replit HTTPS - تفعيل وضع عدم الاتصال تلقائيًا');
