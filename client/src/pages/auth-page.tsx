@@ -21,6 +21,8 @@ export default function AuthPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [loginPending, setLoginPending] = useState(false);
   const [hasRedirected, setHasRedirected] = useState(false);
+  const [currentLanguage, setCurrentLanguage] = useState(getCurrentLanguage());
+  const [forceRerender, setForceRerender] = useState(0);
 
   const form = useForm({
     resolver: zodResolver(
@@ -40,6 +42,29 @@ export default function AuthPage() {
       setLocation("/");
     }
   }, [user, isLoading, loginPending, hasRedirected, setLocation]);
+
+  // Listen for language changes and force re-render
+  useEffect(() => {
+    const handleLanguageChange = (event: any) => {
+      const newLanguage = event.detail.language;
+      console.log('AuthPage: Language changed to:', newLanguage);
+      setCurrentLanguage(newLanguage);
+      setForceRerender(prev => prev + 1); // Force component re-render
+    };
+
+    window.addEventListener('languageChanged', handleLanguageChange);
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+    };
+  }, []);
+
+  // Function to handle language change
+  const handleLanguageChange = (newLanguage: string) => {
+    console.log('AuthPage: Changing language to:', newLanguage);
+    setLanguage(newLanguage, false);
+    setCurrentLanguage(newLanguage);
+    setForceRerender(prev => prev + 1); // Force immediate re-render
+  };
 
   const onSubmit = async (data: any) => {
     // Prevent duplicate submissions or submission after redirection
@@ -208,13 +233,13 @@ export default function AuthPage() {
                 </div>
 
                 {/* Language Selection for New Users */}
-                <div className="space-y-2">
+                <div className="space-y-2" key={`language-selector-${forceRerender}`}>
                   <Label htmlFor="language" className="text-sm font-medium">
                     {t("preferred_language")}
                   </Label>
                   <Select
-                    value={getCurrentLanguage()}
-                    onValueChange={(value) => setLanguage(value, false)}
+                    value={currentLanguage}
+                    onValueChange={handleLanguageChange}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder={t("choose_app_language")} />
@@ -225,6 +250,9 @@ export default function AuthPage() {
                       <SelectItem value="hi">हिन्दी</SelectItem>
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground">
+                    {t("language_will_be_saved")}
+                  </p>
                 </div>
 
                 {/* Submit Button */}

@@ -2289,10 +2289,17 @@ export const setLanguage = (lang: string, saveToDatabase: boolean = false) => {
   // Clear translation cache to force refresh
   translationCache = {};
 
-  // Dispatch language change event
-  window.dispatchEvent(new CustomEvent('languageChanged', { 
-    detail: { language: normalizedLang, saveToDatabase } 
-  }));
+  // Force immediate UI update by dispatching multiple events
+  setTimeout(() => {
+    window.dispatchEvent(new CustomEvent('languageChanged', { 
+      detail: { language: normalizedLang, saveToDatabase } 
+    }));
+    
+    // Additional event for immediate UI updates
+    window.dispatchEvent(new CustomEvent('forceTranslationUpdate', { 
+      detail: { language: normalizedLang } 
+    }));
+  }, 0);
 
   console.log('Language change complete:', normalizedLang, 'Save to DB:', saveToDatabase);
 };
@@ -2311,8 +2318,10 @@ export const t = (key: string, user?: any): string => {
   // Ensure language is supported, fallback to English
   const validLang = translations[lang] ? lang : 'en';
 
+  // Get translation or fallback to key
+  const translation = translations[validLang]?.[key] || translations['en']?.[key] || key;
+  
   // Save translation in cache
-  const translation = translations[validLang]?.[key] || key;
   translationCache[cacheKey] = translation;
 
   return translation;
