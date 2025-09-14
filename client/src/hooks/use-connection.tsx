@@ -10,7 +10,7 @@ interface ConnectionState {
 
 export function useConnection(
   pingUrl = '/health',
-  checkInterval = 60000, // فحص كل دقيقة افتراضيًا
+  checkInterval = 90000, // فحص كل 1.5 دقيقة افتراضيًا - أقل تكرارًا
   autoCheck = true
 ): ConnectionState {
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
@@ -32,7 +32,7 @@ export function useConnection(
 
       // فحص الاتصال بالخادم من خلال طلب بسيط
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000); // timeout بعد 8 ثواني
+      const timeoutId = setTimeout(() => controller.abort(), 12000); // timeout بعد 12 ثانية - وقت أطول لتجنب الإلغاء المتكرر
 
       const response = await fetch(pingUrl, {
         method: 'GET',
@@ -54,19 +54,29 @@ export function useConnection(
 
       return isConnected;
     } catch (error) {
-      // تجاهل أخطاء الإنهاء والأخطاء المؤقتة
+      // تجاهل أخطاء الإنهاء والأخطاء المؤقتة - منع الإبلاغ عنها كأخطاء frontend
       const isAbortError = error instanceof Error && 
-                          (error.name === 'AbortError' || error.message.includes('aborted'));
+                          (error.name === 'AbortError' || error.message.includes('aborted') || error.message.includes('user aborted'));
       const isNetworkError = error instanceof Error && 
                            (error.message.includes('Failed to fetch') ||
-                            error.message.includes('NetworkError'));
+                            error.message.includes('NetworkError') ||
+                            error.message.includes('timeout'));
 
-      // لا تطبع الأخطاء المتوقعة (abort, network)
+      // منع تسجيل الأخطاء المتوقعة تمامًا (abort, network, timeout)
+      // هذه أخطاء طبيعية في فحص الاتصال ولا تستدعي القلق
       if (!isAbortError && !isNetworkError) {
         console.warn('🌐 Connection check failed:', { 
           url: pingUrl, 
           error: error instanceof Error ? error.message : 'Unknown error'
         });
+      }
+      
+      // منع انتشار أخطاء AbortError لتجنب الإبلاغ عنها في تقارير frontend
+      if (isAbortError) {
+        // تسجيل محدود فقط للتطوير
+        if (process.env.NODE_ENV === 'development') {
+          console.debug('🔄 Connection check aborted (normal behavior)');
+        }
       }
 
       setIsOnline(false);

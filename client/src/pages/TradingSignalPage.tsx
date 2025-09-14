@@ -133,14 +133,14 @@ export default function TradingSignalPage() {
   const { toast } = useToast();
   const { user } = useAuth();
   
-  // استخدام مكون التحقق من الاتصال - تكرار الفحص كل 30 ثانية
+  // استخدام مكون التحقق من الاتصال - تكرار الفحص كل دقيقتين لتقليل الطلبات المُلغاة
   const { 
     isOnline, 
     isChecking, 
     checkConnection,
     resetState: resetConnectionState,
     lastCheckTime
-  } = useConnection('/api/test/health', 30000);
+  } = useConnection('/api/test/health', 120000);
   
   // حالة وضع عدم الاتصال للتطبيق
   const [isOfflineMode, setIsOfflineMode] = useState<boolean>(() => {

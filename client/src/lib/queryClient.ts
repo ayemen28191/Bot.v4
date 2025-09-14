@@ -1,5 +1,7 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+type UnauthorizedBehavior = "throw" | "returnNull";
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -41,6 +43,15 @@ export async function apiRequest(
     await throwIfResNotOk(res);
     return res;
   } catch (error: any) {
+    // تجاهل أخطاء AbortError ومنع الإبلاغ عنها
+    if (error?.name === 'AbortError' || error?.message?.includes('user aborted') || error?.message?.includes('aborted')) {
+      // لا تعيد المحاولة عند الإلغاء المتعمد
+      if (process.env.NODE_ENV === 'development') {
+        console.debug('🔄 API request aborted (normal behavior)');
+      }
+      throw error;
+    }
+    
     // إذا كان خطأ شبكة مؤقت وما زال لدينا محاولات، أعد المحاولة
     if (retryCount < maxRetries && 
         (error?.message?.includes('Failed to fetch') ||
