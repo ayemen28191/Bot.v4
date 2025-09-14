@@ -9,7 +9,7 @@ interface ConnectionState {
 }
 
 export function useConnection(
-  pingUrl = '/api/test/health',
+  pingUrl = '/health',
   checkInterval = 60000, // فحص كل دقيقة افتراضيًا
   autoCheck = true
 ): ConnectionState {
@@ -32,23 +32,30 @@ export function useConnection(
 
       // فحص الاتصال بالخادم من خلال طلب بسيط
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // timeout بعد 5 ثواني
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // timeout بعد 10 ثواني بدلاً من 5
 
       const response = await fetch(pingUrl, {
         method: 'GET',
-        headers: { 'Cache-Control': 'no-cache' },
+        headers: { 
+          'Cache-Control': 'no-cache',
+          'Accept': 'application/json'
+        },
         signal: controller.signal
       });
 
       clearTimeout(timeoutId);
 
-      const isConnected = response.ok;
+      // التحقق من أن الاستجابة صحيحة ولها محتوى JSON
+      const isConnected = response.ok && response.status === 200;
       setIsOnline(isConnected);
       setLastCheckTime(Date.now());
 
       return isConnected;
     } catch (error) {
-      console.error('Connection check error:', error);
+      // تجاهل الأخطاء العابرة وتسجيل فقط الأخطاء المهمة
+      if (error instanceof Error && !error.name.includes('AbortError')) {
+        console.error('🌐 Fetch error:', { url: pingUrl, error: error.message });
+      }
       setIsOnline(false);
       setLastCheckTime(Date.now());
 

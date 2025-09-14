@@ -1,5 +1,6 @@
 {pkgs}: {
   deps = [
+    pkgs.nano
     pkgs.sshpass
     pkgs.inetutils
     pkgs.unixtools.ping
