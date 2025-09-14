@@ -3,61 +3,87 @@ console.log('🔧 Error handler initialized');
 
 // معالجة الأخطاء غير المعالجة في JavaScript
 window.addEventListener('error', (event) => {
-  console.error('🚨 Unhandled error:', {
-    message: event.message,
-    filename: event.filename,
-    lineno: event.lineno,
-    colno: event.colno,
-    error: event.error
-  });
-
-  // إرسال الخطأ لنظام المراقبة إذا كان متاحاً
-  if (window.navigator.onLine) {
-    try {
-      fetch('/api/errors', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'javascript_error',
-          message: event.message,
-          filename: event.filename,
-          line: event.lineno,
-          column: event.colno,
-          stack: event.error?.stack,
-          userAgent: navigator.userAgent,
-          timestamp: new Date().toISOString()
-        })
-      }).catch(() => {
-        // تجاهل أخطاء إرسال الأخطاء لتجنب حلقة لا نهائية
-      });
-    } catch (e) {
-      // تجاهل أخطاء إرسال الأخطاء
+  try {
+    // التحقق من صحة event قبل الوصول إلى خصائصه
+    if (!event || typeof event !== 'object') {
+      console.warn('🚨 Invalid error event received');
+      return;
     }
+
+    const errorInfo = {
+      message: event.message || 'Unknown error message',
+      filename: event.filename || 'Unknown file',
+      lineno: event.lineno || 0,
+      colno: event.colno || 0,
+      error: event.error || null
+    };
+
+    console.error('🚨 Unhandled error:', errorInfo);
+
+    // إرسال الخطأ لنظام المراقبة إذا كان متاحاً وإذا سمح throttling
+    if (window?.navigator?.onLine && shouldReportError()) {
+      try {
+        fetch('/api/errors', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'javascript_error',
+            message: errorInfo.message,
+            filename: errorInfo.filename,
+            line: errorInfo.lineno,
+            column: errorInfo.colno,
+            stack: errorInfo.error?.stack || 'No stack trace available',
+            userAgent: navigator?.userAgent || 'Unknown',
+            timestamp: new Date().toISOString()
+          })
+        }).catch(() => {
+          // تجاهل أخطاء إرسال الأخطاء لتجنب حلقة لا نهائية
+        });
+      } catch (e) {
+        // تجاهل أخطاء إرسال الأخطاء
+      }
+    }
+  } catch (handlerError) {
+    console.warn('Error in error handler:', handlerError);
   }
 });
 
 // معالجة Promise rejections غير المعالجة
 window.addEventListener('unhandledrejection', (event) => {
-  console.error('🚨 Unhandled promise rejection:', event.reason);
-
-  if (window.navigator.onLine) {
-    try {
-      fetch('/api/errors', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'promise_rejection',
-          message: event.reason?.message || 'Promise rejection',
-          stack: event.reason?.stack,
-          userAgent: navigator.userAgent,
-          timestamp: new Date().toISOString()
-        })
-      }).catch(() => {
-        // تجاهل أخطاء الإرسال
-      });
-    } catch (e) {
-      // تجاهل أخطاء الإرسال
+  try {
+    // التحقق من صحة event قبل المعالجة
+    if (!event || typeof event !== 'object') {
+      console.warn('🚨 Invalid promise rejection event received');
+      return;
     }
+
+    const reason = event.reason;
+    const reasonMessage = reason?.message || reason?.toString() || 'Unknown promise rejection';
+    
+    console.error('🚨 Unhandled promise rejection:', reasonMessage);
+
+    // إرسال التقرير فقط إذا سمح throttling
+    if (window?.navigator?.onLine && shouldReportError()) {
+      try {
+        fetch('/api/errors', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'promise_rejection',
+            message: reasonMessage,
+            stack: reason?.stack || 'No stack trace available',
+            userAgent: navigator?.userAgent || 'Unknown',
+            timestamp: new Date().toISOString()
+          })
+        }).catch(() => {
+          // تجاهل أخطاء الإرسال
+        });
+      } catch (e) {
+        // تجاهل أخطاء الإرسال
+      }
+    }
+  } catch (handlerError) {
+    console.warn('Error in promise rejection handler:', handlerError);
   }
 });
 
@@ -81,25 +107,58 @@ window.addEventListener('offline', () => {
   localStorage.setItem('last_offline_time', Date.now().toString());
 });
 
-// إضافة دالة مساعدة لإرسال الأخطاء
+// إضافة دالة مساعدة لإرسال الأخطاء مع معالجة محسنة
 function reportError(errorData: any) {
-  if (window.navigator.onLine) {
-    try {
-      fetch('/api/errors', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...errorData,
-          userAgent: navigator.userAgent,
-          timestamp: new Date().toISOString()
-        })
-      }).catch(() => {
-        // تجاهل أخطاء إرسال الأخطاء لتجنب حلقة لا نهائية
-      });
-    } catch (e) {
-      // تجاهل أخطاء إرسال الأخطاء
+  try {
+    // التحقق من صحة البيانات المدخلة
+    if (!errorData || typeof errorData !== 'object') {
+      console.warn('Invalid error data provided to reportError');
+      return;
     }
+
+    // التحقق من حالة الاتصال
+    if (!window?.navigator?.onLine) {
+      return;
+    }
+
+    // تنظيف البيانات وإضافة معلومات إضافية
+    const cleanErrorData = {
+      type: errorData.type || 'unknown_error',
+      message: errorData.message || 'Unknown error',
+      filename: errorData.filename || 'unknown',
+      url: errorData.url || 'unknown',
+      stack: errorData.stack || 'No stack trace',
+      userAgent: navigator?.userAgent || 'Unknown',
+      timestamp: new Date().toISOString(),
+      // إضافة معلومات سياق إضافية
+      location: window?.location?.href || 'unknown',
+      language: navigator?.language || 'unknown'
+    };
+
+    fetch('/api/errors', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cleanErrorData)
+    }).catch(() => {
+      // تجاهل أخطاء إرسال الأخطاء لتجنب حلقة لا نهائية
+    });
+  } catch (e) {
+    // تجاهل أخطاء إرسال الأخطاء
+    console.warn('Error in reportError function:', e);
   }
+}
+
+// إضافة throttling لتقارير الأخطاء
+let lastErrorReport = 0;
+const ERROR_REPORT_INTERVAL = 5000; // 5 ثواني بين التقارير
+
+function shouldReportError() {
+  const now = Date.now();
+  if (now - lastErrorReport > ERROR_REPORT_INTERVAL) {
+    lastErrorReport = now;
+    return true;
+  }
+  return false;
 }
 
 // Override fetch to catch all network errors
@@ -107,39 +166,52 @@ const originalFetch = window.fetch;
 window.fetch = function(...args) {
   const url = args[0]?.toString();
 
-  // تجنب طلبات fetch إلى عناوين غير صالحة في Replit
-  const blockedPatterns = [
-    '0.0.0.0:443',
-    'https://0.0.0.0',
-    'localhost:443',
-    '127.0.0.1:443',
-    'http://localhost:80',
-    'http://127.0.0.1:80'
-  ];
+  try {
+    // تجنب طلبات fetch إلى عناوين غير صالحة في Replit
+    const blockedPatterns = [
+      '0.0.0.0:443',
+      'https://0.0.0.0',
+      'localhost:443',
+      '127.0.0.1:443',
+      'http://localhost:80',
+      'http://127.0.0.1:80'
+    ];
 
-  if (url && blockedPatterns.some(pattern => url.includes(pattern))) {
-    console.warn('🚫 منع طلب fetch إلى عنوان غير صالح:', url);
-    return Promise.reject(new Error('Invalid URL blocked: ' + url));
-  }
-
-  return originalFetch.apply(this, args).catch((error) => {
-    // تجنب طباعة أخطاء العناوين المحظورة بشكل متكرر
-    if (!url || !blockedPatterns.some(pattern => url.includes(pattern))) {
-      console.error('🌐 Fetch error:', {
-        url: args[0],
-        error: error.message
-      });
-
-      // Report fetch errors (exclude blocked URLs)
-      reportError({
-        type: 'fetch_error',
-        message: error.message,
-        url: url
-      });
+    if (url && blockedPatterns.some(pattern => url.includes(pattern))) {
+      console.warn('🚫 منع طلب fetch إلى عنوان غير صالح:', url);
+      return Promise.reject(new Error('Invalid URL blocked: ' + url));
     }
 
-    throw error;
-  });
+    return originalFetch.apply(this, args).catch((error) => {
+      try {
+        // تجنب طباعة أخطاء العناوين المحظورة بشكل متكرر
+        if (!url || !blockedPatterns.some(pattern => url.includes(pattern))) {
+          console.error('🌐 Fetch error:', {
+            url: args[0],
+            error: error?.message || 'Unknown error'
+          });
+
+          // Report fetch errors only if throttling allows (exclude blocked URLs)
+          if (shouldReportError()) {
+            reportError({
+              type: 'fetch_error',
+              message: error?.message || 'Unknown fetch error',
+              url: url || 'unknown'
+            });
+          }
+        }
+      } catch (reportingError) {
+        // تجاهل أخطاء تقارير الأخطاء لتجنب حلقة لا نهائية
+        console.warn('Error in error reporting:', reportingError);
+      }
+
+      throw error;
+    });
+  } catch (e) {
+    console.error('Error in fetch override:', e);
+    // العودة للـ fetch الأصلي في حالة الخطأ
+    return originalFetch.apply(this, args);
+  }
 };
 
 export {};

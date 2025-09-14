@@ -79,6 +79,16 @@ const corsOptions = {
 // تطبيق إعدادات CORS
 app.use(cors(corsOptions));
 
+// معالجة شاملة لطلبات OPTIONS (preflight)
+app.options('*', (req: Request, res: Response) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin,X-Requested-With,Content-Type,Accept,Authorization,X-CSRF-Token,Cache-Control,Pragma');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Max-Age', '86400'); // 24 hours
+  res.sendStatus(200);
+});
+
 // إضافة رؤوس CORS إضافية للأمان
 app.use((req: Request, res: Response, next: NextFunction) => {
   // السماح بالطلبات من أي مصدر في بيئة التطوير
@@ -91,6 +101,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   res.header('Cross-Origin-Resource-Policy', 'cross-origin');
   res.header('Cross-Origin-Embedder-Policy', 'unsafe-none');
   res.header('X-Content-Type-Options', 'nosniff');
+  res.header('X-Frame-Options', 'SAMEORIGIN');
+  res.header('Referrer-Policy', 'strict-origin-when-cross-origin');
   
   next();
 });
