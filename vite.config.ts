@@ -35,7 +35,7 @@ export default defineConfig({
   },
   server: {
     hmr: {
-      protocol: 'wss'
+      protocol: 'ws'
     }
   }
 });

@@ -67,7 +67,7 @@ interface ApiKeyGroup {
 const API_KEY_GROUPS: ApiKeyGroup[] = [
   {
     baseName: 'TWELVEDATA_API_KEY',
-    alternativeKeys: ['TWELVEDATA_API_KEY_1', 'TWELVEDATA_API_KEY_2', 'TWELVEDATA_API_KEY_3'],
+    alternativeKeys: ['TWELVEDATA_API_KEY_1', 'TWELVEDATA_API_KEY_2', 'TWELVEDATA_API_KEY_3', 'TWELVEDATA_API_KEY_4', 'TWELVEDATA_API_KEY_5', 'TWELVEDATA_API_KEY_6', 'TWELVEDATA_API_KEY_7', 'TWELVEDATA_API_KEY_8'],
     lastUsedIndex: -1
   },
   {
@@ -92,6 +92,11 @@ function getEnvironmentKeyByName(keyName: string): string {
     case 'TWELVEDATA_API_KEY_1': return process.env.TWELVEDATA_API_KEY_1 || '';
     case 'TWELVEDATA_API_KEY_2': return process.env.TWELVEDATA_API_KEY_2 || '';
     case 'TWELVEDATA_API_KEY_3': return process.env.TWELVEDATA_API_KEY_3 || '';
+    case 'TWELVEDATA_API_KEY_4': return process.env.TWELVEDATA_API_KEY_4 || '';
+    case 'TWELVEDATA_API_KEY_5': return process.env.TWELVEDATA_API_KEY_5 || '';
+    case 'TWELVEDATA_API_KEY_6': return process.env.TWELVEDATA_API_KEY_6 || '';
+    case 'TWELVEDATA_API_KEY_7': return process.env.TWELVEDATA_API_KEY_7 || '';
+    case 'TWELVEDATA_API_KEY_8': return process.env.TWELVEDATA_API_KEY_8 || '';
     case 'PRIMARY_API_KEY': return env.PRIMARY_API_KEY;
     case 'ALPHAVANTAGE_API_KEY_1': return process.env.ALPHAVANTAGE_API_KEY_1 || '';
     case 'ALPHAVANTAGE_API_KEY_2': return process.env.ALPHAVANTAGE_API_KEY_2 || '';

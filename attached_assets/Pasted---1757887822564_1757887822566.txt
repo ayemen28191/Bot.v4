@@ -1,0 +1,94 @@
+تمام، سأشرح لك طريقة إضافة المفاتيح الاحتياطية بشكل آمن في البوت بحيث يتم التناوب بينها تلقائيًا إذا فشل المفتاح الرئيسي أو تجاوز الحد اليومي. سأعطيك طريقة عملية خطوة خطوة.
+
+
+---
+
+1️⃣ تحديث ملف .env
+
+أنت تملك المفاتيح الاحتياطية الآن:
+
+391dd0a5840f40088028fff3885d0bf5,8fa264d960094ee897b0696d8b0fa77a,7c3ac59f822146f59a324919d970956e,33608f0509f74cb694fb81215cbac3a6,8767b5d70a444e909454471f6a7a008b,15cfd1db586742bbb01bb545b7b66bfe,20a9fd855be94d9eb3671b09155ac276,742aec2d56eb4e3095db0fd7b5008923
+
+قم بإضافتها في .env بهذا الشكل:
+
+# مفتاح TWELVEDATA الرئيسي
+TWELVEDATA_API_KEY=820e25efeb6e445183486276ba98d496
+
+# مفاتيح TWELVEDATA الاحتياطية (مفصولة بفواصل)
+BACKUP_TWELVEDATA_KEYS=391dd0a5840f40088028fff3885d0bf5,8fa264d960094ee897b0696d8b0fa77a,7c3ac59f822146f59a324919d970956e,33608f0509f74cb694fb81215cbac3a6,8767b5d70a444e909454471f6a7a008b,15cfd1db586742bbb01bb545b7b66bfe,20a9fd855be94d9eb3671b09155ac276,742aec2d56eb4e3095db0fd7b5008923
+
+
+---
+
+2️⃣ جلب المفاتيح في الكود
+
+في كود البوت (Node.js / TypeScript):
+
+// المفتاح الرئيسي
+const mainKey = process.env.TWELVEDATA_API_KEY!;
+
+// مفاتيح الاحتياطية كمصفوفة
+const backupKeys = process.env.BACKUP_TWELVEDATA_KEYS?.split(',') || [];
+
+// دمج المفتاح الرئيسي مع الاحتياطية
+const twelveDataKeys = [mainKey, ...backupKeys];
+
+
+---
+
+3️⃣ التناوب بين المفاتيح تلقائيًا
+
+let usedKeys = new Set<string>(); // لتسجيل المفاتيح الفاشلة
+
+function getNextKey(): string | null {
+    for (const key of twelveDataKeys) {
+        if (!usedKeys.has(key)) return key;
+    }
+    return null; // لا يوجد مفتاح متاح
+}
+
+
+---
+
+4️⃣ استخدام المفتاح عند جلب السعر أو التحليل الفني
+
+import fetch from 'node-fetch';
+
+async function getPrice(symbol: string) {
+    let key = getNextKey();
+    while (key) {
+        try {
+            const res = await fetch(`https://api.twelvedata.com/price?symbol=${symbol}&apikey=${key}`);
+            const data = await res.json();
+
+            if (data.status === "error") throw new Error(data.message);
+
+            return parseFloat(data.price);
+        } catch (err: any) {
+            console.error(`فشل المفتاح ${key}: ${err.message}`);
+            usedKeys.add(key); // تجاهل المفتاح الفاشل
+            key = getNextKey(); // جرب المفتاح التالي
+        }
+    }
+    throw new Error("فشل في جلب السعر من جميع المفاتيح المتاحة");
+}
+
+
+---
+
+✅ بهذه الطريقة:
+
+المفاتيح الاحتياطية تعمل تلقائيًا عند تجاوز المفتاح الرئيسي الحد اليومي.
+
+البوت لا يتوقف عن العمل.
+
+يمكن إضافة أي عدد من المفاتيح الاحتياطية بسهولة عبر .env.
+
+
+
+---
+
+إذا أحببت، أستطيع أن أصنع لك نسخة كاملة من كود البوت مع جميع المفاتيح الاحتياطية مفعّلة للتناوب في كل عمليات السعر والتحليل الفني تلقائيًا.
+
+هل تريد أن أفعل ذلك؟
+
