@@ -3,7 +3,7 @@ import session from "express-session";
 import path from "path";
 import fs from "fs";
 import sqlite3 from "sqlite3";
-import { 
+import {
   users, type User, type InsertUser,
   configKeys, type ConfigKey, type InsertConfigKey,
   deploymentServers, type DeploymentServer, type InsertDeploymentServer,
@@ -39,7 +39,7 @@ export interface IStorage {
   createServer(server: InsertDeploymentServer): Promise<DeploymentServer>;
   updateServer(id: number, serverData: Partial<InsertDeploymentServer>): Promise<DeploymentServer>;
   deleteServer(id: number): Promise<void>;
-  
+
   // Deployment logs methods
   getLog(id: number): Promise<DeploymentLog | undefined>;
   getLogsByServer(serverId: number, limit?: number): Promise<DeploymentLog[]>;
@@ -99,7 +99,7 @@ try {
           console.log('Preferred language column ensured in users table');
         }
       });
-      
+
       // إضافة عمود preferred_theme إلى الجدول الموجود إذا لم يكن موجوداً
       sqliteDb.run(`
         ALTER TABLE users ADD COLUMN preferred_theme TEXT DEFAULT 'system'
@@ -112,7 +112,7 @@ try {
       });
     }
   });
-  
+
   // تأكد من إنشاء جدول الجلسات
   sqliteDb.exec(`
     CREATE TABLE IF NOT EXISTS sessions (
@@ -127,7 +127,7 @@ try {
       console.log('Sessions table created or already exists');
     }
   });
-  
+
   // تأكد من إنشاء جدول مفاتيح التكوين
   sqliteDb.exec(`
     CREATE TABLE IF NOT EXISTS config_keys (
@@ -146,7 +146,7 @@ try {
       console.log('Config_keys table created or already exists');
     }
   });
-  
+
   // تأكد من إنشاء جدول خوادم النشر
   sqliteDb.exec(`
     CREATE TABLE IF NOT EXISTS deployment_servers (
@@ -173,7 +173,7 @@ try {
       console.log('Deployment_servers table created or already exists');
     }
   });
-  
+
   // تأكد من إنشاء جدول سجلات النشر
   sqliteDb.exec(`
     CREATE TABLE IF NOT EXISTS deployment_logs (
@@ -196,7 +196,7 @@ try {
       console.log('Deployment_logs table created or already exists');
     }
   });
-  
+
   console.log('✅ تم إنشاء جداول قاعدة البيانات بنجاح');
 } catch (error) {
   console.error('❌ حدث خطأ أثناء إنشاء جداول قاعدة البيانات:', error);
@@ -212,7 +212,7 @@ export class DatabaseStorage implements IStorage {
       concurrentDB: false,
     });
   }
-  
+
   // إتاحة الوصول إلى قاعدة البيانات
   getDatabase() {
     return sqliteDb;
@@ -283,7 +283,7 @@ export class DatabaseStorage implements IStorage {
   async createUser(user: InsertUser): Promise<User> {
     return new Promise<User>((resolve, reject) => {
       const now = new Date().toISOString();
-      
+
       // تحويل من camelCase إلى snake_case للقاعدة
       sqliteDb.run(
         'INSERT INTO users (username, password, display_name, email, is_admin, preferred_language, preferred_theme, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
@@ -321,10 +321,10 @@ export class DatabaseStorage implements IStorage {
         if (!existingUser) {
           throw new Error('المستخدم غير موجود');
         }
-        
+
         // استخدام نسخة من بيانات التحديث
         const updateData = { ...userData };
-        
+
         // تحقق من عدم وجود تعارض في اسم المستخدم
         if (updateData.username) {
           const existingUserWithSameUsername = await new Promise<any>((resolve, reject) => {
@@ -337,12 +337,12 @@ export class DatabaseStorage implements IStorage {
               }
             );
           });
-          
+
           if (existingUserWithSameUsername) {
             throw new Error('اسم المستخدم مستخدم بالفعل');
           }
         }
-        
+
         // تحقق من عدم وجود تعارض في البريد الإلكتروني
         if (updateData.email) {
           const existingUserWithSameEmail = await new Promise<any>((resolve, reject) => {
@@ -355,54 +355,54 @@ export class DatabaseStorage implements IStorage {
               }
             );
           });
-          
+
           if (existingUserWithSameEmail) {
             throw new Error('البريد الإلكتروني مستخدم بالفعل');
           }
         }
-        
+
         // بناء استعلام التحديث من البيانات المتوفرة
         const updateFields: string[] = [];
         const updateValues: any[] = [];
-        
+
         if (updateData.username) {
           updateFields.push('username = ?');
           updateValues.push(updateData.username);
         }
-        
+
         if (updateData.displayName) {
           updateFields.push('display_name = ?');
           updateValues.push(updateData.displayName);
         }
-        
+
         if (updateData.email) {
           updateFields.push('email = ?');
           updateValues.push(updateData.email);
         }
-        
+
         if ('isAdmin' in updateData) {
           updateFields.push('is_admin = ?');
           updateValues.push(updateData.isAdmin ? 1 : 0);
         }
-        
+
         if (updateData.preferredLanguage) {
           updateFields.push('preferred_language = ?');
           updateValues.push(updateData.preferredLanguage);
         }
-        
+
         if (updateData.preferredTheme) {
           updateFields.push('preferred_theme = ?');
           updateValues.push(updateData.preferredTheme);
         }
-        
+
         // تحديث تاريخ التحديث
         const now = new Date().toISOString();
         updateFields.push('updated_at = ?');
         updateValues.push(now);
-        
+
         // إضافة معرف المستخدم للشرط
         updateValues.push(id);
-        
+
         // تنفيذ استعلام التحديث
         if (updateFields.length > 0) {
           sqliteDb.run(
@@ -440,7 +440,7 @@ export class DatabaseStorage implements IStorage {
         reject(new Error('لا يمكن حذف المشرف الرئيسي'));
         return;
       }
-      
+
       sqliteDb.run('DELETE FROM users WHERE id = ?', [id], (err) => {
         if (err) {
           console.error('Error deleting user:', err);
@@ -536,7 +536,7 @@ export class DatabaseStorage implements IStorage {
         // تحقق مما إذا كان المفتاح موجوداً بالفعل
         const existingKey = await this.getConfigKey(key);
         const now = new Date().toISOString();
-        
+
         if (existingKey) {
           // تحديث المفتاح الموجود
           sqliteDb.run(
@@ -709,7 +709,7 @@ export class DatabaseStorage implements IStorage {
   async createServer(server: InsertDeploymentServer): Promise<DeploymentServer> {
     return new Promise<DeploymentServer>((resolve, reject) => {
       const now = new Date().toISOString();
-      
+
       // تحويل من camelCase إلى snake_case للقاعدة
       sqliteDb.run(
         `INSERT INTO deployment_servers (
@@ -770,74 +770,74 @@ export class DatabaseStorage implements IStorage {
         if (!existingServer) {
           throw new Error('الخادم غير موجود');
         }
-        
+
         // بناء استعلام التحديث من البيانات المتوفرة
         const updateFields: string[] = [];
         const updateValues: any[] = [];
-        
+
         if (serverData.name !== undefined) {
           updateFields.push('name = ?');
           updateValues.push(serverData.name);
         }
-        
+
         if (serverData.host !== undefined) {
           updateFields.push('host = ?');
           updateValues.push(serverData.host);
         }
-        
+
         if (serverData.port !== undefined) {
           updateFields.push('port = ?');
           updateValues.push(serverData.port);
         }
-        
+
         if (serverData.username !== undefined) {
           updateFields.push('username = ?');
           updateValues.push(serverData.username);
         }
-        
+
         if (serverData.authType !== undefined) {
           updateFields.push('auth_type = ?');
           updateValues.push(serverData.authType);
         }
-        
+
         if (serverData.password !== undefined) {
           updateFields.push('password = ?');
           updateValues.push(serverData.password);
         }
-        
+
         if (serverData.privateKey !== undefined) {
           updateFields.push('private_key = ?');
           updateValues.push(serverData.privateKey);
         }
-        
+
         if (serverData.deployPath !== undefined) {
           updateFields.push('deploy_path = ?');
           updateValues.push(serverData.deployPath);
         }
-        
+
         if (serverData.isActive !== undefined) {
           updateFields.push('is_active = ?');
           updateValues.push(serverData.isActive ? 1 : 0);
         }
-        
+
         if (serverData.environment !== undefined) {
           updateFields.push('environment = ?');
           updateValues.push(serverData.environment);
         }
-        
+
         if (serverData.commands !== undefined) {
           updateFields.push('commands = ?');
           updateValues.push(serverData.commands);
         }
-        
+
         // تحديث تاريخ التحديث
         const now = new Date().toISOString();
         updateFields.push('updated_at = ?');
         updateValues.push(now);
-        
+
         // إضافة معرف الخادم للشرط
         updateValues.push(id);
-        
+
         // تنفيذ استعلام التحديث
         if (updateFields.length > 0) {
           sqliteDb.run(
@@ -916,7 +916,7 @@ export class DatabaseStorage implements IStorage {
     return new Promise<DeploymentLog[]>((resolve, reject) => {
       sqliteDb.all(
         'SELECT * FROM deployment_logs WHERE server_id = ? ORDER BY created_at DESC LIMIT ?',
-        [serverId, limit], 
+        [serverId, limit],
         (err, rows: any[]) => {
           if (err) {
             console.error('Error getting deployment logs by server ID:', err);
@@ -973,7 +973,7 @@ export class DatabaseStorage implements IStorage {
   async createLog(log: InsertDeploymentLog): Promise<DeploymentLog> {
     return new Promise<DeploymentLog>((resolve, reject) => {
       const now = new Date().toISOString();
-      
+
       // تحويل من camelCase إلى snake_case للقاعدة
       sqliteDb.run(
         `INSERT INTO deployment_logs (
@@ -1035,24 +1035,24 @@ export class DatabaseStorage implements IStorage {
         if (!existingLog) {
           throw new Error('سجل النشر غير موجود');
         }
-        
+
         // بناء استعلام التحديث
         const updateFields: string[] = [];
         const updateValues: any[] = [];
-        
+
         updateFields.push('status = ?');
         updateValues.push(status);
-        
+
         if (message !== undefined) {
           updateFields.push('message = ?');
           updateValues.push(message);
         }
-        
+
         if (details !== undefined) {
           updateFields.push('details = ?');
           updateValues.push(details);
         }
-        
+
         if (endTime) {
           updateFields.push('end_time = ?');
           updateValues.push(endTime);
@@ -1062,10 +1062,10 @@ export class DatabaseStorage implements IStorage {
           updateFields.push('end_time = ?');
           updateValues.push(now);
         }
-        
+
         // إضافة معرف السجل للشرط
         updateValues.push(id);
-        
+
         // تنفيذ استعلام التحديث
         sqliteDb.run(
           `UPDATE deployment_logs SET ${updateFields.join(', ')} WHERE id = ?`,

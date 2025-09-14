@@ -684,6 +684,8 @@ const translations: Translations = {
     unknown_error: 'خطأ غير معروف',
     please_login_to_access: 'يرجى تسجيل الدخول للوصول إلى هذه الصفحة',
     no_permission_access: 'ليس لديك صلاحية للوصول إلى هذه الصفحة',
+    preferred_language: 'اللغة المفضلة',
+    language_will_be_saved: 'سيتم حفظ اختيار اللغة مع حسابك',
 
     // Trading platforms
     metatrader4: 'ميتاتريدر 4',
@@ -1384,6 +1386,8 @@ const translations: Translations = {
     unknown_error: 'Unknown error',
     please_login_to_access: 'Please login to access this page',
     no_permission_access: 'You do not have permission to access this page',
+    preferred_language: 'Preferred Language',
+    language_will_be_saved: 'Language choice will be saved with your account',
 
     // Trading platforms
     metatrader4: 'MetaTrader 4',
@@ -2115,6 +2119,8 @@ const translations: Translations = {
     unknown_error: 'अज्ञात त्रुटि',
     please_login_to_access: 'इस पृष्ठ तक पहुंचने के लिए कृपया लॉगिन करें',
     no_permission_access: 'आपके पास इस पृष्ठ तक पहुंचने की अनुमति नहीं है',
+    preferred_language: 'पसंदीदा भाषा',
+    language_will_be_saved: 'भाषा की पसंद आपके खाते के साथ सहेजी जाएगी',
 
     // Trading platforms
     metatrader4: 'मेटाट्रेडर 4',

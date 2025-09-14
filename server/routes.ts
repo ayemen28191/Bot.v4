@@ -22,6 +22,49 @@ function isAuthenticated(req: express.Request, res: express.Response, next: expr
 function isAdmin(req: express.Request, res: express.Response, next: express.NextFunction) {
   if (req.isAuthenticated() && req.user?.isAdmin) {
     return next();
+
+import { storage } from './storage';
+
+// مسار لحفظ إعدادات المستخدم (اللغة والموضوع)
+app.put('/api/user/settings', async (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: 'غير مسجل الدخول' });
+  }
+
+  try {
+    const { preferredLanguage, preferredTheme } = req.body;
+    const userId = req.user!.id;
+
+    // التحقق من صحة اللغة
+    const validLanguages = ['ar', 'en', 'hi'];
+    if (preferredLanguage && !validLanguages.includes(preferredLanguage)) {
+      return res.status(400).json({ error: 'لغة غير مدعومة' });
+    }
+
+    // التحقق من صحة الموضوع
+    const validThemes = ['light', 'dark', 'system'];
+    if (preferredTheme && !validThemes.includes(preferredTheme)) {
+      return res.status(400).json({ error: 'موضوع غير مدعوم' });
+    }
+
+    // تحديث إعدادات المستخدم
+    const updatedUser = await storage.updateUserSettings(userId, {
+      preferredLanguage,
+      preferredTheme
+    });
+
+    console.log(`تم تحديث إعدادات المستخدم ${userId}:`, { preferredLanguage, preferredTheme });
+
+    // إزالة كلمة المرور من الاستجابة
+    const { password, ...safeUser } = updatedUser;
+    res.json(safeUser);
+
+  } catch (error: any) {
+    console.error('خطأ في تحديث إعدادات المستخدم:', error);
+    res.status(500).json({ error: 'فشل في تحديث الإعدادات' });
+  }
+});
+
   }
   return res.status(403).json({ error: 'غير مصرح بالوصول. المسار مخصص للمشرفين فقط.' });
 }

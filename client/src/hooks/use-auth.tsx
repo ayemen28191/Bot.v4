@@ -36,21 +36,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const userData = meQuery.data as User;
       setUser(userData);
 
-      // Only apply user's preferred language if user hasn't explicitly set a language locally
+      // Apply user's preferred language from database with priority
       try {
-        const hasLocalLanguageSettings = localStorage.getItem('settings') || localStorage.getItem('language');
-        if (!hasLocalLanguageSettings && userData.preferredLanguage) {
-          console.log('Applying user preferred language (no local override):', userData.preferredLanguage);
+        if (userData.preferredLanguage) {
+          console.log('🌍 Applying user preferred language from database:', userData.preferredLanguage);
           // Import language functions dynamically to avoid circular dependency
           import('@/lib/i18n').then(({ setLanguage }) => {
+            // Always apply user's database language preference when logged in
             setLanguage(userData.preferredLanguage, false);
           });
+        } else {
+          console.log('📝 User has no preferred language set, using current language');
         }
       } catch (error) {
-        console.error('Error checking local language settings:', error);
+        console.error('Error applying user preferred language:', error);
       }
     } else {
       setUser(null);
+      // Clear language on logout and reset to English
+      try {
+        import('@/lib/i18n').then(({ clearLanguageOnLogout }) => {
+          clearLanguageOnLogout();
+        });
+      } catch (error) {
+        console.error('Error clearing language on logout:', error);
+      }
     }
   }, [meQuery.data]);
 

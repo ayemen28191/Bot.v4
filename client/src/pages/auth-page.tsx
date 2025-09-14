@@ -10,7 +10,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertUserSchema } from "@shared/schema";
 import { Loader2, Eye, EyeOff, Shield, User, Lock, CheckCircle } from "lucide-react";
-import { t } from "@/lib/i18n";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { t, getCurrentLanguage, setLanguage } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export default function AuthPage() {
@@ -204,6 +205,26 @@ export default function AuthPage() {
                   >
                     {t("forgot_password")}
                   </Button>
+                </div>
+
+                {/* Language Selection for New Users */}
+                <div className="space-y-2">
+                  <Label htmlFor="language" className="text-sm font-medium">
+                    {t("preferred_language")}
+                  </Label>
+                  <Select
+                    value={getCurrentLanguage()}
+                    onValueChange={(value) => setLanguage(value, false)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={t("choose_app_language")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ar">العربية</SelectItem>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="hi">हिन्दी</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Submit Button */}
