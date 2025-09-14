@@ -1,8 +1,12 @@
 
-const { scrypt, randomBytes } = require('crypto');
-const { promisify } = require('util');
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+import { scrypt, randomBytes } from 'crypto';
+import { promisify } from 'util';
+import sqlite3 from 'sqlite3';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const scryptAsync = promisify(scrypt);
 
