@@ -144,8 +144,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     },
   });
 
-  // Derive loading state
-  const isLoading = isLoading || loginMutation.isPending || logoutMutation.isPending || registerMutation.isPending;
+  // Derive combined loading state
+  const authIsLoading = isLoading || loginMutation.isPending || logoutMutation.isPending || registerMutation.isPending;
 
   // Derive error state
   const authError = error 
@@ -160,7 +160,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const value: AuthContextValue = {
     user,
-    isLoading,
+    isLoading: authIsLoading,
     error: authError,
     login: loginMutation.mutateAsync,
     logout: logoutMutation.mutateAsync,
