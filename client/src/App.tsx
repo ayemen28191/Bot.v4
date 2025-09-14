@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import LoadingScreen from '@/components/LoadingScreen';
 import { AuthProvider } from "@/hooks/use-auth";
 import { ThemeProvider } from "@/hooks/use-theme";
+import { DirectionProvider } from "@/hooks/use-direction";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { ProtectedAdminRoute } from "@/lib/protected-admin-route";
 import { useStore as useChatStore } from './store/chatStore';
@@ -91,14 +92,16 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="system" storageKey="binar-theme">
-        <TooltipProvider>
-          <AuthProvider>
-            <Router />
-            <Toaster />
-          </AuthProvider>
-        </TooltipProvider>
-      </ThemeProvider>
+      <DirectionProvider defaultLanguage="ar">
+        <ThemeProvider defaultTheme="system" storageKey="binar-theme">
+          <TooltipProvider>
+            <AuthProvider>
+              <Router />
+              <Toaster />
+            </AuthProvider>
+          </TooltipProvider>
+        </ThemeProvider>
+      </DirectionProvider>
     </QueryClientProvider>
   );
 }

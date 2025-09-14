@@ -1,18 +1,54 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ROBOT DATA | Binar Join Analytic</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    
+    <script>
+      // Early direction and language setup - runs before React loads
+      (function() {
+        const LANGUAGE_STORAGE_KEY = 'app-language';
+        const DIRECTION_STORAGE_KEY = 'app-direction';
+        
+        // Default values
+        let language = 'ar';
+        let direction = 'rtl';
+        
+        try {
+          // Try to read stored preferences
+          const storedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+          const storedDirection = localStorage.getItem(DIRECTION_STORAGE_KEY);
+          
+          if (storedLanguage && ['en', 'ar'].includes(storedLanguage)) {
+            language = storedLanguage;
+            direction = storedLanguage === 'ar' ? 'rtl' : 'ltr';
+          } else if (storedDirection && ['ltr', 'rtl'].includes(storedDirection)) {
+            direction = storedDirection;
+            language = storedDirection === 'rtl' ? 'ar' : 'en';
+          }
+        } catch (error) {
+          console.warn('Error reading direction preferences:', error);
+        }
+        
+        // Apply immediately to prevent layout jumps
+        const root = document.documentElement;
+        root.setAttribute('lang', language);
+        root.setAttribute('dir', direction);
+        
+        console.log('🚀 Early setup: Applied', language, '(' + direction + ') to document');
+      })();
+    </script>
+    
     <style>
       /* أنماط شاشة التحميل الأولية */
       body {
         margin: 0;
         padding: 0;
         font-family: 'Cairo', sans-serif;
-        direction: rtl;
+        /* Remove fixed direction - will be set by script */
       }
       
       /* متغيرات CSS للوضع المظلم (افتراضي) */

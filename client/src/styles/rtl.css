@@ -1,53 +1,55 @@
 /* RTL-specific styles for Arabic and other right-to-left languages */
+/* Phase 1: Scoped and targeted RTL styles to prevent layout issues */
 
-/* Base RTL direction and text alignment */
+/* =================================
+   Base RTL Setup (Non-intrusive)
+   ================================= */
+
+/* Base RTL direction - only set text alignment and reading direction */
 [dir="rtl"] {
   direction: rtl;
-  text-align: start;
+  text-align: start; /* Use logical property */
 }
 
-[dir="rtl"] * {
-  text-align: inherit;
-}
-
-/* RTL font family for Arabic */
+/* RTL font family for Arabic text */
 [dir="rtl"] {
   font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* RTL layout for flex containers (with specific exceptions) */
-[dir="rtl"] .flex:not(.ltr-content):not(.mobile-navbar):not(.mobile-nav-container):not(.language-buttons):not(.navbar-actions) {
+/* =================================
+   Scoped Flex Layout (Opt-in only)
+   ================================= */
+
+/* Only apply flex-row-reverse to elements that explicitly request RTL layout */
+[dir="rtl"] .rtl-flex {
   flex-direction: row-reverse;
 }
 
+/* Keep standard flex behavior unless explicitly requesting RTL */
+[dir="rtl"] .flex {
+  flex-direction: row; /* Default behavior, no automatic reversal */
+}
+
 [dir="rtl"] .flex-col {
-  flex-direction: column;
+  flex-direction: column; /* Column is always the same */
 }
 
-[dir="rtl"] .grid:not(.ltr-content) {
+/* Grid containers that need RTL behavior */
+[dir="rtl"] .grid.rtl-grid {
   direction: rtl;
 }
 
-/* RTL form elements */
-[dir="rtl"] button:not(.ltr-content button):not(.language-buttons button),
-[dir="rtl"] .btn:not(.ltr-content),
-[dir="rtl"] textarea:not(.ltr-content textarea),
-[dir="rtl"] select:not(.ltr-content select) {
-  text-align: start;
-}
+/* =================================
+   Form Elements (Targeted fixes)
+   ================================= */
 
-/* RTL input field specific styling */
-[dir="rtl"] input:not([type="number"]):not([type="tel"]):not(.number-display):not(.western-nums):not(.ltr-input) {
+/* RTL input styling - only for inputs that should be RTL */
+[dir="rtl"] input.rtl-input:not([type="number"]):not([type="tel"]):not(.ltr-input) {
   direction: rtl;
   text-align: start;
 }
 
-[dir="rtl"] input.arabic-input {
-  direction: rtl;
-  text-align: start;
-}
-
-/* Auth form input styling for RTL */
+/* Auth form specific styling for RTL */
 [dir="rtl"] .auth-input-with-icon {
   padding-inline-start: 1rem;
   padding-inline-end: 2.5rem;
@@ -58,21 +60,29 @@
   inset-inline-start: auto;
 }
 
-/* Toggle password button positioning */
 [dir="rtl"] .auth-password-toggle {
   inset-inline-end: 0.25rem;
   inset-inline-start: auto;
 }
 
-/* RTL arrow icon flipping */
-[dir="rtl"] .icon-arrow-left,
-[dir="rtl"] .lucide-arrow-left,
+/* =================================
+   Icon Management (Specific only)
+   ================================= */
+
+/* Only flip specific directional icons/arrows */
+[dir="rtl"] .icon-arrow,
 [dir="rtl"] .arrow-icon,
+[dir="rtl"] .lucide-arrow-left,
 [dir="rtl"] .lucide-arrow-right,
 [dir="rtl"] .lucide-chevron-left,
 [dir="rtl"] .lucide-chevron-right,
 [dir="rtl"] .lucide-arrow-up-right,
 [dir="rtl"] .lucide-arrow-down-right {
+  transform: scaleX(-1);
+}
+
+/* Breadcrumb separators */
+[dir="rtl"] .breadcrumb-separator {
   transform: scaleX(-1);
 }
 
@@ -82,183 +92,87 @@
   transform: scaleX(-1);
 }
 
-/* RTL exceptions for elements that should remain LTR */
-[dir="rtl"] .mobile-navbar,
-[dir="rtl"] .mobile-nav-container,
-[dir="rtl"] .mobile-nav-item,
-[dir="rtl"] nav:not(.rtl-nav),
-[dir="rtl"] .navbar-actions {
-  direction: ltr;
-  flex-direction: row;
-}
-
-[dir="rtl"] .mobile-nav-item {
-  text-align: center;
-}
-
-[dir="rtl"] .language-buttons,
-[dir="rtl"] .language-selector {
-  direction: ltr;
-}
-
-[dir="rtl"] .language-buttons button {
-  text-align: center;
-}
-
-/* Icons that should not be flipped */
-[dir="rtl"] .icon:not(.arrow-icon),
-[dir="rtl"] svg:not(.arrow-icon):not(.lucide-arrow-left):not(.lucide-arrow-right):not(.lucide-chevron-left):not(.lucide-chevron-right) {
+/* Do NOT flip other icons automatically */
+[dir="rtl"] .icon:not(.icon-arrow):not(.arrow-icon),
+[dir="rtl"] svg:not(.arrow-icon):not(.lucide-arrow-left):not(.lucide-arrow-right):not(.lucide-chevron-left):not(.lucide-chevron-right):not(.lucide-arrow-up-right):not(.lucide-arrow-down-right) {
   transform: none;
 }
 
-/* RTL spacing using logical properties */
-[dir="rtl"] .space-x-1 > :not([hidden]) ~ :not([hidden]) {
-  --tw-space-x-reverse: 1;
-  margin-inline-start: calc(0.25rem * calc(1 - var(--tw-space-x-reverse)));
-  margin-inline-end: calc(0.25rem * var(--tw-space-x-reverse));
-}
+/* =================================
+   Utility Classes (Opt-in RTL)
+   ================================= */
 
-[dir="rtl"] .space-x-2 > :not([hidden]) ~ :not([hidden]) {
-  --tw-space-x-reverse: 1;
-  margin-inline-start: calc(0.5rem * calc(1 - var(--tw-space-x-reverse)));
-  margin-inline-end: calc(0.5rem * var(--tw-space-x-reverse));
-}
+/* Margin utilities using logical properties */
+.rtl-margin-start-1 { margin-inline-start: 0.25rem; }
+.rtl-margin-start-2 { margin-inline-start: 0.5rem; }
+.rtl-margin-start-3 { margin-inline-start: 0.75rem; }
+.rtl-margin-start-4 { margin-inline-start: 1rem; }
 
-[dir="rtl"] .space-x-4 > :not([hidden]) ~ :not([hidden]) {
-  --tw-space-x-reverse: 1;
-  margin-inline-start: calc(1rem * calc(1 - var(--tw-space-x-reverse)));
-  margin-inline-end: calc(1rem * var(--tw-space-x-reverse));
-}
+.rtl-margin-end-1 { margin-inline-end: 0.25rem; }
+.rtl-margin-end-2 { margin-inline-end: 0.5rem; }
+.rtl-margin-end-3 { margin-inline-end: 0.75rem; }
+.rtl-margin-end-4 { margin-inline-end: 1rem; }
 
-/* RTL margin adjustments using logical properties */
-[dir="rtl"] .ml-1 {
-  margin-inline-start: 0;
-  margin-inline-end: 0.25rem;
-}
+/* Padding utilities using logical properties */
+.rtl-padding-start-1 { padding-inline-start: 0.25rem; }
+.rtl-padding-start-2 { padding-inline-start: 0.5rem; }
+.rtl-padding-start-3 { padding-inline-start: 0.75rem; }
+.rtl-padding-start-4 { padding-inline-start: 1rem; }
 
-[dir="rtl"] .ml-2 {
-  margin-inline-start: 0;
-  margin-inline-end: 0.5rem;
-}
+.rtl-padding-end-1 { padding-inline-end: 0.25rem; }
+.rtl-padding-end-2 { padding-inline-end: 0.5rem; }
+.rtl-padding-end-3 { padding-inline-end: 0.75rem; }
+.rtl-padding-end-4 { padding-inline-end: 1rem; }
 
-[dir="rtl"] .ml-3 {
-  margin-inline-start: 0;
-  margin-inline-end: 0.75rem;
-}
+/* Text alignment utilities */
+.rtl-text-start { text-align: start; }
+.rtl-text-end { text-align: end; }
 
-[dir="rtl"] .ml-4 {
-  margin-inline-start: 0;
-  margin-inline-end: 1rem;
-}
+/* Legacy RTL utilities (for gradual migration) */
+.rtl-flip { transform: scaleX(-1); }
+.rtl-margin-start { margin-inline-start: 0.5rem; }
+.rtl-margin-end { margin-inline-end: 0.5rem; }
+.rtl-padding-start { padding-inline-start: 0.5rem; }
+.rtl-padding-end { padding-inline-end: 0.5rem; }
 
-[dir="rtl"] .mr-1 {
-  margin-inline-end: 0;
-  margin-inline-start: 0.25rem;
-}
+/* =================================
+   Positioning (Safe logical properties)
+   ================================= */
 
-[dir="rtl"] .mr-2 {
-  margin-inline-end: 0;
-  margin-inline-start: 0.5rem;
-}
-
-[dir="rtl"] .mr-3 {
-  margin-inline-end: 0;
-  margin-inline-start: 0.75rem;
-}
-
-[dir="rtl"] .mr-4 {
-  margin-inline-end: 0;
-  margin-inline-start: 1rem;
-}
-
-/* RTL padding adjustments using logical properties */
-[dir="rtl"] .pl-1 {
-  padding-inline-start: 0;
-  padding-inline-end: 0.25rem;
-}
-
-[dir="rtl"] .pl-2 {
-  padding-inline-start: 0;
-  padding-inline-end: 0.5rem;
-}
-
-[dir="rtl"] .pl-3 {
-  padding-inline-start: 0;
-  padding-inline-end: 0.75rem;
-}
-
-[dir="rtl"] .pl-4 {
-  padding-inline-start: 0;
-  padding-inline-end: 1rem;
-}
-
-[dir="rtl"] .pr-1 {
-  padding-inline-end: 0;
-  padding-inline-start: 0.25rem;
-}
-
-[dir="rtl"] .pr-2 {
-  padding-inline-end: 0;
-  padding-inline-start: 0.5rem;
-}
-
-[dir="rtl"] .pr-3 {
-  padding-inline-end: 0;
-  padding-inline-start: 0.75rem;
-}
-
-[dir="rtl"] .pr-4 {
-  padding-inline-end: 0;
-  padding-inline-start: 1rem;
-}
-
-/* RTL utility classes */
-.rtl-flip {
-  transform: scaleX(-1);
-}
-
-.rtl-margin-start {
-  margin-inline-start: 0.5rem;
-}
-
-.rtl-margin-end {
-  margin-inline-end: 0.5rem;
-}
-
-.rtl-padding-start {
-  padding-inline-start: 0.5rem;
-}
-
-.rtl-padding-end {
-  padding-inline-end: 0.5rem;
-}
-
-/* RTL dropdown and menu positioning */
-[dir="rtl"] .dropdown-menu {
+/* Dropdown and menu positioning - opt-in */
+[dir="rtl"] .dropdown-menu.rtl-position {
   right: 0;
   left: auto;
 }
 
-[dir="rtl"] .popover-content {
+[dir="rtl"] .popover-content.rtl-position {
   right: 0;
   left: auto;
 }
 
-/* RTL form label alignment */
-[dir="rtl"] label {
-  text-align: start;
+/* Search input icons - opt-in */
+[dir="rtl"] .search-icon.rtl-position {
+  right: 0.75rem;
+  left: auto;
 }
 
-/* RTL checkbox and radio positioning */
-[dir="rtl"] .checkbox-wrapper {
-  flex-direction: row-reverse;
+/* Toast positioning - opt-in */
+[dir="rtl"] .toast.rtl-position {
+  right: 1rem;
+  left: auto;
 }
 
-[dir="rtl"] .radio-wrapper {
-  flex-direction: row-reverse;
+/* Sidebar positioning - opt-in */
+[dir="rtl"] .sidebar.rtl-position {
+  right: 0;
+  left: auto;
 }
 
-/* RTL card layout adjustments */
+/* =================================
+   Component-Specific Fixes
+   ================================= */
+
+/* Card components */
 [dir="rtl"] .card-header {
   text-align: start;
 }
@@ -267,42 +181,24 @@
   text-align: start;
 }
 
-/* RTL toast and notification positioning */
-[dir="rtl"] .toast {
-  right: 1rem;
-  left: auto;
+/* Form labels */
+[dir="rtl"] label {
+  text-align: start;
 }
 
-/* RTL sidebar adjustments */
-[dir="rtl"] .sidebar {
-  right: 0;
-  left: auto;
-}
-
-/* RTL search input icons */
-[dir="rtl"] .search-icon {
-  right: 0.75rem;
-  left: auto;
-}
-
-/* RTL breadcrumb separators */
-[dir="rtl"] .breadcrumb-separator {
-  transform: scaleX(-1);
-}
-
-/* RTL table text alignment */
+/* Table alignment */
 [dir="rtl"] .table th,
 [dir="rtl"] .table td {
   text-align: start;
 }
 
-/* RTL progress bar direction */
+/* Progress bars - keep visual direction LTR */
 [dir="rtl"] .progress-bar {
-  direction: ltr; /* Progress bars should always fill left-to-right visually */
+  direction: ltr;
 }
 
-/* RTL tab navigation */
-[dir="rtl"] .tabs-list {
+/* Tab navigation */
+[dir="rtl"] .tabs-list.rtl-tabs {
   direction: rtl;
 }
 
@@ -310,23 +206,23 @@
   text-align: start;
 }
 
-/* RTL dialog positioning */
+/* Dialog content */
 [dir="rtl"] .dialog-content {
   text-align: start;
 }
 
-/* RTL form field error positioning */
+/* Form field errors */
 [dir="rtl"] .field-error {
   text-align: start;
   margin-inline-start: 0;
 }
 
-/* RTL loading spinner adjustments */
+/* Loading text */
 [dir="rtl"] .loading-text {
   text-align: center;
 }
 
-/* RTL select component adjustments */
+/* Select components */
 [dir="rtl"] .select-trigger {
   text-align: start;
 }
@@ -335,12 +231,12 @@
   text-align: start;
 }
 
-/* RTL avatar and profile adjustments */
+/* Avatar fallback */
 [dir="rtl"] .avatar-fallback {
   text-align: center;
 }
 
-/* RTL command palette adjustments */
+/* Command palette */
 [dir="rtl"] .command-input {
   text-align: start;
 }
@@ -348,3 +244,118 @@
 [dir="rtl"] .command-item {
   text-align: start;
 }
+
+/* Checkbox and radio positioning - opt-in */
+[dir="rtl"] .checkbox-wrapper.rtl-wrapper {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .radio-wrapper.rtl-wrapper {
+  flex-direction: row-reverse;
+}
+
+/* =================================
+   Exceptions (Elements that stay LTR)
+   ================================= */
+
+/* These elements always maintain LTR behavior */
+[dir="rtl"] .ltr-content,
+[dir="rtl"] .number-display,
+[dir="rtl"] .western-nums,
+[dir="rtl"] input[type="number"],
+[dir="rtl"] input[type="tel"],
+[dir="rtl"] .ltr-input {
+  direction: ltr;
+  text-align: start;
+}
+
+/* Language selector and mobile nav stay LTR */
+[dir="rtl"] .language-buttons,
+[dir="rtl"] .language-selector,
+[dir="rtl"] .mobile-navbar:not(.rtl-nav),
+[dir="rtl"] .mobile-nav-container:not(.rtl-nav),
+[dir="rtl"] .mobile-nav-item:not(.rtl-nav),
+[dir="rtl"] nav:not(.rtl-nav),
+[dir="rtl"] .navbar-actions:not(.rtl-nav) {
+  direction: ltr;
+  flex-direction: row;
+}
+
+[dir="rtl"] .mobile-nav-item {
+  text-align: center;
+}
+
+[dir="rtl"] .language-buttons button {
+  text-align: center;
+}
+
+/* =================================
+   Spacing Utilities (Logical Properties)
+   ================================= */
+
+/* RTL-aware spacing that works with flex - opt-in */
+.rtl-space-x-1 > :not([hidden]) ~ :not([hidden]) {
+  margin-inline-start: 0.25rem;
+}
+
+.rtl-space-x-2 > :not([hidden]) ~ :not([hidden]) {
+  margin-inline-start: 0.5rem;
+}
+
+.rtl-space-x-4 > :not([hidden]) ~ :not([hidden]) {
+  margin-inline-start: 1rem;
+}
+
+/* Tailwind space-x overrides for RTL - more precise */
+[dir="rtl"] .space-x-1.rtl-space > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+  margin-inline-start: calc(0.25rem * calc(1 - var(--tw-space-x-reverse)));
+  margin-inline-end: calc(0.25rem * var(--tw-space-x-reverse));
+}
+
+[dir="rtl"] .space-x-2.rtl-space > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+  margin-inline-start: calc(0.5rem * calc(1 - var(--tw-space-x-reverse)));
+  margin-inline-end: calc(0.5rem * var(--tw-space-x-reverse));
+}
+
+[dir="rtl"] .space-x-4.rtl-space > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+  margin-inline-start: calc(1rem * calc(1 - var(--tw-space-x-reverse)));
+  margin-inline-end: calc(1rem * var(--tw-space-x-reverse));
+}
+
+/* =================================
+   Animation and Transition Safe RTL
+   ================================= */
+
+/* RTL-safe transitions that don't cause layout issues */
+[dir="rtl"] .rtl-transition {
+  transition: margin-inline-start 0.3s ease, margin-inline-end 0.3s ease, padding-inline-start 0.3s ease, padding-inline-end 0.3s ease;
+}
+
+/* =================================
+   Debug Utilities (Development only)
+   ================================= */
+
+/* Debug class to highlight RTL elements during development */
+.rtl-debug [dir="rtl"] {
+  outline: 1px dashed orange;
+}
+
+.rtl-debug .rtl-flex {
+  outline: 2px dashed blue;
+}
+
+/* =================================
+   Migration Helpers
+   ================================= */
+
+/* 
+   Migration notes:
+   - Use .rtl-flex instead of relying on automatic flex reversal
+   - Use logical properties (margin-inline-start/end) instead of left/right
+   - Add .rtl-position to elements that need RTL positioning
+   - Use .rtl-space class with space-x-* for proper RTL spacing
+   - Remove global overrides that were causing layout issues
+*/
