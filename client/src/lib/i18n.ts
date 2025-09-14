@@ -258,6 +258,7 @@ const translations: Translations = {
     market_order: 'سوق',
     limit_order: 'محدد',
     stop_order: 'إيقاف',
+    stop_limit: 'حد الإيقاف',
     stop_limit_order: 'إيقاف حد',
     binary_options: 'خيارات ثنائية',
     turbo: 'توربو',
@@ -353,7 +354,7 @@ const translations: Translations = {
     loading: 'جاري التحميل...',
     loading_page: 'جاري تحميل الصفحة...',
     offline_mode_auto_enabled_title: 'تم تفعيل وضع عدم الاتصال تلقائياً',
-    offline_mode_auto_enabled_description: 'تم تفعيل وضع عدم الاتصال تلقائيًا لتحسين الأداء في بيئة Replit HTTPS. ستعمل جميع ميزات التطبيق ولكن بدون اتصال مباشر بالخادم.',
+    offline_mode_auto_enabled_description: 'تم تفعيل وضع عدم الاتصال تلقائياً لتحسين الأداء في بيئة Replit HTTPS. ستعمل جميع ميزات التطبيق ولكن بدون اتصال مباشر بالخادم.',
     initializing_app: 'جاري تهيئة التطبيق...',
     please_wait: 'يرجى الانتظار...',
     platform_metatrader5: 'ميتاتريدر 5',
@@ -399,7 +400,7 @@ const translations: Translations = {
 
     // السمات (Themes)
     toggle_theme: "تبديل الوضع",
-    light_theme: "فاتح",
+    light_theme: "فاتح", 
     dark_theme: "مظلم",
     system_theme_short: "النظام",
 
@@ -440,7 +441,7 @@ const translations: Translations = {
     default_api_keys_loaded: "تم جلب المفاتيح الافتراضية بنجاح",
     invalid_file_format: "تنسيق الملف غير صالح",
     failed_to_read_content: "فشل قراءة المحتوى",
-
+    
     // Additional console messages
     theme_config_error: "فشل في تطبيق إعدادات theme.json:",
     could_not_read_stored_price_warn: "تعذر قراءة السعر المخزن محليًا:",
@@ -452,7 +453,7 @@ const translations: Translations = {
     signal_converted_to_up: "تم تحويل الإشارة إلى UP",
     signal_converted_to_down: "تم تحويل الإشارة إلى DOWN",
     signal_no_match_using_wait: "الإشارة لم تتطابق مع أي حالة، استخدام WAIT",
-
+    
     // Toast messages for ChatPage
     export_success: "تم تصدير المحادثة بنجاح",
     export_success_desc: "تم حفظ المحادثة في ملف",
@@ -464,7 +465,7 @@ const translations: Translations = {
     import_error_desc: "الملف غير صالح أو معطوب",
     read_content_failed: "فشل قراءة المحتوى",
     notifications_blocked: "تم منع الإشعارات",
-
+    
     // Toast messages for TradingSignalPage
     offline_mode_enabled_title: "تم تفعيل وضع عدم الاتصال",
     offline_mode_enabled_desc: "سيتم استخدام البيانات المخزنة محليًا. بعض الميزات قد تكون محدودة.",
@@ -480,7 +481,7 @@ const translations: Translations = {
     local_mode_switch_desc: "تم التبديل لاستخدام الخوارزمية المحلية بسبب فشل الاتصال مع الخادم.",
     data_updating_title: "جاري تحديث البيانات",
     data_updating_desc: "يتم حاليًا تحديث بيانات السوق وتحليل الاتجاهات.",
-
+    
     // Additional messages for TradingSignalPage
     current_price_label: "السعر الحالي",
     cached_data_loaded_desc: "تم تحميل البيانات المخزنة مسبقاً لضمان استمرارية التحليل.",
@@ -493,19 +494,19 @@ const translations: Translations = {
     offline_mode_reason_timeout: "انتهت مهلة الاتصال",
     offline_mode_reason_unknown: "سبب غير معروف",
     offline_mode_activation_reason: "سبب التفعيل:",
-
+    
     // AdminLayout translations
     admin_login_required: "يجب تسجيل الدخول كمشرف للوصول إلى لوحة التحكم",
     api_keys_label: "مفاتيح API",
     deployment_servers_label: "خوادم النشر",
-
+    
     // IndicatorsPage translations
     market_status_fetch_error: "خطأ في جلب حالة السوق:",
     market_status_update_error: "خطأ في تحديث حالة السوق:",
     market_status_api_error: "فشل في جلب حالة السوق",
     updated: "تم التحديث",
     indicator_updated: "تم تحديث بيانات المؤشر بنجاح",
-
+    
     // Console messages from hooks and other files
     heatmap_data_fetch_error: "خطأ في جلب بيانات الخريطة الحرارية:",
     using_cached_heatmap_data: "استخدام بيانات مخزنة من heatmap_data، عمر البيانات:",
@@ -528,11 +529,11 @@ const translations: Translations = {
     received_analysis_results: "نتائج التحليل المستلمة:",
     data_age: "عمر البيانات",
 
-    // Settings and general success/error messages
+    // Settings and general success/error messages  
     settings_saved_successfully: 'تم حفظ الإعدادات بنجاح',
     language_preference_saved: 'تم حفظ تفضيل اللغة الخاص بك.',
     error_saving_settings: 'خطأ في حفظ الإعدادات',
-    success: 'نجاح',
+    success: 'نجح',
     error: 'خطأ',
     failed: 'فشل',
     successfully_added: 'تم الإضافة بنجاح',
@@ -545,7 +546,7 @@ const translations: Translations = {
     failed_to_update_user: 'فشل في تحديث معلومات المستخدم',
     failed_to_delete_user: 'فشل في حذف المستخدم',
     failed_to_fetch_users: 'فشل في جلب قائمة المستخدمين',
-
+    
     // Server and deployment messages
     server_added_successfully: 'تم إضافة الخادم بنجاح',
     server_updated_successfully: 'تم تحديث معلومات الخادم بنجاح',
@@ -557,7 +558,7 @@ const translations: Translations = {
     failed_to_fetch_servers: 'فشل في جلب قائمة الخوادم',
     failed_to_fetch_deployment_logs: 'فشل في جلب سجلات النشر',
     text_copied_to_clipboard: 'تم نسخ النص إلى الحافظة',
-
+    
     // API Keys messages
     api_key_saved_successfully: 'تم حفظ مفتاح API بنجاح',
 
@@ -566,7 +567,7 @@ const translations: Translations = {
     failed_to_fetch_api_keys: 'فشل في جلب مفاتيح API',
     key_list_updated_successfully: 'تم تحديث قائمة المفاتيح بنجاح',
     failed_to_update_key_list: 'فشل في تحديث قائمة المفاتيح',
-
+    
     // Auth messages
     login_successful: 'تم تسجيل الدخول بنجاح',
     login_failed: 'فشل تسجيل الدخول',
@@ -574,16 +575,16 @@ const translations: Translations = {
     account_creation_failed: 'فشل إنشاء الحساب',
     logout_successful: 'تم تسجيل الخروج بنجاح',
     logout_failed: 'فشل تسجيل الخروج',
-
+    
     // Admin messages
     admin_password_reset_successfully: 'تم إعادة تعيين كلمة مرور المسؤول بنجاح',
     passwords_do_not_match: 'كلمات المرور غير متطابقة',
     password_must_be_longer_than_6_characters: 'كلمة المرور يجب أن تكون أطول من 6 أحرف',
-
+    
     // System updater messages
     system_update_completed: 'تم اكتمال تحديث النظام',
     system_update_failed: 'فشل تحديث النظام',
-
+    
     // Trading and market messages
     refreshing_data: 'جاري تحديث البيانات',
     fetching_latest_prices: 'نعمل على جلب أحدث الأسعار. الرجاء الانتظار أو المحاولة مرة أخرى لاحقاً.',
@@ -808,6 +809,10 @@ const translations: Translations = {
     market_opening_now: 'Market Opening Now',
     refreshing_for_market_open: 'Refreshing data to begin trading',
     time_calculation_error: 'Time calculation error',
+    notifications_enabled: 'Notifications Enabled',
+    market_status_notifications_enabled: 'You will receive notifications when markets open and close',
+    enable_market_notifications: 'Enable Market Notifications',
+    market_closed_message_improved: 'Market is currently closed. It will open at {time}. You can follow the countdown below and will be notified when the market opens.',
     user_management: 'Users',
     admin_panel: 'Admin Panel',
     bot: 'Bot',
@@ -845,19 +850,62 @@ const translations: Translations = {
     admins_only: 'Admins only',
 
     // Settings and general success/error messages
-
+    settings_saved_successfully: 'Settings saved successfully',
+    language_preference_saved: 'Your language preference has been saved.',
+    error_saving_settings: 'Error saving settings',
+    success: 'Success',
+    error: 'Error',
+    failed: 'Failed',
+    successfully_added: 'Successfully added',
+    successfully_updated: 'Successfully updated',
+    successfully_deleted: 'Successfully deleted',
+    user_added_successfully: 'User added successfully',
+    user_updated_successfully: 'User updated successfully',
+    user_deleted_successfully: 'User deleted successfully',
+    failed_to_add_user: 'Failed to add user',
+    failed_to_update_user: 'Failed to update user',
+    failed_to_delete_user: 'Failed to delete user',
+    failed_to_fetch_users: 'Failed to fetch users list',
+    
     // Server and deployment messages
-
+    server_added_successfully: 'Server added successfully',
+    server_updated_successfully: 'Server updated successfully',
+    server_deleted_successfully: 'Server deleted successfully',
+    connected_successfully: 'Connected successfully',
+    connection_failed: 'Connection failed',
+    deployed_successfully: 'Deployed successfully',
+    deployment_failed: 'Deployment failed',
+    failed_to_fetch_servers: 'Failed to fetch servers list',
+    failed_to_fetch_deployment_logs: 'Failed to fetch deployment logs',
+    text_copied_to_clipboard: 'Text copied to clipboard',
+    
     // API Keys messages
-
+    api_key_saved_successfully: 'API key saved successfully',
+    failed_to_save_api_key: 'Failed to save API key',
+    api_key_deleted_successfully: 'API key deleted successfully',
+    failed_to_delete_api_key: 'Failed to delete API key',
+    failed_to_fetch_api_keys: 'Failed to fetch API keys',
+    key_list_updated_successfully: 'Key list updated successfully',
+    failed_to_update_key_list: 'Failed to update key list',
+    
     // Auth messages
-
+    login_successful: 'Login successful',
+    login_failed: 'Login failed',
+    account_created_successfully: 'Account created successfully',
+    account_creation_failed: 'Account creation failed',
+    logout_successful: 'Logout successful',
+    logout_failed: 'Logout failed',
+    
     // Admin messages
     password_must_be_longer_than_6_characters: 'Password must be longer than 6 characters',
-
+    
     // System updater messages
-
+    system_update_completed: 'System update completed',
+    system_update_failed: 'System update failed',
+    
     // Trading and market messages
+    refreshing_data: 'Refreshing data',
+    fetching_latest_prices: 'Fetching latest prices. Please wait or try again later.',
     go_online: 'Go Online',
     offline_mode: 'Offline Mode',
     expected_price_change: 'Expected Price Change',
@@ -876,11 +924,13 @@ const translations: Translations = {
     group_chats: 'Chat',
     settings: 'Settings',
     chat: 'Chat',
+    notifications: 'Notifications',
     timezone: 'Timezone',
     language: 'Language',
     theme: 'Theme',
     save_settings: 'Save Settings',
     settings_saved: 'Settings saved successfully',
+    auto_timezone: 'Auto (Device Time)',
     utc: 'Coordinated Universal Time (UTC)',
     riyadh: 'Riyadh (UTC+3)',
     dubai: 'Dubai (UTC+4)',
@@ -911,6 +961,7 @@ const translations: Translations = {
     app_version: 'App Version',
     dark_mode: 'Dark Mode',
     light_mode: 'Light Mode',
+    system_theme: 'System Theme',
     wait: 'Wait',
     analyzing: 'Analyzing...',
     waiting_for_signal: 'Waiting for signal...',
@@ -924,11 +975,14 @@ const translations: Translations = {
     account_info: 'Account Info',
     app_user: 'User Display Name',
     free_account: 'Premium Annual Subscription',
+    signal_notifications: 'Signal Notifications',
+    receive_signal_notifications: 'Receive notifications for new signals',
+    market_alerts: 'Market Alerts',
+    receive_market_alerts: 'Receive notifications for market open/close',
     choose_timezone: 'Choose Timezone',
     detected_timezone: 'Detected Timezone',
     timezone_description: 'Timezone affects how signal times and market open/close times are displayed',
     auto_timezone_description: 'Timezone is automatically set based on your device time',
-    auto_timezone: 'Auto (Device Time)',
     market: 'Market',
     market_open: 'Market Open',
     market_closed: 'Market Closed',
@@ -937,6 +991,7 @@ const translations: Translations = {
     technical_analysis: 'Technical Analysis',
     get_signal: 'Get Signal',
     signal_cooldown: 'Wait for next signal',
+    second_unit: 'seconds',
     probability: 'Probability',
     current_price: 'Current Price',
     select_trading_platform: 'Select Trading Platform',
@@ -996,20 +1051,31 @@ const translations: Translations = {
     analyzing_message: 'Analyzing {pair} on {timeframe} timeframe',
     market_closed_message: 'Cannot get signals when market is closed. Opens at {time}',
     new_signal_message: 'New {type} signal',
-    market_closed_message_improved: 'Market is currently closed. It will open at {time}. You can follow the countdown below and will be notified when the market opens.',
-
-    // Notifications
-    notifications: 'Notifications',
-    notifications_enabled: 'Notifications Enabled',
-    market_status_notifications_enabled: 'You will receive notifications when markets open and close',
-    enable_market_notifications: 'Enable Market Notifications',
-    signal_notifications: 'Signal Notifications',
-    receive_signal_notifications: 'Receive notifications for new signals',
-    market_alerts: 'Market Alerts',
-    receive_market_alerts: 'Receive notifications for market open/close',
-
-
-    // Technical indicators
+    target_price: 'Target Price',
+    higher: 'higher',
+    lower: 'lower',
+    prediction_valid_for: 'Prediction valid for',
+    timeframe_impacts_signal: 'Timeframe affects signals',
+    expected_rise: 'Expected rise',
+    expected_drop: 'Expected drop',
+    expected_price_rise_in: 'Expected rise in',
+    expected_price_drop_in: 'Expected drop in',
+    expected_price_rise_in_timeframe: 'Price expected to rise within timeframe',
+    expected_price_drop_in_timeframe: 'Price expected to drop within timeframe',
+    bullish_trend: 'Bullish trend',
+    bearish_trend: 'Bearish trend',
+    timeframe_1m: '1 Minute',
+    timeframe_1m_short: '1M',
+    timeframe_5m: '5 Minutes',
+    timeframe_5m_short: '5M',
+    timeframe_15m: '15 Minutes',
+    timeframe_15m_short: '15M',
+    timeframe_1h: '1 Hour',
+    timeframe_1h_short: '1H',
+    timeframe_4h: '4 Hours',
+    timeframe_4h_short: '4H',
+    timeframe_1d: '1 Day',
+    timeframe_1d_short: '1D',
     all_indicators: 'All Indicators',
     trend: 'Trend',
     oscillator: 'Oscillator',
@@ -1033,6 +1099,7 @@ const translations: Translations = {
     momentum_description: 'Negative momentum indicates weakening uptrend strength',
     volatility_description: 'Average increase in price volatility',
     indicator_value: 'Value',
+    timeframe: 'Timeframe',
     buy: 'Buy',
     sell: 'Sell',
     neutral: 'Neutral',
@@ -1043,8 +1110,38 @@ const translations: Translations = {
     indicator_stoch: 'Stoch',
     indicator_adx: 'ADX',
     loading: 'Loading...',
+    loading_page: 'Loading page...',
+    offline_mode_auto_enabled_title: 'Offline Mode Auto-Enabled',
+    offline_mode_auto_enabled_description: 'Offline mode has been automatically enabled to improve performance in Replit HTTPS environment. All app features will work but without direct server connection.',
+    initializing_app: 'Initializing application...',
+    please_wait: 'Please wait...',
+    platform_metatrader5: 'MetaTrader 5',
+    platform_metatrader4: 'MetaTrader 4',
+    platform_eobroker: 'EO Broker',
+    platform_binomo: 'Binomo',
+    platform_iqoption: 'IQ Option',
+    platform_binance: 'Binance',
+    platform_pocketoption: 'Pocket Option',
+    platform_olymptrade: 'Olymp Trade',
+    platform_etoro: 'eToro',
+    platform_kucoin: 'KuCoin',
+    platform_deriv: 'Deriv',
+    login: "Login",
+    create_account: "Create Account",
+    username: "Username",
+    password: "Password",
+    confirm_password: "Confirm Password",
+    display_name: "Display Name",
+    email: "Email",
+    password_mismatch: "Passwords do not match",
+    dont_have_account: "Don't have an account? Sign up",
+    already_have_account: "Already have an account? Login",
+    app_welcome: "Welcome to Binar Join Analytic",
+    app_description: "An integrated platform for analyzing trading signals in financial markets with multilingual support and advanced analysis features.",
+    logout: "Logout",
+    logout_success: "Logged out successfully",
 
-    // Console and system messages
+    // Adding missing translations
     error_checking_connection: "Error checking connection",
     backup_data_updated: "Backup data updated",
     connection_check_error: "Connection check error:",
@@ -1056,34 +1153,32 @@ const translations: Translations = {
     independent_mode_activated: "Independent mode activated",
 
     // 404 page
-    page_not_found_404: '404 Page Not Found',
-    page_not_found_description: 'Did you forget to add the page to the router?',
+    page_not_found_404: "404 Page Not Found",
+    page_not_found_description: "Did you forget to add the page to the router?",
 
     // Themes
-    toggle_theme: 'Toggle theme',
-    light_theme: 'Light',
-    dark_theme: 'Dark',
-    system_theme: 'System Theme',
-    system_theme_short: 'System',
+    toggle_theme: "Toggle theme",
+    light_theme: "Light",
+    dark_theme: "Dark", 
+    system_theme_short: "System",
 
-    // Connection states and messages
-    reconnection_successful: 'Reconnection successful',
-    connection_restored_data_updated: 'Connection restored successfully and data updated',
-    data_update_in_progress: 'Data update in progress',
-    fetching_latest_data_auto_retry: 'We are working to fetch the latest data. Will retry automatically',
-    offline_mode_enabled_success: 'Offline mode enabled',
-    offline_mode_enabled_description: 'You can now use the app without internet connection. Data will sync when connection is restored.',
-    offline_mode_enable_failed: 'Failed to enable offline mode',
-    offline_mode_enable_error: 'An error occurred while trying to enable offline mode. Please try again.',
-    retrying_attempt: 'Retrying...',
-    enable_offline_mode: 'Enable offline mode',
-    offline_mode_connection_issue: 'If connection issues persist, you can enable offline mode to continue using the app.',
-    offline_mode_data_storage: 'In offline mode, your data will be stored locally and synced when connection is restored.',
-    retry_count: 'Attempts:',
-    data_analysis_update_message: 'Data analysis update in progress. You can wait a moment or use local analysis mode to continue.',
+    // Connection errors
+    reconnection_successful: "Reconnection successful",
+    connection_restored_data_updated: "Connection restored successfully and data updated",
+    data_update_in_progress: "Data update in progress",
+    fetching_latest_data_auto_retry: "We are working to fetch the latest data. Will retry automatically",
+    offline_mode_enabled_success: "Offline mode enabled",
+    offline_mode_enabled_description: "You can now use the app without internet connection. Data will sync when connection is restored.",
+    offline_mode_enable_failed: "Failed to enable offline mode",
+    offline_mode_enable_error: "An error occurred while trying to enable offline mode. Please try again.",
+    retrying_attempt: "Retrying...",
+    enable_offline_mode: "Enable offline mode",
+    offline_mode_connection_issue: "If connection issues persist, you can enable offline mode to continue using the app.",
+    offline_mode_data_storage: "In offline mode, your data will be stored locally and synced when connection is restored.",
+    retry_count: "Attempts:",
+    data_analysis_update_message: "Data analysis update in progress. You can wait a moment or use local analysis mode to continue.",
 
-
-    // All the console.log messages
+    // Console.log messages for internationalization
     https_detected_replit: "HTTPS detected in Replit environment - enabling offline mode automatically",
     offline_mode_auto_activated_replit: "Offline mode auto-enabled due to Replit HTTPS environment",
     offline_mode_enabled_trading_page: "Enabling offline mode in trading signals page",
@@ -1104,6 +1199,8 @@ const translations: Translations = {
     default_api_keys_loaded: "Default API keys loaded successfully",
     invalid_file_format: "Invalid file format",
     failed_to_read_content: "Failed to read content",
+    
+    // Additional console messages  
     theme_config_error: "Failed to apply theme.json settings:",
     could_not_read_stored_price_warn: "Could not read stored price:",
     market_analysis_for: "Market analysis for:",
@@ -1114,7 +1211,7 @@ const translations: Translations = {
     signal_converted_to_up: "Signal converted to UP",
     signal_converted_to_down: "Signal converted to DOWN",
     signal_no_match_using_wait: "Signal did not match any condition, using WAIT",
-
+    
     // Toast messages for ChatPage
     export_success: "Chat exported successfully",
     export_success_desc: "Chat saved to file",
@@ -1126,7 +1223,7 @@ const translations: Translations = {
     import_error_desc: "Invalid or corrupted file",
     read_content_failed: "Failed to read content",
     notifications_blocked: "Notifications blocked",
-
+    
     // Toast messages for TradingSignalPage
     offline_mode_enabled_title: "Offline mode enabled",
     offline_mode_enabled_desc: "Locally stored data will be used. Some features may be limited.",
@@ -1142,7 +1239,7 @@ const translations: Translations = {
     local_mode_switch_desc: "Switched to using local algorithm due to server connection failure.",
     data_updating_title: "Data updating",
     data_updating_desc: "Currently updating market data and analyzing trends.",
-
+    
     // Additional messages for TradingSignalPage
     current_price_label: "Current price",
     cached_data_loaded_desc: "Previously cached data loaded to ensure analysis continuity.",
@@ -1155,19 +1252,19 @@ const translations: Translations = {
     offline_mode_reason_timeout: "Connection timeout",
     offline_mode_reason_unknown: "Unknown reason",
     offline_mode_activation_reason: "Activation reason:",
-
+    
     // AdminLayout translations
     admin_login_required: "Must login as admin to access control panel",
     api_keys_label: "API Keys",
     deployment_servers_label: "Deployment Servers",
-
+    
     // IndicatorsPage translations
     market_status_fetch_error: "Error fetching market status:",
     market_status_update_error: "Error updating market status:",
     market_status_api_error: "Failed to fetch market status",
     updated: "Updated",
     indicator_updated: "Indicator data updated successfully",
-
+    
     // Console messages from hooks and other files
     heatmap_data_fetch_error: "Error fetching heatmap data:",
     using_cached_heatmap_data: "Using cached data from heatmap_data, data age:",
@@ -1190,64 +1287,26 @@ const translations: Translations = {
     received_analysis_results: "Received analysis results:",
     data_age: "data age",
 
-    // Settings and general success/error messages
-    settings_saved_successfully: 'Settings saved successfully',
-    language_preference_saved: 'Your language preference has been saved.',
-    error_saving_settings: 'Error saving settings',
-    success: 'Success',
-    error: 'Error',
-    failed: 'Failed',
-    successfully_added: 'Successfully added',
-    successfully_updated: 'Successfully updated',
-    successfully_deleted: 'Successfully deleted',
-    user_added_successfully: 'User added successfully',
-    user_updated_successfully: 'User updated successfully',
-    user_deleted_successfully: 'User deleted successfully',
-    failed_to_add_user: 'Failed to add user',
-    failed_to_update_user: 'Failed to update user',
-    failed_to_delete_user: 'Failed to delete user',
-    failed_to_fetch_users: 'Failed to fetch users list',
+    // Missing keys from Arabic
+    copied_to_clipboard: 'Copied to clipboard',
+    copy_failed: 'Copy failed',
+    copy_translation: 'Copy translation',
+    second: 'second',
 
-    // Server and deployment messages
-    server_added_successfully: 'Server added successfully',
-    server_updated_successfully: 'Server updated successfully',
-    server_deleted_successfully: 'Server deleted successfully',
-    connected_successfully: 'Connected successfully',
-    connection_failed: 'Connection failed',
-    deployed_successfully: 'Deployed successfully',
-    deployment_failed: 'Deployment failed',
-    failed_to_fetch_servers: 'Failed to fetch servers list',
-    failed_to_fetch_deployment_logs: 'Failed to fetch deployment logs',
-    text_copied_to_clipboard: 'Text copied to clipboard',
-
-    // API Keys messages
-    api_key_saved_successfully: 'API key saved successfully',
-    failed_to_save_api_key: 'Failed to save API key',
-    api_key_deleted_successfully: 'API key deleted successfully',
-    failed_to_delete_api_key: 'Failed to delete API key',
-    failed_to_fetch_api_keys: 'Failed to fetch API keys',
-    key_list_updated_successfully: 'Key list updated successfully',
-    failed_to_update_key_list: 'Failed to update key list',
-
-    // Auth messages
-    login_successful: 'Login successful',
-    login_failed: 'Login failed',
-    account_created_successfully: 'Account created successfully',
-    account_creation_failed: 'Account creation failed',
-    logout_successful: 'Logout successful',
-    logout_failed: 'Logout failed',
-
-    // Admin messages
-    admin_password_reset_successfully: 'Admin password reset successfully',
-
-    // System updater messages
-    system_update_completed: 'System update completed',
-    system_update_failed: 'System update failed',
-
-    // Trading and market messages
-    refreshing_data: 'Refreshing data',
-    fetching_latest_prices: 'Fetching latest prices. Please wait or try again later.',
-    second_unit: 'second',
+    // Trading pairs names
+    'EUR/USD': 'Euro / US Dollar',
+    'GBP/USD': 'British Pound / US Dollar',
+    'USD/JPY': 'US Dollar / Japanese Yen',
+    'USD/CHF': 'US Dollar / Swiss Franc',
+    'EUR/JPY': 'Euro / Japanese Yen',
+    'GBP/JPY': 'British Pound / Japanese Yen',
+    'BTC/USDT': 'Bitcoin / Tether',
+    'ETH/USDT': 'Ethereum / Tether',
+    'XRP/USDT': 'Ripple / Tether',
+    'AAPL': 'Apple Inc.',
+    'MSFT': 'Microsoft Corporation',
+    'GOOGL': 'Google LLC',
+    'AMZN': 'Amazon.com Inc.',
 
     // Admin Reset Password
     admin_reset_password_title: 'Reset Admin Password',
@@ -1355,6 +1414,7 @@ const translations: Translations = {
     deployment_stage_upload: 'Uploading Files',
     deployment_stage_execution: 'Execution',
     deployment_stage_completion: 'Completion'
+
   },
   hi: {
     // Error messages
@@ -1452,9 +1512,9 @@ const translations: Translations = {
     show_compact: 'संक्षिप्त दिखाएं',
     close: 'बंद करें',
 
-    // Basic Hindi translations
+    // Basic Hindi translations  
     loading_page: 'पेज लोड हो रहा है...',
-    offline_mode_auto_enabled_title: 'ऑफ़लाइन मोड स्वचालित सक्षम',
+    offline_mode_auto_enabled_title: 'ऑफलाइन मोड स्वचालित सक्षम',
     offline_mode_auto_enabled_description: 'Replit HTTPS वातावरण में प्रदर्शन सुधारने के लिए ऑफलाइन मोड स्वचालित रूप से सक्षम हो गया है। सभी ऐप सुविधाएं काम करेंगी लेकिन प्रत्यक्ष सर्वर कनेक्शन के बिना।',
     initializing_app: 'ऐप इनिशियलाइज़ हो रहा है...',
     please_wait: 'कृपया प्रतीक्षा करें...',
@@ -1540,7 +1600,7 @@ const translations: Translations = {
     light_mode: 'लाइट मोड',
     choose_app_language: 'ऐप भाषा चुनें',
 
-    // Trading specific translations
+    // Trading specific translations  
     waiting_for_signal: 'सिग्नल की प्रतीक्षा...',
     current_signal: 'वर्तमान सिग्नल',
     get_signal: 'सिग्नल प्राप्त करें',
@@ -1913,7 +1973,7 @@ const translations: Translations = {
     received_analysis_results: "विश्लेषण परिणाम प्राप्त हुए:",
     data_age: "डेटा आयु",
 
-    // Settings and general success/error messages
+    // Settings and general success/error messages  
     settings_saved_successfully: 'सेटिंग्स सफलतापूर्वक सेव हुईं',
     language_preference_saved: 'आपकी भाषा प्राथमिकता सेव हो गई है।',
     error_saving_settings: 'सेटिंग्स सेव करने में त्रुटि',
@@ -1930,7 +1990,7 @@ const translations: Translations = {
     failed_to_update_user: 'उपयोगकर्ता की जानकारी अपडेट करने में विफल',
     failed_to_delete_user: 'उपयोगकर्ता हटाने में विफल',
     failed_to_fetch_users: 'उपयोगकर्ता सूची प्राप्त करने में विफल',
-
+    
     // Server and deployment messages
     server_added_successfully: 'सर्वर सफलतापूर्वक जोड़ा गया',
     server_updated_successfully: 'सर्वर की जानकारी सफलतापूर्वक अपडेट हुई',
@@ -1942,7 +2002,7 @@ const translations: Translations = {
     failed_to_fetch_servers: 'सर्वर सूची प्राप्त करने में विफल',
     failed_to_fetch_deployment_logs: 'डिप्लॉयमेंट लॉग प्राप्त करने में विफल',
     text_copied_to_clipboard: 'टेक्स्ट क्लिपबोर्ड में कॉपी हुआ',
-
+    
     // API Keys messages
     api_key_saved_successfully: 'API कुंजी सफलतापूर्वक सेव हुई',
     failed_to_save_api_key: 'API कुंजी सेव करने में विफल',
@@ -1951,7 +2011,7 @@ const translations: Translations = {
     failed_to_fetch_api_keys: 'API कुंजी प्राप्त करने में विफल',
     key_list_updated_successfully: 'कुंजी सूची सफलतापूर्वक अपडेट हुई',
     failed_to_update_key_list: 'कुंजी सूची अपडेट करने में विफल',
-
+    
     // Auth messages
     login_successful: 'लॉगिन सफल',
     login_failed: 'लॉगिन विफल',
@@ -1959,14 +2019,16 @@ const translations: Translations = {
     account_creation_failed: 'खाता बनाने में विफल',
     logout_successful: 'लॉगआउट सफल',
     logout_failed: 'लॉगआउट विफल',
-
+    
     // Admin messages
     admin_password_reset_successfully: 'व्यवस्थापक पासवर्ड सफलतापूर्वक रीसेट हुआ',
 
+
+    
     // System updater messages
     system_update_completed: 'सिस्टम अपडेट पूरा हुआ',
     system_update_failed: 'सिस्टम अपडेट विफल',
-
+    
     // Trading and market messages
     refreshing_data: 'डेटा रीफ्रेश हो रहा है',
     fetching_latest_prices: 'नवीनतम कीमतों को प्राप्त कर रहे हैं। कृपया प्रतीक्षा करें या बाद में पुनः प्रयास करें।',
@@ -2044,8 +2106,11 @@ const translations: Translations = {
     failed_to_update_keys: 'कुंजी सूची अपडेट करने में विफल',
 
     // Error and success messages
+
+
     failed_to_reset_password: 'पासवर्ड रीसेट करने में विफल',
     error_occurred_while_resetting_password: 'पासवर्ड रीसेट करते समय त्रुटि हुई',
+
 
     // Additional common messages
     confirm_delete_key: 'क्या आप वाकई कुंजी हटाना चाहते हैं',
@@ -2062,7 +2127,7 @@ const translations: Translations = {
     fxpro: 'एफएक्स प्रो',
     icmarkets: 'आईसी मार्केट्स',
     xm: 'एक्सएम',
-    xtb: 'एक्सटीपी',
+    xtb: 'एक्सटीबी',
     alpari: 'अल्पारी',
     plus500: 'प्लस500',
     etoro: 'ईटोरो',
@@ -2081,6 +2146,7 @@ const translations: Translations = {
     deployment_stage_upload: 'फाइल अपलोड',
     deployment_stage_execution: 'कार्यान्वयन',
     deployment_stage_completion: 'पूर्णता',
+
 
     // Trading pairs names
     'EUR/USD': 'यूरो / अमेरिकी डॉलर',
@@ -2122,11 +2188,11 @@ export function getBrowserLanguage(): string {
 let currentLanguage = 'en'; // English as default language
 
 // Normalize language codes to supported values
-const normalizeLanguage = (lang: string): 'ar' | 'en' | 'hi' => {
+const normalizeLanguage = (lang: string): 'ar' | 'en' => {
   // Handle variations like 'ar-SA' -> 'ar', 'en-US' -> 'en'
   const langCode = lang.toLowerCase().split('-')[0];
-  console.log('Normalizing language:', lang, '=>', langCode === 'ar' ? 'ar' : (langCode === 'hi' ? 'hi' : 'en'));
-  return langCode === 'ar' ? 'ar' : (langCode === 'hi' ? 'hi' : 'en');
+  console.log('Normalizing language:', lang, '=>', langCode === 'ar' ? 'ar' : 'en');
+  return langCode === 'ar' ? 'ar' : 'en';
 };
 
 // Function to change language with optional database save
@@ -2135,10 +2201,10 @@ export const setLanguage = (lang: string, saveToDatabase: boolean = false) => {
   // Normalize language code first
   const normalizedLang = normalizeLanguage(lang);
   console.log('setLanguage called with:', lang, '=> normalized to:', normalizedLang, 'saveToDatabase:', saveToDatabase);
-
+  
   // Update internal language state
   currentLanguage = normalizedLang;
-
+  
   // ALWAYS update DOM attributes regardless of flags
   const isRTL = normalizedLang === 'ar';
   document.documentElement.setAttribute('lang', normalizedLang);
@@ -2147,7 +2213,7 @@ export const setLanguage = (lang: string, saveToDatabase: boolean = false) => {
   // Remove any existing direction classes to avoid conflicts
   document.documentElement.classList.remove('ar', 'rtl', 'ltr');
   document.body.classList.remove('font-arabic');
-
+  
   // Add appropriate classes for the selected language
   if (isRTL) {
     document.documentElement.classList.add('ar', 'rtl');
@@ -2180,9 +2246,9 @@ export const setLanguage = (lang: string, saveToDatabase: boolean = false) => {
   translationCache = {};
 
   // Dispatch language change event
-  window.dispatchEvent(new CustomEvent('languageChanged',
-    { detail: { language: normalizedLang, saveToDatabase } }
-  ));
+  window.dispatchEvent(new CustomEvent('languageChanged', { 
+    detail: { language: normalizedLang, saveToDatabase } 
+  }));
 
   console.log('Language change complete:', normalizedLang, 'Save to DB:', saveToDatabase);
 };
@@ -2216,7 +2282,7 @@ export const getCurrentLanguage = (user?: any): string => {
     console.log('Language from user preferences:', user.preferredLanguage);
     return user.preferredLanguage;
   }
-
+  
   try {
     // Priority 2: check saved settings in localStorage
     const settings = JSON.parse(localStorage.getItem('settings') || '{}');
@@ -2259,10 +2325,10 @@ export const changeLanguage = (newLanguage: string, saveToStorage: boolean = tru
     }
 
     console.log('Language changed to:', newLanguage, 'Save to DB:', saveToStorage);
-
+    
     // Update current language
     currentLanguage = newLanguage;
-
+    
     // Save to localStorage if requested
     if (saveToStorage) {
       try {
@@ -2288,111 +2354,52 @@ export const changeLanguage = (newLanguage: string, saveToStorage: boolean = tru
     }
 
     // Dispatch custom event for components to react to language change
-    window.dispatchEvent(new CustomEvent('languageChanged',
-      { detail: { language: newLanguage, user } }
-    ));
+    window.dispatchEvent(new CustomEvent('languageChanged', {
+      detail: { language: newLanguage, user }
+    }));
 
     return newLanguage;
   }
   return 'en';
 };
 
-// Placeholder for the language initialization function from the original code,
-// which will be replaced by the corrected version.
-const LANGUAGE_STORAGE_KEY = 'language';
-const DEFAULT_LANGUAGE = 'en'; // Default to English
-
-type Language = 'ar' | 'en' | 'hi';
-
-function setCurrentLanguage(lang: Language): void {
-  currentLanguage = lang;
-}
-
-function applyDirection(lang: Language): void {
-  const isRTL = lang === 'ar';
-  document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
-
-  // Remove existing direction classes and add the correct one
-  document.documentElement.classList.remove('rtl', 'ltr');
-  document.documentElement.classList.add(isRTL ? 'rtl' : 'ltr');
-
-  // Handle Arabic-specific styling
-  if (isRTL) {
-    document.body.classList.add('font-arabic');
-    document.documentElement.classList.add('ar');
-  } else {
-    document.body.classList.remove('font-arabic');
-    document.documentElement.classList.remove('ar');
-  }
-}
-
-export function initializeLanguageSystem() {
-  try {
-    console.log('🌐 Starting language system initialization...');
-
-    // قراءة اللغة من localStorage مع تنظيف الإعدادات المتضاربة
-    let targetLanguage = getCurrentLanguage();
-
-    console.log('Target language determined:', targetLanguage);
-
-    // تطبيق اللغة والاتجاه بشكل مستمر
-    setCurrentLanguage(targetLanguage as Language);
-    applyLanguageSettings(targetLanguage as Language);
-
-    console.log('✅ Language system initialized successfully:', {
-      language: targetLanguage,
-      direction: targetLanguage === 'ar' ? 'rtl' : 'ltr',
-      htmlLang: document.documentElement.getAttribute('lang'),
-      htmlDir: document.documentElement.getAttribute('dir')
-    });
-
-  } catch (error) {
-    console.error('❌ Critical error in language initialization:', error);
-    // في حالة الخطأ الحرج، استخدم إعدادات آمنة
-    applySafeLanguageDefaults();
-  }
-}
-
-function applyLanguageSettings(lang: Language): void {
-  try {
-    // تطبيق الإعدادات على document
-    setCurrentLanguage(lang);
-    applyDirection(lang);
-
-    // تحديث document attributes
-    document.documentElement.setAttribute('lang', lang);
-    document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
-
-    // حفظ اللغة في localStorage
-    localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
-
-    // تحديث الإعدادات
-    try {
-      const settings = JSON.parse(localStorage.getItem('settings') || '{}');
-      settings.language = lang;
-      localStorage.setItem('settings', JSON.stringify(settings));
-    } catch (settingsError) {
-      console.warn('Could not update settings:', settingsError);
-      localStorage.setItem('settings', JSON.stringify({ language: lang }));
+export const initializeLanguageSystem = (user?: any) => {
+  if (typeof window !== 'undefined') {
+    // Get language using proper fallback order
+    const lang = getCurrentLanguage(user);
+    
+    // Only save to localStorage if user has a preference and it's different from current
+    const shouldSaveToStorage = user && user.preferredLanguage;
+    
+    if (shouldSaveToStorage) {
+      try {
+        const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+        if (!settings.language || user.preferredLanguage !== settings.language) {
+          settings.language = lang;
+          localStorage.setItem('settings', JSON.stringify(settings));
+        }
+      } catch {
+        localStorage.setItem('settings', JSON.stringify({ language: lang }));
+      }
     }
 
-    console.log('Language settings applied successfully:', lang);
-  } catch (error) {
-    console.error('Error applying language settings:', error);
-    applySafeLanguageDefaults();
-  }
-}
+    // Apply language settings to document
+    document.documentElement.setAttribute('lang', lang);
+    document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+    currentLanguage = lang;
 
-function applySafeLanguageDefaults(): void {
-  console.log('Applying safe language defaults');
-  document.documentElement.classList.remove('ar', 'en', 'hi', 'rtl', 'ltr');
-  document.body.classList.remove('font-arabic');
-  document.documentElement.classList.add('ltr');
-  document.documentElement.setAttribute('lang', DEFAULT_LANGUAGE);
-  document.documentElement.setAttribute('dir', 'ltr');
-  localStorage.setItem(LANGUAGE_STORAGE_KEY, DEFAULT_LANGUAGE);
-  currentLanguage = DEFAULT_LANGUAGE;
-}
+    // Add Arabic-specific classes if needed
+    if (lang === 'ar') {
+      document.documentElement.classList.add('ar');
+      document.body.classList.add('font-arabic');
+    } else {
+      document.documentElement.classList.remove('ar');
+      document.body.classList.remove('font-arabic');
+    }
+
+    console.log('Language system initialized with:', lang, user ? '(from user data)' : '(from fallback)');
+  }
+};
 
 // Initialize on module load for non-authenticated users
 // Clear localStorage on logout utility function
@@ -2403,13 +2410,13 @@ export const clearLanguageOnLogout = () => {
       const settings = JSON.parse(localStorage.getItem('settings') || '{}');
       delete settings.language;
       localStorage.setItem('settings', JSON.stringify(settings));
-
-      // Clear old localStorage
+      
+      // Clear old language storage
       localStorage.removeItem('language');
-
+      
       // Reset to English
       changeLanguage('en', false);
-
+      
       console.log('Language cleared on logout, reset to English');
     } catch (error) {
       console.error('Error clearing language on logout:', error);
@@ -2425,11 +2432,11 @@ if (typeof window !== 'undefined') {
   document.documentElement.setAttribute('lang', lang);
   document.documentElement.setAttribute('dir', 'ltr');
   currentLanguage = lang;
-
+  
   // Remove any Arabic classes from initial load
   document.documentElement.classList.remove('ar');
   document.body.classList.remove('font-arabic');
-
+  
   console.log('Initial language system setup with English');
 
   // Add listener for language changes - enhanced dynamic direction support
@@ -2437,12 +2444,12 @@ if (typeof window !== 'undefined') {
     const detail = event.detail;
     const newLang = detail.language;
     const isRTL = newLang === 'ar';
-
+    
     // Update HTML attributes
     document.documentElement.setAttribute('lang', newLang);
     document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
     currentLanguage = newLang;
-
+    
     // Apply/remove Arabic-specific styling and classes
     if (isRTL) {
       document.documentElement.classList.add('ar');
@@ -2453,16 +2460,16 @@ if (typeof window !== 'undefined') {
     } else {
       document.documentElement.classList.remove('ar');
       document.body.classList.remove('font-arabic');
-      // Add LTR class for better CSS targeting
+      // Add LTR class for better CSS targeting  
       document.documentElement.classList.add('ltr');
       document.documentElement.classList.remove('rtl');
     }
-
+    
     // Dispatch additional RTL event for components that need to update icons/layouts
-    window.dispatchEvent(new CustomEvent('directionChanged',
-      { detail: { direction: isRTL ? 'rtl' : 'ltr', language: newLang } }
-    ));
-
+    window.dispatchEvent(new CustomEvent('directionChanged', { 
+      detail: { direction: isRTL ? 'rtl' : 'ltr', language: newLang } 
+    }));
+    
     console.log(`Direction changed to: ${isRTL ? 'RTL' : 'LTR'} for language: ${newLang}`);
   });
 }
@@ -2476,18 +2483,18 @@ export const setUserLanguage = (userPreferredLang: string | null) => {
       settings.language = userPreferredLang;
       localStorage.setItem('settings', JSON.stringify(settings));
       localStorage.setItem('language', userPreferredLang);
-
+      
       // Update current language
       currentLanguage = userPreferredLang;
       document.documentElement.setAttribute('lang', userPreferredLang);
       document.documentElement.setAttribute('dir', userPreferredLang === 'ar' ? 'rtl' : 'ltr');
-
+      
       // Clear translation cache
       translationCache = {};
-
+      
       // Dispatch language change event
       window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: userPreferredLang } }));
-
+      
       console.log('User preferred language set to:', userPreferredLang);
       return true;
     } catch (error) {
@@ -2502,7 +2509,7 @@ export const setUserLanguage = (userPreferredLang: string | null) => {
 export const formatNumber = (num: number | string, lang?: string): string => {
   const currentLang = lang || getCurrentLanguage();
   const numString = num.toString();
-
+  
   // للعربية، نستخدم الأرقام الغربية مع RTL
   if (currentLang === 'ar') {
     // تحويل الأرقام العربية إلى غربية إذا كانت موجودة
@@ -2514,7 +2521,7 @@ export const formatNumber = (num: number | string, lang?: string): string => {
     }
     return result;
   }
-
+  
   return numString;
 };
 
@@ -2522,7 +2529,7 @@ export const formatNumber = (num: number | string, lang?: string): string => {
 export const getTextClasses = (hasNumbers: boolean = false): string => {
   const lang = getCurrentLanguage();
   let classes = '';
-
+  
   if (lang === 'ar') {
     classes += 'text-right ';
     if (hasNumbers) {
@@ -2531,34 +2538,34 @@ export const getTextClasses = (hasNumbers: boolean = false): string => {
   } else {
     classes += 'text-left ';
   }
-
+  
   return classes;
 };
 
 // Function to get user's preferred language with fallback order
 export const getUserPreferredLanguage = (userPreferredLang?: string | null): string => {
   // Priority 1: User is logged in and has preferred language in database
-  if (userPreferredLang && supportedLanguages.some(lang => lang.id === userPreferredLang)) {
+  if (userPreferredLang && translations[userPreferredLang]) {
     return userPreferredLang;
   }
-
+  
   // Priority 2: Saved in localStorage
   if (typeof window !== 'undefined') {
     try {
       const settings = JSON.parse(localStorage.getItem('settings') || '{}');
-      if (settings.language && supportedLanguages.some(lang => lang.id === settings.language)) {
+      if (settings.language && translations[settings.language]) {
         return settings.language;
       }
-
+      
       const storedLang = localStorage.getItem('language');
-      if (storedLang && supportedLanguages.some(lang => lang.id === storedLang)) {
+      if (storedLang && translations[storedLang]) {
         return storedLang;
       }
     } catch (error) {
       console.error('Error reading language from localStorage:', error);
     }
   }
-
+  
   // Priority 3: Browser language
   return getBrowserLanguage();
 };

@@ -388,5 +388,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // مسار حالة السوق - يعطي معلومات عن ساعات التداول
+  app.get('/api/market-status', (req, res) => {
+    const { market, timezone } = req.query;
+    
+    try {
+      const currentTime = new Date();
+      const currentHour = currentTime.getHours();
+      
+      // منطق بسيط لتحديد حالة السوق (يمكن تطويره لاحقاً)
+      let isOpen = false;
+      let nextOpenTime = null;
+      let nextCloseTime = null;
+      
+      if (market === 'forex') {
+        // سوق الفوركس مفتوح 24/5 (من الاثنين إلى الجمعة)
+        const dayOfWeek = currentTime.getDay();
+        isOpen = dayOfWeek >= 1 && dayOfWeek <= 5; // الاثنين = 1, الجمعة = 5
+      } else if (market === 'crypto') {
+        // العملات المشفرة مفتوحة 24/7
+        isOpen = true;
+      } else {
+        // الأسهم عادة مفتوحة من 9 صباحاً إلى 4 مساءً
+        isOpen = currentHour >= 9 && currentHour < 16;
+      }
+      
+      res.json({
+        market: market || 'unknown',
+        isOpen,
+        currentTime: currentTime.toISOString(),
+        timezone: timezone || 'UTC',
+        nextOpenTime,
+        nextCloseTime
+      });
+    } catch (error) {
+      console.error('Error in market status:', error);
+      res.status(500).json({ error: 'Failed to get market status' });
+    }
+  });
+
+  // مسار تقارير الأخطاء
+  app.post('/api/errors', (req, res) => {
+    try {
+      const { type, message, filename, line, column, stack, userAgent, timestamp } = req.body;
+      
+      // طباعة الخطأ في السجلات (يمكن حفظه في قاعدة البيانات لاحقاً)
+      console.error('Frontend Error Report:', {
+        type,
+        message,
+        filename,
+        line,
+        column,
+        stack,
+        userAgent,
+        timestamp,
+        ip: req.ip,
+        url: req.get('Referer')
+      });
+      
+      res.json({ success: true, message: 'Error reported successfully' });
+    } catch (error) {
+      console.error('Error processing error report:', error);
+      res.status(500).json({ error: 'Failed to process error report' });
+    }
+  });
+
   return httpServer;
 }

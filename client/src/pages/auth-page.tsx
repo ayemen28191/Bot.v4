@@ -15,10 +15,12 @@ import { cn } from "@/lib/utils";
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
-  const { loginMutation, user } = useAuth();
+  const { login, user, isLoading, error } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [loginPending, setLoginPending] = useState(false);
+  const [loginSuccess, setLoginSuccess] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(
@@ -39,22 +41,28 @@ export default function AuthPage() {
 
   // Handle animation effect on form submission
   useEffect(() => {
-    if (loginMutation.isPending) {
+    if (loginPending) {
       setIsAnimating(true);
     } else {
       const timer = setTimeout(() => setIsAnimating(false), 300);
       return () => clearTimeout(timer);
     }
-  }, [loginMutation.isPending]);
+  }, [loginPending]);
 
   const onSubmit = async (data: any) => {
     try {
-      await loginMutation.mutateAsync({
+      setLoginPending(true);
+      setLoginSuccess(false);
+      await login({
         username: data.username,
         password: data.password,
       });
+      setLoginSuccess(true);
     } catch (error) {
-      // Error handling is done in the useAuth hook
+      console.error('Login error:', error);
+      // Error handling can be shown to user here if needed
+    } finally {
+      setLoginPending(false);
     }
   };
 
@@ -201,12 +209,12 @@ export default function AuthPage() {
                   className={cn(
                     "w-full h-11 transition-all duration-200",
                     "hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]",
-                    loginMutation.isPending && "cursor-not-allowed"
+                    loginPending && "cursor-not-allowed"
                   )}
-                  disabled={loginMutation.isPending}
+                  disabled={loginPending}
                   data-testid="button-submit"
                 >
-                  {loginMutation.isPending ? (
+                  {loginPending ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
                       {t("logging_in")}
@@ -220,15 +228,15 @@ export default function AuthPage() {
                 </Button>
 
                 {/* Success/Error Messages */}
-                {loginMutation.isError && (
+                {error && (
                   <div className="p-3 rounded-md bg-destructive/10 border border-destructive/20 animate-in slide-in-from-top-2" data-testid="error-message">
                     <p className="text-destructive text-sm">
-                      {loginMutation.error?.message || t("login_failed")}
+                      {error || t("login_failed")}
                     </p>
                   </div>
                 )}
 
-                {loginMutation.isSuccess && (
+                {loginSuccess && (
                   <div className="p-3 rounded-md bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900/50 animate-in slide-in-from-top-2" data-testid="success-message">
                     <div className="flex items-center">
                       <CheckCircle className="h-4 w-4 text-green-600 mr-2" />

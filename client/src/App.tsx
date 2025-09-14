@@ -5,7 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import LoadingScreen from "@/components/LoadingScreen";
-// import { useAuth } from "@/hooks/use-auth"; // سنحذف هذا ونستخدم useAuth محلياً
+import { setAuthContext, useAuth } from "@/hooks/use-auth";
 import { t, getCurrentLanguage } from "@/lib/i18n";
 
 // Lazy load pages to improve performance
@@ -35,7 +35,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         setIsLoading(true);
         
         // محاولة الحصول على معلومات المستخدم
-        const response = await fetch('/api/auth/me', {
+        const response = await fetch('/api/user', {
           credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
@@ -69,7 +69,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     setUser,
     login: async (credentials: any) => {
       try {
-        const response = await fetch('/api/auth/login', {
+        const response = await fetch('/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -91,7 +91,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     },
     logout: async () => {
       try {
-        await fetch('/api/auth/logout', {
+        await fetch('/api/logout', {
           method: 'POST',
           credentials: 'include',
         });
@@ -103,7 +103,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     },
     register: async (userData: any) => {
       try {
-        const response = await fetch('/api/auth/register', {
+        const response = await fetch('/api/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -212,34 +212,34 @@ function AppContent() {
             {/* مسارات المصادقة */}
             {!user ? (
               <>
-                <Route path="/" element={<AuthPage />} />
-                <Route path="/login" element={<AuthPage />} />
-                <Route path="/register" element={<AuthPage />} />
-                <Route path="*" element={<AuthPage />} />
+                <Route path="/" component={AuthPage} />
+                <Route path="/login" component={AuthPage} />
+                <Route path="/register" component={AuthPage} />
+                <Route path="*" component={AuthPage} />
               </>
             ) : (
               <>
                 {/* مسارات المستخدمين العاديين */}
-                <Route path="/" element={<TradingSignalPage />} />
-                <Route path="/signals" element={<TradingSignalPage />} />
-                <Route path="/chat" element={<ChatPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/indicators" element={<IndicatorsPage />} />
-                <Route path="/bot" element={<BotInfoPage />} />
+                <Route path="/" component={TradingSignalPage} />
+                <Route path="/signals" component={TradingSignalPage} />
+                <Route path="/chat" component={ChatPage} />
+                <Route path="/settings" component={SettingsPage} />
+                <Route path="/indicators" component={IndicatorsPage} />
+                <Route path="/bot" component={BotInfoPage} />
                 
                 {/* مسارات المشرفين */}
                 {user.role === 'admin' && (
                   <>
-                    <Route path="/admin" element={<AdminDashboardNew />} />
-                    <Route path="/admin/users" element={<UserManagement />} />
-                    <Route path="/admin/api-keys" element={<ApiKeysManagement />} />
-                    <Route path="/admin/deployment" element={<DeploymentPage />} />
-                    <Route path="/admin/reset-password" element={<AdminResetPassword />} />
+                    <Route path="/admin" component={AdminDashboardNew} />
+                    <Route path="/admin/users" component={UserManagement} />
+                    <Route path="/admin/api-keys" component={ApiKeysManagement} />
+                    <Route path="/admin/deployment" component={DeploymentPage} />
+                    <Route path="/admin/reset-password" component={AdminResetPassword} />
                   </>
                 )}
                 
                 {/* صفحة 404 */}
-                <Route path="*" element={<NotFoundPage />} />
+                <Route path="*" component={NotFoundPage} />
               </>
             )}
           </Switch>
@@ -253,25 +253,9 @@ function AppContent() {
 // إنشاء AuthContext في أعلى الملف
 export const AuthContext = React.createContext<any>(null);
 
-// hook useAuth محلي
-const useAuth = () => {
-  const context = React.useContext(AuthContext);
-  
-  if (!context) {
-    console.warn('useAuth called outside AuthProvider');
-    return {
-      user: null,
-      isLoading: false,
-      error: null,
-      login: async () => { throw new Error('Not authenticated'); },
-      logout: async () => { throw new Error('Not authenticated'); },
-      register: async () => { throw new Error('Not authenticated'); },
-      setUser: () => {},
-    };
-  }
-  
-  return context;
-};
+// تعيين AuthContext في الملف المنفصل
+setAuthContext(AuthContext);
+
 
 // المكون الرئيسي
 function App() {
