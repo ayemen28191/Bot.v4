@@ -1,3 +1,4 @@
+
 import React, { Suspense, useEffect, useState } from "react";
 import { Router, Route, Switch } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -21,7 +22,121 @@ const DeploymentPage = React.lazy(() => import("@/pages/DeploymentPage"));
 const AdminResetPassword = React.lazy(() => import("@/pages/AdminResetPassword"));
 const NotFoundPage = React.lazy(() => import("@/pages/not-found"));
 
-function App() {
+// AuthProvider component - نحتاج لإنشاؤه أولاً
+const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        console.log('Checking authentication...');
+        setIsLoading(true);
+        
+        // محاولة الحصول على معلومات المستخدم
+        const response = await fetch('/api/auth/me', {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const userData = await response.json();
+          console.log('User authenticated:', userData);
+          setUser(userData);
+        } else {
+          console.log('No authenticated user');
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Auth check error:', error);
+        setUser(null);
+        setError('فشل في التحقق من حالة المصادقة');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  const contextValue = {
+    user,
+    isLoading,
+    error,
+    setUser,
+    login: async (credentials: any) => {
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(credentials),
+        });
+
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+          return userData;
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'فشل تسجيل الدخول');
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        throw error;
+      }
+    },
+    logout: async () => {
+      try {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          credentials: 'include',
+        });
+        setUser(null);
+      } catch (error) {
+        console.error('Logout error:', error);
+        setUser(null);
+      }
+    },
+    register: async (userData: any) => {
+      try {
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(userData),
+        });
+
+        if (response.ok) {
+          const newUser = await response.json();
+          setUser(newUser);
+          return newUser;
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'فشل إنشاء الحساب');
+        }
+      } catch (error) {
+        console.error('Registration error:', error);
+        throw error;
+      }
+    },
+  };
+
+  return (
+    <AuthContext.Provider value={contextValue}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+// إنشاء AuthContext
+const AuthContext = React.createContext<any>(null);
+
+// المكون الداخلي الذي يستخدم useAuth
+function AppContent() {
   const { user, isLoading: authLoading } = useAuth();
   const [appReady, setAppReady] = useState(false);
   const [appError, setAppError] = useState<string | null>(null);
@@ -37,13 +152,13 @@ function App() {
       const timer = setTimeout(() => {
         setAppReady(true);
         console.log('App ready with language:', getCurrentLanguage());
-      }, 50); // تقليل وقت التأخير
+      }, 50);
 
       return () => clearTimeout(timer);
     } catch (error) {
       console.error('Error during app initialization:', error);
       setAppError('Failed to initialize app');
-      setAppReady(true); // السماح بالعرض حتى مع وجود خطأ
+      setAppReady(true);
     }
   }, []);
 
@@ -66,54 +181,63 @@ function App() {
   }
 
   // عرض شاشة التحميل فقط أثناء تحميل المصادقة
-  if (authLoading) {
+  if (authLoading || !appReady) {
     return <LoadingScreen message={t('initializing_app')} />;
   }
 
   return (
+    <div className="trading-app min-h-screen">
+      <Router>
+        <Suspense fallback={<LoadingScreen message={t('loading_page')} />}>
+          <Switch>
+            {/* مسارات المصادقة */}
+            {!user ? (
+              <>
+                <Route path="/" element={<AuthPage />} />
+                <Route path="/login" element={<AuthPage />} />
+                <Route path="/register" element={<AuthPage />} />
+                <Route path="*" element={<AuthPage />} />
+              </>
+            ) : (
+              <>
+                {/* مسارات المستخدمين العاديين */}
+                <Route path="/" element={<TradingSignalPage />} />
+                <Route path="/signals" element={<TradingSignalPage />} />
+                <Route path="/chat" element={<ChatPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/indicators" element={<IndicatorsPage />} />
+                <Route path="/bot" element={<BotInfoPage />} />
+                
+                {/* مسارات المشرفين */}
+                {user.role === 'admin' && (
+                  <>
+                    <Route path="/admin" element={<AdminDashboardNew />} />
+                    <Route path="/admin/users" element={<UserManagement />} />
+                    <Route path="/admin/api-keys" element={<ApiKeysManagement />} />
+                    <Route path="/admin/deployment" element={<DeploymentPage />} />
+                    <Route path="/admin/reset-password" element={<AdminResetPassword />} />
+                  </>
+                )}
+                
+                {/* صفحة 404 */}
+                <Route path="*" element={<NotFoundPage />} />
+              </>
+            )}
+          </Switch>
+        </Suspense>
+      </Router>
+      <Toaster />
+    </div>
+  );
+}
+
+// المكون الرئيسي
+function App() {
+  return (
     <QueryClientProvider client={queryClient}>
-      <div className="trading-app min-h-screen">
-        <Router>
-          <Suspense fallback={<LoadingScreen message={t('loading_page')} />}>
-            <Switch>
-              {/* مسارات المصادقة */}
-              {!user ? (
-                <>
-                  <Route path="/" element={<AuthPage />} />
-                  <Route path="/login" element={<AuthPage />} />
-                  <Route path="/register" element={<AuthPage />} />
-                  <Route path="*" element={<AuthPage />} />
-                </>
-              ) : (
-                <>
-                  {/* مسارات المستخدمين العاديين */}
-                  <Route path="/" element={<TradingSignalPage />} />
-                  <Route path="/signals" element={<TradingSignalPage />} />
-                  <Route path="/chat" element={<ChatPage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
-                  <Route path="/indicators" element={<IndicatorsPage />} />
-                  <Route path="/bot" element={<BotInfoPage />} />
-                  
-                  {/* مسارات المشرفين */}
-                  {user.role === 'admin' && (
-                    <>
-                      <Route path="/admin" element={<AdminDashboardNew />} />
-                      <Route path="/admin/users" element={<UserManagement />} />
-                      <Route path="/admin/api-keys" element={<ApiKeysManagement />} />
-                      <Route path="/admin/deployment" element={<DeploymentPage />} />
-                      <Route path="/admin/reset-password" element={<AdminResetPassword />} />
-                    </>
-                  )}
-                  
-                  {/* صفحة 404 */}
-                  <Route path="*" element={<NotFoundPage />} />
-                </>
-              )}
-            </Switch>
-          </Suspense>
-        </Router>
-        <Toaster />
-      </div>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
