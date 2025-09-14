@@ -30,24 +30,32 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  // التأكد من أن العنوان صحيح وليس 0.0.0.0
+  // بناء URL صحيح
   let requestUrl = url;
+  
+  // إذا كان URL يحتوي على 0.0.0.0، استبدله بالعنوان الحالي
   if (url.includes('0.0.0.0')) {
     console.warn('🌐 Invalid URL detected:', url, 'fixing to use current origin');
     requestUrl = url.replace(/https?:\/\/0\.0\.0\.0(:\d+)?/, window.location.origin);
+  }
+  
+  // إذا كان URL نسبياً، أضف العنوان الأساسي
+  if (!requestUrl.startsWith('http')) {
+    const baseUrl = baseURL || window.location.origin;
+    requestUrl = `${baseUrl}${requestUrl.startsWith('/') ? '' : '/'}${requestUrl}`;
   }
 
   try {
     const res = await fetch(requestUrl, {
       method,
       headers: {
+        'Accept': 'application/json',
         ...(data ? { "Content-Type": "application/json" } : {}),
-        // إضافة هيدر CSRF إذا كان موجوداً
         ...((window as any).csrfToken ? { 'X-CSRF-Token': (window as any).csrfToken } : {})
       },
       body: data ? JSON.stringify(data) : undefined,
-      credentials: "include", // مهم لإرسال ملفات تعريف الارتباط
-      mode: 'same-origin' // تقييد الطلبات لنفس المصدر فقط
+      credentials: "include",
+      mode: 'same-origin'
     });
 
     await throwIfResNotOk(res);
@@ -65,7 +73,20 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     try {
-      const res = await fetch(queryKey[0] as string, {
+      let url = queryKey[0] as string;
+      
+      // إصلاح URL إذا كان يحتوي على 0.0.0.0
+      if (url.includes('0.0.0.0')) {
+        url = url.replace(/https?:\/\/0\.0\.0\.0(:\d+)?/, window.location.origin);
+      }
+      
+      // إضافة العنوان الأساسي للمسارات النسبية
+      if (!url.startsWith('http')) {
+        const base = baseURL || window.location.origin;
+        url = `${base}${url.startsWith('/') ? '' : '/'}${url}`;
+      }
+
+      const res = await fetch(url, {
         credentials: "include",
         mode: 'same-origin',
         headers: {

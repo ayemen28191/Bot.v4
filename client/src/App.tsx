@@ -30,28 +30,31 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
   useEffect(() => {
     let isMounted = true;
+    let authCheckCompleted = false;
     
     const checkAuth = async () => {
-      if (!isMounted) return;
+      if (!isMounted || authCheckCompleted) return;
       
       try {
         console.log('Checking authentication...');
         setError(null);
         
         // تحديد العنوان الصحيح للـ API
-        const apiUrl = window.location.protocol === 'https:' 
-          ? `${window.location.origin}/api/user`
-          : `http://localhost:5000/api/user`;
+        const baseUrl = window.location.origin;
+        const apiUrl = `${baseUrl}/api/user`;
         
         // محاولة الحصول على معلومات المستخدم
         const response = await fetch(apiUrl, {
           credentials: 'include',
           headers: {
+            'Accept': 'application/json',
             'Content-Type': 'application/json',
           },
         });
 
         if (!isMounted) return;
+
+        authCheckCompleted = true;
 
         if (response.ok) {
           const userData = await response.json();
@@ -68,7 +71,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         if (!isMounted) return;
         console.error('Auth check error:', error);
         setUser(null);
-        // لا نعرض خطأ للمستخدم في حالة فشل فحص المصادقة
+        authCheckCompleted = true;
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -258,10 +261,7 @@ function AppContent() {
                 <Route path="/login" component={AuthPage} />
                 <Route path="/register" component={AuthPage} />
                 <Route path="/" component={AuthPage} />
-                <Route path="*">
-                  {/* إعادة توجيه أي مسار آخر إلى صفحة المصادقة */}
-                  <AuthPage />
-                </Route>
+                <Route path="*" component={AuthPage} />
               </>
             ) : (
               <>
@@ -269,6 +269,7 @@ function AppContent() {
                 <Route path="/" component={TradingSignalPage} />
                 <Route path="/signals" component={TradingSignalPage} />
                 <Route path="/chat" component={ChatPage} />
+                <Route path="/group-chat" component={ChatPage} />
                 <Route path="/settings" component={SettingsPage} />
                 <Route path="/indicators" component={IndicatorsPage} />
                 <Route path="/bot" component={BotInfoPage} />

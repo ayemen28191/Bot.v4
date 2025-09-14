@@ -18,9 +18,8 @@ export default function AuthPage() {
   const { login, user, isLoading, error } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
   const [loginPending, setLoginPending] = useState(false);
-  const [loginSuccess, setLoginSuccess] = useState(false);
+  const [hasRedirected, setHasRedirected] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(
@@ -32,37 +31,24 @@ export default function AuthPage() {
     },
   });
 
-  // Redirect if already logged in - مع حماية من التكرار
+  // Redirect if already logged in - with protection against duplication
   useEffect(() => {
-    if (user && !isLoading && !loginPending) {
+    if (user && !isLoading && !loginPending && !hasRedirected) {
       console.log('User authenticated, redirecting to home...');
-      const timer = setTimeout(() => {
-        setLocation("/");
-      }, 100);
-      return () => clearTimeout(timer);
+      setHasRedirected(true); // Set the flag to prevent multiple redirects
+      setLocation("/");
     }
-  }, [user, isLoading, loginPending, setLocation]);
-
-  // Handle animation effect on form submission
-  useEffect(() => {
-    if (loginPending) {
-      setIsAnimating(true);
-    } else {
-      const timer = setTimeout(() => setIsAnimating(false), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [loginPending]);
+  }, [user, isLoading, loginPending, hasRedirected, setLocation]);
 
   const onSubmit = async (data: any) => {
-    // منع الإرسال المتكرر
-    if (loginPending) {
-      console.log('Login already in progress, ignoring duplicate submission');
+    // Prevent duplicate submissions or submission after redirection
+    if (loginPending || hasRedirected) {
+      console.log('Login already in progress or already redirected, ignoring submission');
       return;
     }
     
     try {
       setLoginPending(true);
-      setLoginSuccess(false);
       
       console.log('Submitting login form with username:', data.username);
       
@@ -73,14 +59,13 @@ export default function AuthPage() {
       
       if (result) {
         console.log('Login form submitted successfully');
-        setLoginSuccess(true);
-        // إعادة التوجيه فوراً عند النجاح
+        setHasRedirected(true); // Set the flag upon successful login
+        // Redirect immediately upon success
         setLocation("/");
       }
     } catch (error) {
       console.error('Login form submission error:', error);
-      setLoginSuccess(false);
-      // الخطأ سيتم عرضه من خلال error في useAuth
+      // The error will be displayed by `error` in useAuth
     } finally {
       setLoginPending(false);
     }
@@ -90,21 +75,19 @@ export default function AuthPage() {
     setShowPassword(!showPassword);
   };
 
-  if (user) {
+  // If user is already logged in or redirection has occurred, render nothing
+  if (user || hasRedirected) {
     return null;
   }
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-background to-muted/20">
-      {/* Auth Form */}
+      {/* Auth Form - Only one instance */}
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           {/* Card with improved styling */}
           <Card 
-            className={cn(
-              "shadow-2xl border-0 backdrop-blur-sm bg-background/80 transition-all duration-500",
-              isAnimating && "scale-[0.98] shadow-xl"
-            )}
+            className="shadow-2xl border-0 backdrop-blur-sm bg-background/80"
             data-testid="auth-card"
           >
             <CardHeader className="space-y-1 pb-4">
@@ -131,15 +114,15 @@ export default function AuthPage() {
                     {t("username")}
                   </Label>
                   <div className="relative">
-                    <User className="auth-input-icon" />
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="username"
                       data-testid="input-username"
                       placeholder={t("username_placeholder")}
                       className={cn(
-                        "auth-input-with-icon transition-all duration-200",
+                        "pl-10 transition-all duration-200", // Adjusted padding for icon
                         "focus:ring-2 focus:ring-primary/20 focus:border-primary",
-                        form.formState.errors.username && "border-destructive focus:ring-destructive/20"
+                        form.formState.errors.username && "border-destructive"
                       )}
                       {...form.register("username")}
                     />
@@ -157,16 +140,16 @@ export default function AuthPage() {
                     {t("password")}
                   </Label>
                   <div className="relative">
-                    <Lock className="auth-input-icon" />
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="password"
                       data-testid="input-password"
                       type={showPassword ? "text" : "password"}
                       placeholder={t("password_placeholder")}
                       className={cn(
-                        "auth-input-with-icon transition-all duration-200",
+                        "pl-10 pr-10 transition-all duration-200", // Adjusted padding for icon and button
                         "focus:ring-2 focus:ring-primary/20 focus:border-primary",
-                        form.formState.errors.password && "border-destructive focus:ring-destructive/20"
+                        form.formState.errors.password && "border-destructive"
                       )}
                       {...form.register("password")}
                     />
@@ -174,7 +157,7 @@ export default function AuthPage() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="auth-password-toggle h-8 w-8 p-0 hover:bg-transparent"
+                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent" // Positioned toggle button
                       onClick={togglePasswordVisibility}
                       data-testid="button-toggle-password"
                     >
@@ -228,8 +211,7 @@ export default function AuthPage() {
                   type="submit"
                   className={cn(
                     "w-full h-11 transition-all duration-200",
-                    "hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]",
-                    loginPending && "cursor-not-allowed"
+                    loginPending && "cursor-not-allowed" // Visual cue for pending state
                   )}
                   disabled={loginPending}
                   data-testid="button-submit"
@@ -247,23 +229,12 @@ export default function AuthPage() {
                   )}
                 </Button>
 
-                {/* Success/Error Messages */}
+                {/* Error Messages */}
                 {error && (
                   <div className="p-3 rounded-md bg-destructive/10 border border-destructive/20 animate-in slide-in-from-top-2" data-testid="error-message">
                     <p className="text-destructive text-sm">
                       {error || t("login_failed")}
                     </p>
-                  </div>
-                )}
-
-                {loginSuccess && (
-                  <div className="p-3 rounded-md bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900/50 animate-in slide-in-from-top-2" data-testid="success-message">
-                    <div className="flex items-center">
-                      <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                      <p className="text-green-600 text-sm">
-                        {t("login_success")}
-                      </p>
-                    </div>
                   </div>
                 )}
               </form>
@@ -309,18 +280,6 @@ export default function AuthPage() {
           <p className="text-lg text-muted-foreground leading-relaxed">
             {t("app_description")}
           </p>
-          
-          {/* Feature highlights */}
-          <div className="mt-8 space-y-3">
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              <CheckCircle className="h-4 w-4 text-green-500" />
-              <span>{t("secure_login")}</span>
-            </div>
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              <CheckCircle className="h-4 w-4 text-green-500" />
-              <span>{t("app_name")}</span>
-            </div>
-          </div>
         </div>
       </div>
     </div>
