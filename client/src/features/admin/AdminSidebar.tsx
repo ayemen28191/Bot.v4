@@ -29,7 +29,7 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ collapsed = false, onToggle, className }: AdminSidebarProps) {
   const [location] = useLocation();
-  const { user, logoutMutation } = useAuth();
+  const { user, logout } = useAuth();
   const isRTL = getCurrentLanguage() === 'ar';
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -49,9 +49,9 @@ export function AdminSidebar({ collapsed = false, onToggle, className }: AdminSi
     return null;
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (confirm(t('confirm_logout'))) {
-      logoutMutation.mutate();
+      await logout();
     }
   };
 

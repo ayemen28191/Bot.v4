@@ -81,7 +81,7 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children, title }: AdminLayoutProps) {
   const [location] = useLocation();
-  const { user, logoutMutation } = useAuth();
+  const { user, logout } = useAuth();
   const isRTL = getCurrentLanguage() === 'ar';
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -124,9 +124,9 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
     return <div className="text-center p-8">{t('admin_login_required')}</div>;
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (confirm(t('confirm_logout'))) {
-      logoutMutation.mutate();
+      await logout();
     }
   };
 

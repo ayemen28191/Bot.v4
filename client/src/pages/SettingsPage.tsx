@@ -9,7 +9,7 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
 export default function SettingsPage() {
-  const { user, logoutMutation } = useAuth();
+  const { user, logout } = useAuth();
   const { toast } = useToast();
   const [notifications, setNotifications] = useState(() => {
     try {
@@ -183,7 +183,7 @@ export default function SettingsPage() {
   };
 
   const handleLogout = async () => {
-    await logoutMutation.mutateAsync();
+    await logout();
   };
 
   return (
