@@ -2188,11 +2188,13 @@ export function getBrowserLanguage(): string {
 let currentLanguage = 'en'; // English as default language
 
 // Normalize language codes to supported values
-const normalizeLanguage = (lang: string): 'ar' | 'en' => {
-  // Handle variations like 'ar-SA' -> 'ar', 'en-US' -> 'en'
+const normalizeLanguage = (lang: string): 'ar' | 'en' | 'hi' => {
+  // Handle variations like 'ar-SA' -> 'ar', 'en-US' -> 'en', 'hi-IN' -> 'hi'
   const langCode = lang.toLowerCase().split('-')[0];
-  console.log('Normalizing language:', lang, '=>', langCode === 'ar' ? 'ar' : 'en');
-  return langCode === 'ar' ? 'ar' : 'en';
+  
+  if (langCode === 'ar') return 'ar';
+  if (langCode === 'hi') return 'hi';
+  return 'en'; // default fallback
 };
 
 // Function to change language with optional database save
@@ -2318,8 +2320,8 @@ export const supportedLanguages = [
 export const changeLanguage = (newLanguage: string, saveToStorage: boolean = true, user?: any) => {
   if (typeof window !== 'undefined') {
     // Validate language
-    const supportedLanguages = ['en', 'ar', 'hi'];
-    if (!supportedLanguages.includes(newLanguage)) {
+    const supportedLanguagesList = ['en', 'ar', 'hi'];
+    if (!supportedLanguagesList.includes(newLanguage)) {
       console.warn('Unsupported language:', newLanguage, 'defaulting to en');
       newLanguage = 'en';
     }
@@ -2344,13 +2346,17 @@ export const changeLanguage = (newLanguage: string, saveToStorage: boolean = tru
     document.documentElement.setAttribute('lang', newLanguage);
     document.documentElement.setAttribute('dir', newLanguage === 'ar' ? 'rtl' : 'ltr');
 
-    // Add/remove Arabic-specific classes
+    // Add/remove language-specific classes
+    document.documentElement.classList.remove('ar', 'en', 'hi');
+    document.body.classList.remove('font-arabic');
+    
     if (newLanguage === 'ar') {
       document.documentElement.classList.add('ar');
       document.body.classList.add('font-arabic');
+    } else if (newLanguage === 'hi') {
+      document.documentElement.classList.add('hi');
     } else {
-      document.documentElement.classList.remove('ar');
-      document.body.classList.remove('font-arabic');
+      document.documentElement.classList.add('en');
     }
 
     // Dispatch custom event for components to react to language change
@@ -2450,19 +2456,20 @@ if (typeof window !== 'undefined') {
     document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
     currentLanguage = newLang;
     
-    // Apply/remove Arabic-specific styling and classes
+    // Apply/remove language-specific styling and classes
+    document.documentElement.classList.remove('ar', 'en', 'hi', 'rtl', 'ltr');
+    document.body.classList.remove('font-arabic');
+    
     if (isRTL) {
-      document.documentElement.classList.add('ar');
+      document.documentElement.classList.add('ar', 'rtl');
       document.body.classList.add('font-arabic');
-      // Add RTL class for better CSS targeting
-      document.documentElement.classList.add('rtl');
-      document.documentElement.classList.remove('ltr');
     } else {
-      document.documentElement.classList.remove('ar');
-      document.body.classList.remove('font-arabic');
-      // Add LTR class for better CSS targeting  
       document.documentElement.classList.add('ltr');
-      document.documentElement.classList.remove('rtl');
+      if (newLang === 'hi') {
+        document.documentElement.classList.add('hi');
+      } else {
+        document.documentElement.classList.add('en');
+      }
     }
     
     // Dispatch additional RTL event for components that need to update icons/layouts

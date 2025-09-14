@@ -15,6 +15,22 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* خطوط عربية محسنة */
+.font-arabic,
+.ar {
+  font-family: 'Segoe UI', 'Noto Sans Arabic', 'Arial Unicode MS', sans-serif;
+  font-feature-settings: 'liga', 'kern', 'calt';
+  text-rendering: optimizeLegibility;
+}
+
+/* خطوط هندية محسنة */
+.font-hindi,
+.hi {
+  font-family: 'Segoe UI', 'Noto Sans Devanagari', 'Mangal', 'Arial Unicode MS', sans-serif;
+  font-feature-settings: 'liga', 'kern', 'calt';
+  text-rendering: optimizeLegibility;
+}
+
 .mixed-content {
   font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, sans-serif;
   unicode-bidi: isolate;
