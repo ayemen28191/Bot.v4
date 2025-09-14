@@ -24,7 +24,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Query to get current user
   const {
-    data: user,
+    data: userData,
     isLoading,
     error,
     refetch: refetchUser,
@@ -77,18 +77,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Update user state when query data changes
   useEffect(() => {
-    if (user && typeof user === 'object') {
-      const userData = user as User;
-      setUser(userData);
+    if (userData && typeof userData === 'object') {
+      const userDataObj = userData as User;
+      setUser(userDataObj);
 
       // Apply user's preferred language from database with priority
       try {
-        if (userData.preferredLanguage) {
-          console.log('🌍 Applying user preferred language from database:', userData.preferredLanguage);
+        if (userDataObj.preferredLanguage) {
+          console.log('🌍 Applying user preferred language from database:', userDataObj.preferredLanguage);
           // Import language functions dynamically to avoid circular dependency
           import('@/lib/i18n').then(({ setLanguage }) => {
             // Always apply user's database language preference when logged in
-            setLanguage(userData.preferredLanguage, false);
+            setLanguage(userDataObj.preferredLanguage, false);
           });
         } else {
           console.log('📝 User has no preferred language set, using current language');
@@ -107,7 +107,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         console.error('Error clearing language on logout:', error);
       }
     }
-  }, [user]);
+  }, [userData]);
 
   // Login mutation
   const loginMutation = useMutation({
@@ -145,11 +145,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   });
 
   // Derive loading state
-  const isLoading = meQuery.isLoading || loginMutation.isPending || logoutMutation.isPending || registerMutation.isPending;
+  const isLoading = isLoading || loginMutation.isPending || logoutMutation.isPending || registerMutation.isPending;
 
   // Derive error state
-  const error = meQuery.error 
-    ? String(meQuery.error)
+  const authError = error 
+    ? String(error)
     : loginMutation.error
     ? String(loginMutation.error) 
     : logoutMutation.error
@@ -161,7 +161,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const value: AuthContextValue = {
     user,
     isLoading,
-    error,
+    error: authError,
     login: loginMutation.mutateAsync,
     logout: logoutMutation.mutateAsync,
     register: registerMutation.mutateAsync,
