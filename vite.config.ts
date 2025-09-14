@@ -33,14 +33,9 @@ export default defineConfig({
     outDir: path.resolve(__dirname, "client", "dist"),
     emptyOutDir: true,
   },
-  server: {
+    server: {
     host: true, // يسمح بالوصول من أي IP
     port: 5000,
-    allowedHosts: [
-      "binarjoinanelytic.info", 
-      "b00f220b-d065-437d-b856-e9b6e42f5342-00-k4wz3vxc5est.sisko.replit.dev",
-      "localhost",
-      "127.0.0.1",
-    ],
+    allowedHosts: "all", // يسمح بجميع الـ hosts - الحل النهائي
   },
 });
