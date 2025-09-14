@@ -15,7 +15,7 @@ const mkdtemp = promisify(fs.mkdtemp);
 const rm = promisify(fs.rm);
 
 /**
- * قائمة الأوامر المسموحة والآمنة لتنفيذها على الخادم
+ * قائمة الأوامر المسموحة والآمنة لتنفيذها على الخادم (إزالة sudo لتجنب المخاطر)
  */
 const ALLOWED_COMMANDS = [
   'npm', 'yarn', 'pnpm', 'node', 'pm2', 'systemctl',
@@ -23,45 +23,82 @@ const ALLOWED_COMMANDS = [
   'echo', 'cd', 'pwd', 'whoami', 'id', 'date', 'uptime',
   'ps', 'kill', 'killall', 'which', 'whereis',
   'git', 'docker', 'docker-compose', 'nginx', 'apache2',
-  'service', 'sudo'
+  'service'
 ];
 
 /**
  * أحرف وأنماط خطيرة محظورة في الأوامر
  */
 const DANGEROUS_PATTERNS = [
-  /[;&|`$(){}[\]\\]/g,  // أحرف خطيرة للتحكم في الأوامر
-  /\.\./g,              // نقاط للصعود للمجلدات العليا
-  /rm\s+-rf?\s+\//g,    // أوامر حذف خطيرة
-  />\s*\/dev\/null/g,   // إعادة توجيه المخرجات
-  /2>&1/g,              // إعادة توجيه الأخطاء
-  /\|\s*sh/g,           // تنفيذ أوامر عبر الأنابيب
-  /\|\s*bash/g,         // تنفيذ أوامر عبر bash
-  /--?\s*eval/g,        // تنفيذ أوامر ديناميكية
-  /curl.*\|\s*sh/g,     // تحميل وتنفيذ أوامر من الإنترنت
-  /wget.*\|\s*sh/g,     // تحميل وتنفيذ أوامر من الإنترنت
+  /[;&|`$(){}[\]\\]/,   // أحرف خطيرة للتحكم في الأوامر (إزالة /g لتجنب مشاكل lastIndex)
+  /[\r\n]/,             // منع حقن الأسطر الجديدة  
+  /\.\./,               // نقاط للصعود للمجلدات العليا
+  /rm\s+-rf?\s+\//,     // أوامر حذف خطيرة
+  />\s*\/dev\/null/,    // إعادة توجيه المخرجات
+  /2>&1/,               // إعادة توجيه الأخطاء
+  /\|\s*sh/,            // تنفيذ أوامر عبر الأنابيب
+  /\|\s*bash/,          // تنفيذ أوامر عبر bash
+  /--?\s*eval/,         // تنفيذ أوامر ديناميكية
+  /curl.*\|\s*sh/,      // تحميل وتنفيذ أوامر من الإنترنت
+  /wget.*\|\s*sh/,      // تحميل وتنفيذ أوامر من الإنترنت
 ];
 
 /**
- * تنظيف وتأمين الأوامر المرسلة من المستخدم
+ * تحقق من صحة مسار النشر
+ */
+function validateDeployPath(path: string): string {
+  if (!path || typeof path !== 'string') {
+    throw new Error('مسار النشر يجب أن يكون نص غير فارغ');
+  }
+
+  // السماح فقط بمسارات مطلقة آمنة
+  const safePathPattern = /^\/[A-Za-z0-9_\-\.\/~]+$/;
+  if (!safePathPattern.test(path)) {
+    throw new Error('مسار النشر يحتوي على أحرف غير مسموحة');
+  }
+
+  // منع الصعود للمجلدات العليا
+  if (path.includes('../')) {
+    throw new Error('مسار النشر لا يمكن أن يحتوي على ../');
+  }
+
+  return path;
+}
+
+/**
+ * هروب آمن للمعاملات في shell
+ */
+function escapeShellArg(arg: string): string {
+  // استخدام علامات تنصيص مفردة واستبدال أي علامة تنصيص مفردة موجودة
+  return `'${arg.replace(/'/g, "'\\''")}'`;
+}
+
+/**
+ * تنظيف وتأمين الأوامر المرسلة من المستخدم (رفض بدلاً من التعديل)
  */
 function sanitizeCommand(command: string): string {
   if (!command || typeof command !== 'string') {
     throw new Error('الأمر يجب أن يكون نص غير فارغ');
   }
 
-  // إزالة المسافات الزائدة
-  const trimmedCommand = command.trim();
+  // إزالة المسافات الزائدة وتحويل إلى مسافة واحدة
+  const trimmedCommand = command.trim().replace(/\s+/g, ' ');
   
   if (!trimmedCommand) {
     throw new Error('لا يمكن تنفيذ أمر فارغ');
   }
 
-  // فحص الأنماط الخطيرة
+  // فحص الأنماط الخطيرة (رفض فوري بدلاً من التعديل)
   for (const pattern of DANGEROUS_PATTERNS) {
     if (pattern.test(trimmedCommand)) {
       throw new Error(`الأمر يحتوي على نمط خطير غير مسموح: ${pattern.source}`);
     }
+  }
+
+  // التحقق من أن الأمر يحتوي فقط على أحرف آمنة
+  const safeCharPattern = /^[a-zA-Z0-9\s\-_./:=@]+$/;
+  if (!safeCharPattern.test(trimmedCommand)) {
+    throw new Error('الأمر يحتوي على أحرف غير مسموحة');
   }
 
   // تقسيم الأمر وفحص كل جزء
@@ -73,10 +110,7 @@ function sanitizeCommand(command: string): string {
     throw new Error(`الأمر '${mainCommand}' غير مسموح. الأوامر المسموحة: ${ALLOWED_COMMANDS.join(', ')}`);
   }
 
-  // إزالة الأحرف الخطيرة وإبقاء الأحرف الآمنة فقط
-  const sanitized = trimmedCommand.replace(/[^a-zA-Z0-9\s\-_./:=@]/g, '');
-  
-  return sanitized;
+  return trimmedCommand;
 }
 
 /**
@@ -192,26 +226,57 @@ export class DeploymentService {
   }
 
   /**
-   * إعداد حزمة النشر (ملف مضغوط مؤقت)
+   * إعداد حزمة النشر (ملف مضغوط مؤقت) - استخدام spawn بدلاً من exec لتجنب حقن الأوامر
    */
   private static async prepareDeploymentPackage(sourceDir: string, excludeFiles: string[] = []): Promise<string> {
+    // التحقق من صحة sourceDir
+    if (!sourceDir || typeof sourceDir !== 'string') {
+      throw new Error('مجلد المصدر غير صالح');
+    }
+    
+    // التحقق من أن sourceDir يحتوي على أحرف آمنة فقط
+    const safeDirPattern = /^[A-Za-z0-9_\-\.\/~]+$/;
+    if (!safeDirPattern.test(sourceDir)) {
+      throw new Error('مجلد المصدر يحتوي على أحرف غير مسموحة');
+    }
+
     const tempDir = await mkdtemp(path.join(os.tmpdir(), 'deploy-'));
     const outputFile = path.join(tempDir, 'deployment.tar.gz');
 
     // بناء قائمة الملفات المستثناة مع التنظيف الأمني
     const sanitizedExcludes = sanitizeExcludeFiles(excludeFiles);
-    const excludeArgs = sanitizedExcludes.map(file => `--exclude="${file}"`).join(' ');
+    
+    // استخدام spawn بدلاً من exec لتجنب حقن الأوامر
+    const { spawn } = child_process;
+    const tarArgs = ['-czf', outputFile, '-C', sourceDir];
+    
+    // إضافة ملفات الاستثناء
+    sanitizedExcludes.forEach(file => {
+      tarArgs.push(`--exclude=${file}`);
+    });
+    
+    tarArgs.push('.');
 
-    // تنفيذ أمر tar لإنشاء الأرشيف
-    const tarCommand = `tar -czf "${outputFile}" -C "${sourceDir}" ${excludeArgs} .`;
+    return new Promise((resolve, reject) => {
+      const tarProcess = spawn('tar', tarArgs);
+      let stderr = '';
 
-    try {
-      await exec(tarCommand);
-      return outputFile;
-    } catch (error) {
-      console.error('Error in deployment command:', error);
-      throw error as Error;
-    }
+      tarProcess.stderr.on('data', (data) => {
+        stderr += data.toString();
+      });
+
+      tarProcess.on('close', (code) => {
+        if (code !== 0) {
+          reject(new Error(`فشل في إنشاء أرشيف النشر: ${stderr}`));
+        } else {
+          resolve(outputFile);
+        }
+      });
+
+      tarProcess.on('error', (error) => {
+        reject(new Error(`خطأ في تنفيذ أمر tar: ${error.message}`));
+      });
+    });
   }
 
   /**
@@ -222,7 +287,10 @@ export class DeploymentService {
     packagePath: string,
     deploymentLog: DeploymentLog
   ): Promise<DeploymentResult> {
-    const { host, port, username, deployPath } = server;
+    const { host, port, username } = server;
+    
+    // التحقق من صحة مسار النشر
+    const safeDeployPath = validateDeployPath(server.deployPath);
 
     // إنشاء ملف مؤقت للمفتاح الخاص
     const tempKeyFile = path.join(os.tmpdir(), `ssh-key-${crypto.randomBytes(8).toString('hex')}`);
@@ -249,24 +317,24 @@ export class DeploymentService {
         });
       });
 
-      // إنشاء مجلد النشر إذا لم يكن موجوداً
-      await this.executeSshCommand(ssh, `mkdir -p ${deployPath}`);
+      // إنشاء مجلد النشر إذا لم يكن موجوداً مع هروب آمن للمسار
+      await this.executeSshCommand(ssh, `mkdir -p ${escapeShellArg(safeDeployPath)}`);
 
       // رفع ملف النشر
-      await this.uploadFile(ssh, packagePath, `${deployPath}/deployment.tar.gz`, server);
+      await this.uploadFile(ssh, packagePath, `${safeDeployPath}/deployment.tar.gz`, server);
 
-      // فك ضغط الملف على الخادم
-      await this.executeSshCommand(ssh, `cd ${deployPath} && tar -xzf deployment.tar.gz`);
+      // فك ضغط الملف على الخادم مع هروب آمن للمسار
+      await this.executeSshCommand(ssh, `cd ${escapeShellArg(safeDeployPath)} && tar -xzf deployment.tar.gz`);
 
-      // حذف ملف النشر المضغوط
-      await this.executeSshCommand(ssh, `rm ${deployPath}/deployment.tar.gz`);
+      // حذف ملف النشر المضغوط مع هروب آمن للمسار
+      await this.executeSshCommand(ssh, `rm ${escapeShellArg(safeDeployPath)}/deployment.tar.gz`);
 
       // تنفيذ أوامر ما بعد النشر مع التحقق الأمني
       let commandOutput = '';
       if (server.commands) {
         try {
           const sanitizedCommand = sanitizeCommand(server.commands);
-          commandOutput = await this.executeSshCommand(ssh, `cd ${deployPath} && ${sanitizedCommand}`);
+          commandOutput = await this.executeSshCommand(ssh, `cd ${escapeShellArg(safeDeployPath)} && ${sanitizedCommand}`);
         } catch (sanitizeError) {
           throw new Error(`أمر غير آمن تم رفضه: ${sanitizeError.message}`);
         }
@@ -331,7 +399,10 @@ export class DeploymentService {
     packagePath: string,
     deploymentLog: DeploymentLog
   ): Promise<DeploymentResult> {
-    const { host, port, username, deployPath } = server;
+    const { host, port, username } = server;
+    
+    // التحقق من صحة مسار النشر
+    const safeDeployPath = validateDeployPath(server.deployPath);
 
     const ssh = new SSHClient();
 
@@ -351,24 +422,24 @@ export class DeploymentService {
         });
       });
 
-      // إنشاء مجلد النشر إذا لم يكن موجوداً
-      await this.executeSshCommand(ssh, `mkdir -p ${deployPath}`);
+      // إنشاء مجلد النشر إذا لم يكن موجوداً مع هروب آمن للمسار
+      await this.executeSshCommand(ssh, `mkdir -p ${escapeShellArg(safeDeployPath)}`);
 
       // رفع ملف النشر
-      await this.uploadFile(ssh, packagePath, `${deployPath}/deployment.tar.gz`, server);
+      await this.uploadFile(ssh, packagePath, `${safeDeployPath}/deployment.tar.gz`, server);
 
-      // فك ضغط الملف على الخادم
-      await this.executeSshCommand(ssh, `cd ${deployPath} && tar -xzf deployment.tar.gz`);
+      // فك ضغط الملف على الخادم مع هروب آمن للمسار
+      await this.executeSshCommand(ssh, `cd ${escapeShellArg(safeDeployPath)} && tar -xzf deployment.tar.gz`);
 
-      // حذف ملف النشر المضغوط
-      await this.executeSshCommand(ssh, `rm ${deployPath}/deployment.tar.gz`);
+      // حذف ملف النشر المضغوط مع هروب آمن للمسار
+      await this.executeSshCommand(ssh, `rm ${escapeShellArg(safeDeployPath)}/deployment.tar.gz`);
 
       // تنفيذ أوامر ما بعد النشر مع التحقق الأمني
       let commandOutput = '';
       if (server.commands) {
         try {
           const sanitizedCommand = sanitizeCommand(server.commands);
-          commandOutput = await this.executeSshCommand(ssh, `cd ${deployPath} && ${sanitizedCommand}`);
+          commandOutput = await this.executeSshCommand(ssh, `cd ${escapeShellArg(safeDeployPath)} && ${sanitizedCommand}`);
         } catch (sanitizeError) {
           throw new Error(`أمر غير آمن تم رفضه: ${sanitizeError.message}`);
         }
