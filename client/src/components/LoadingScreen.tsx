@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState, useRef } from "react";
-import { t } from "@/lib/i18n";
+import { t, getCurrentLanguage } from "@/lib/i18n";
 
 interface LoadingScreenProps {
   message?: string;
@@ -10,7 +10,13 @@ interface LoadingScreenProps {
 
 const LoadingScreen: React.FC<LoadingScreenProps> = ({ message, error, onRetry }) => {
   const [loadingProgress, setLoadingProgress] = useState(0);
-  const [loadingText, setLoadingText] = useState(t('loading'));
+  const [loadingText, setLoadingText] = useState(() => {
+    try {
+      return t('loading');
+    } catch {
+      return getCurrentLanguage() === 'ar' ? 'جاري التحميل...' : 'Loading...';
+    }
+  });
   const progressTimerRef = useRef<number | null>(null);
   const textTimerRef = useRef<number | null>(null);
 

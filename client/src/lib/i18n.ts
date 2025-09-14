@@ -2533,40 +2533,13 @@ export function initializeLanguageSystem() {
     console.log('🌐 Starting language system initialization...');
     
     // قراءة اللغة من localStorage مع تنظيف الإعدادات المتضاربة
-    let targetLanguage = DEFAULT_LANGUAGE;
+    let targetLanguage = getCurrentLanguage();
     
-    try {
-      const settings = JSON.parse(localStorage.getItem('settings') || '{}');
-      const storedLanguage = settings.language || localStorage.getItem(LANGUAGE_STORAGE_KEY);
-      
-      if (storedLanguage && supportedLanguages.some(lang => lang.id === storedLanguage)) {
-        targetLanguage = storedLanguage as Language;
-      }
-      
-      console.log('Selected language:', targetLanguage);
-    } catch (error) {
-      console.warn('Error reading stored language, using default:', error);
-    }
+    console.log('Target language determined:', targetLanguage);
 
-    // إزالة جميع الفئات المتعلقة باللغة والاتجاه أولاً
-    document.documentElement.classList.remove('ar', 'en', 'hi', 'rtl', 'ltr');
-    document.body.classList.remove('font-arabic');
-
-    // تطبيق اللغة والاتجاه
+    // تطبيق اللغة والاتجاه بشكل مستمر
     setCurrentLanguage(targetLanguage);
-    applyDirection(targetLanguage);
-
-    // تحديث document attributes
-    document.documentElement.setAttribute('lang', targetLanguage);
-    document.documentElement.setAttribute('dir', targetLanguage === 'ar' ? 'rtl' : 'ltr');
-
-    // حفظ اللغة في localStorage
-    localStorage.setItem(LANGUAGE_STORAGE_KEY, targetLanguage);
-    
-    // تحديث الإعدادات
-    const settings = JSON.parse(localStorage.getItem('settings') || '{}');
-    settings.language = targetLanguage;
-    localStorage.setItem('settings', JSON.stringify(settings));
+    applyLanguageSettings(targetLanguage);
 
     console.log('✅ Language system initialized successfully:', {
       language: targetLanguage,
@@ -2578,14 +2551,49 @@ export function initializeLanguageSystem() {
   } catch (error) {
     console.error('❌ Critical error in language initialization:', error);
     // في حالة الخطأ الحرج، استخدم إعدادات آمنة
-    document.documentElement.classList.remove('ar', 'en', 'hi', 'rtl', 'ltr');
-    document.body.classList.remove('font-arabic');
-    document.documentElement.classList.add('ltr');
-    document.documentElement.setAttribute('lang', DEFAULT_LANGUAGE);
-    document.documentElement.setAttribute('dir', 'ltr');
-    localStorage.setItem(LANGUAGE_STORAGE_KEY, DEFAULT_LANGUAGE);
-    currentLanguage = DEFAULT_LANGUAGE;
+    applySafeLanguageDefaults();
   }
+}
+
+function applyLanguageSettings(lang: Language): void {
+  try {
+    // تطبيق الإعدادات على document
+    setCurrentLanguage(lang);
+    applyDirection(lang);
+
+    // تحديث document attributes
+    document.documentElement.setAttribute('lang', lang);
+    document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+
+    // حفظ اللغة في localStorage
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
+    
+    // تحديث الإعدادات
+    try {
+      const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+      settings.language = lang;
+      localStorage.setItem('settings', JSON.stringify(settings));
+    } catch (settingsError) {
+      console.warn('Could not update settings:', settingsError);
+      localStorage.setItem('settings', JSON.stringify({ language: lang }));
+    }
+
+    console.log('Language settings applied successfully:', lang);
+  } catch (error) {
+    console.error('Error applying language settings:', error);
+    applySafeLanguageDefaults();
+  }
+}
+
+function applySafeLanguageDefaults(): void {
+  console.log('Applying safe language defaults');
+  document.documentElement.classList.remove('ar', 'en', 'hi', 'rtl', 'ltr');
+  document.body.classList.remove('font-arabic');
+  document.documentElement.classList.add('ltr');
+  document.documentElement.setAttribute('lang', DEFAULT_LANGUAGE);
+  document.documentElement.setAttribute('dir', 'ltr');
+  localStorage.setItem(LANGUAGE_STORAGE_KEY, DEFAULT_LANGUAGE);
+  currentLanguage = DEFAULT_LANGUAGE;
 }
 
 // Initialize on module load for non-authenticated users
