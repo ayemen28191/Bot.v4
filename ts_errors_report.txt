@@ -1,0 +1,62 @@
+client/src/features/admin/AdminSidebar.tsx(32,17): error TS2339: Property 'logoutMutation' does not exist on type 'AuthContextValue'.
+client/src/features/admin/AdminSidebar.tsx(157,46): error TS2322: Type 'Element | ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ReactNode'.
+  Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ReactNode'.
+client/src/features/admin/AdminSidebar.tsx(222,65): error TS2322: Type 'Element | ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ReactNode'.
+  Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ReactNode'.
+client/src/features/admin/AdminSidebar.tsx(226,65): error TS2322: Type 'Element | ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ReactNode'.
+  Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ReactNode'.
+client/src/hooks/use-heatmap.tsx(2,42): error TS2307: Cannot find module '@/components/ProbabilityHeatmap' or its corresponding type declarations.
+client/src/hooks/use-heatmap.tsx(17,19): error TS2304: Cannot find name 't'.
+client/src/hooks/use-heatmap.tsx(102,21): error TS2304: Cannot find name 't'.
+client/src/hooks/use-heatmap.tsx(109,53): error TS7006: Parameter 'cell' implicitly has an 'any' type.
+client/src/hooks/use-heatmap.tsx(127,54): error TS7006: Parameter 'cell' implicitly has an 'any' type.
+client/src/hooks/use-heatmap.tsx(142,21): error TS2304: Cannot find name 't'.
+client/src/hooks/use-heatmap.tsx(168,23): error TS2304: Cannot find name 't'.
+client/src/hooks/use-heatmap.tsx(185,30): error TS2304: Cannot find name 't'.
+client/src/hooks/use-heatmap.tsx(185,70): error TS2304: Cannot find name 't'.
+client/src/hooks/use-heatmap.tsx(190,29): error TS2304: Cannot find name 't'.
+client/src/hooks/use-heatmap.tsx(200,23): error TS2304: Cannot find name 't'.
+client/src/hooks/use-heatmap.tsx(203,24): error TS2304: Cannot find name 't'.
+client/src/hooks/use-heatmap.tsx(207,20): error TS2304: Cannot find name 't'.
+client/src/layouts/AdminLayout.tsx(84,17): error TS2339: Property 'logoutMutation' does not exist on type 'AuthContextValue'.
+client/src/lib/protected-route.tsx(5,11): error TS2430: Interface 'ProtectedRouteProps' incorrectly extends interface 'RouteProps<undefined, PathPattern>'.
+  Types of property 'component' are incompatible.
+    Type 'ComponentType<{}>' is not assignable to type 'ComponentType<RouteComponentProps<RegexRouteParams | { [param: number]: string | undefined; }>> | undefined'.
+      Type 'ComponentClass<{}, any>' is not assignable to type 'ComponentType<RouteComponentProps<RegexRouteParams | { [param: number]: string | undefined; }>> | undefined'.
+        Type 'ComponentClass<{}, any>' is not assignable to type 'ComponentClass<RouteComponentProps<RegexRouteParams | { [param: number]: string | undefined; }>, any>'.
+          Construct signature return types 'Component<{}, any, any>' and 'Component<RouteComponentProps<RegexRouteParams | { [param: number]: string | undefined; }>, any, any>' are incompatible.
+            The types of 'props' are incompatible between these types.
+              Property 'params' is missing in type 'Readonly<{}>' but required in type 'Readonly<RouteComponentProps<RegexRouteParams | { [param: number]: string | undefined; }>>'.
+client/src/pages/SettingsPage.tsx(12,17): error TS2339: Property 'logoutMutation' does not exist on type 'AuthContextValue'.
+server/index.ts(2,18): error TS7016: Could not find a declaration file for module 'cors'. '/home/runner/workspace/node_modules/cors/lib/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/cors` if it exists or add a new declaration (.d.ts) file containing `declare module 'cors';`
+server/services/deployment-service.ts(1,37): error TS7016: Could not find a declaration file for module 'ssh2'. '/home/runner/workspace/node_modules/ssh2/lib/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/ssh2` if it exists or add a new declaration (.d.ts) file containing `declare module 'ssh2';`
+server/services/deployment-service.ts(95,28): error TS18046: 'error' is of type 'unknown'.
+server/services/deployment-service.ts(96,11): error TS18046: 'error' is of type 'unknown'.
+server/services/deployment-service.ts(106,41): error TS18046: 'error' is of type 'unknown'.
+server/services/deployment-service.ts(107,18): error TS18046: 'error' is of type 'unknown'.
+server/services/deployment-service.ts(130,51): error TS18046: 'error' is of type 'unknown'.
+server/services/deployment-service.ts(158,25): error TS7006: Parameter 'err' implicitly has an 'any' type.
+server/services/deployment-service.ts(220,26): error TS18046: 'error' is of type 'unknown'.
+server/services/deployment-service.ts(221,9): error TS18046: 'error' is of type 'unknown'.
+server/services/deployment-service.ts(227,41): error TS18046: 'error' is of type 'unknown'.
+server/services/deployment-service.ts(228,18): error TS18046: 'error' is of type 'unknown'.
+server/services/deployment-service.ts(251,25): error TS7006: Parameter 'err' implicitly has an 'any' type.
+server/services/deployment-service.ts(303,26): error TS18046: 'error' is of type 'unknown'.
+server/services/deployment-service.ts(304,9): error TS18046: 'error' is of type 'unknown'.
+server/services/deployment-service.ts(310,41): error TS18046: 'error' is of type 'unknown'.
+server/services/deployment-service.ts(311,18): error TS18046: 'error' is of type 'unknown'.
+server/services/deployment-service.ts(325,26): error TS7006: Parameter 'err' implicitly has an 'any' type.
+server/services/deployment-service.ts(325,31): error TS7006: Parameter 'stream' implicitly has an 'any' type.
+server/services/deployment-service.ts(331,28): error TS7006: Parameter 'data' implicitly has an 'any' type.
+server/services/deployment-service.ts(335,35): error TS7006: Parameter 'data' implicitly has an 'any' type.
+server/services/deployment-service.ts(339,29): error TS7006: Parameter 'code' implicitly has an 'any' type.
+server/services/deployment-service.ts(360,17): error TS7006: Parameter 'err' implicitly has an 'any' type.
+server/services/deployment-service.ts(360,22): error TS7006: Parameter 'sftp' implicitly has an 'any' type.
+server/services/deployment-service.ts(371,34): error TS7006: Parameter 'err' implicitly has an 'any' type.
+server/services/deployment-service.ts(394,25): error TS7006: Parameter 'err' implicitly has an 'any' type.
+server/services/deployment-service.ts(450,34): error TS18046: 'error' is of type 'unknown'.
+server/vite.ts(47,5): error TS2322: Type '{ middlewareMode: boolean; hmr: { server: Server<typeof IncomingMessage, typeof ServerResponse>; timeout: number; protocol: string; clientPort: number; }; allowedHosts: boolean; }' is not assignable to type 'ServerOptions'.
+  Types of property 'allowedHosts' are incompatible.
+    Type 'boolean' is not assignable to type 'true | string[] | undefined'.
