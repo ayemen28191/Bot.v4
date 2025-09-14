@@ -982,6 +982,7 @@ const translations: Translations = {
     detected_timezone: 'Detected Timezone',
     timezone_description: 'Timezone affects how signal times and market open/close times are displayed',
     auto_timezone_description: 'Timezone is automatically set based on your device time',
+    auto_timezone: 'Auto (Device Time)',
     market: 'Market',
     market_open: 'Market Open',
     market_closed: 'Market Closed',
@@ -1046,99 +1047,6 @@ const translations: Translations = {
     multiple_platforms: 'Multiple Platforms',
     diverse_trading_options: 'Diverse Trading Options',
     select_timeframe: 'Select Timeframe',
-    wait_time_message: 'Please wait {time} seconds for a new signal',
-    analyzing_message: 'Analyzing {pair} on {timeframe} timeframe',
-    market_closed_message: 'Cannot get signals when market is closed. Opens at {time}',
-    new_signal_message: 'New {type} signal',
-    target_price: 'Target Price',
-    higher: 'higher',
-    lower: 'lower',
-    prediction_valid_for: 'Prediction valid for',
-    timeframe_impacts_signal: 'Timeframe affects signals',
-    expected_rise: 'Expected rise',
-    expected_drop: 'Expected drop',
-    expected_price_rise_in: 'Expected rise in',
-    expected_price_drop_in: 'Expected drop in',
-    expected_price_rise_in_timeframe: 'Price expected to rise within timeframe',
-    expected_price_drop_in_timeframe: 'Price expected to drop within timeframe',
-    bullish_trend: 'Bullish trend',
-    bearish_trend: 'Bearish trend',
-    timeframe_1m: '1 Minute',
-    timeframe_1m_short: '1M',
-    timeframe_5m: '5 Minutes',
-    timeframe_5m_short: '5M',
-    timeframe_15m: '15 Minutes',
-    timeframe_15m_short: '15M',
-    timeframe_1h: '1 Hour',
-    timeframe_1h_short: '1H',
-    timeframe_4h: '4 Hours',
-    timeframe_4h_short: '4H',
-    timeframe_1d: '1 Day',
-    timeframe_1d_short: '1D',
-    timeframe: 'Timeframe',
-
-    // Trading platforms
-    platform_metatrader5: 'MetaTrader 5',
-    platform_metatrader4: 'MetaTrader 4',
-    platform_eobroker: 'EO Broker',
-    platform_binomo: 'Binomo',
-    platform_iqoption: 'IQ Option',
-    platform_binance: 'Binance',
-    platform_pocketoption: 'Pocket Option',
-    platform_olymptrade: 'Olymp Trade',
-    platform_etoro: 'eToro',
-    platform_kucoin: 'KuCoin',
-    platform_deriv: 'Deriv',
-
-    // Markets
-    market: 'Market',
-    forex: 'Forex',
-    crypto: 'Crypto',
-    stocks: 'Stocks',
-    market_open: 'Market Open',
-    market_closed: 'Market Closed',
-    market_opening: 'Opens at',
-    market_closing: 'Closes at',
-
-    // Trading features
-    order_types: 'Order Types:',
-    features: 'Features:',
-    min_deposit: 'Min Deposit:',
-    market_order: 'Market',
-    limit_order: 'Limit',
-    stop_order: 'Stop',
-    stop_limit: 'Stop Limit',
-    stop_limit_order: 'Stop Limit',
-    binary_options: 'Binary Options',
-    turbo: 'Turbo',
-    copy_traders: 'Copy Traders',
-    forex_trading: 'Forex',
-    crypto_trading: 'Crypto',
-    technical_analysis_feature: 'Technical Analysis',
-    advanced_indicators: 'Advanced Indicators',
-    stability: 'Stability',
-    ease_of_use: 'Ease of Use',
-    modern_platform: 'Modern Platform',
-    high_payouts: 'High Payouts',
-    simple_interface: 'Simple Interface',
-    arabic_support: 'Arabic Support',
-    comprehensive_platform: 'Comprehensive Platform',
-    advanced_charts: 'Advanced Charts',
-    cryptocurrencies: 'Cryptocurrencies',
-    low_fees: 'Low Fees',
-    fast_deposits: 'Fast Deposits',
-    bonuses: 'Bonuses',
-    reliable_platform: 'Reliable Platform',
-    fast_trading: 'Fast Trading',
-    social_trading: 'Social Trading',
-    wide_range_currencies: 'Wide Range of Currencies',
-    wide_crypto_selection: 'Wide Cryptocurrency Selection',
-    digital_options: 'Digital Options',
-    copy_trading: 'Copy Trading',
-    multiple_platforms: 'Multiple Platforms',
-    diverse_trading_options: 'Diverse Trading Options',
-
-    // Messages
     wait_time_message: 'Please wait {time} seconds for a new signal',
     analyzing_message: 'Analyzing {pair} on {timeframe} timeframe',
     market_closed_message: 'Cannot get signals when market is closed. Opens at {time}',
@@ -1656,7 +1564,7 @@ const translations: Translations = {
 
     // Basic Hindi translations
     loading_page: 'पेज लोड हो रहा है...',
-    offline_mode_auto_enabled_title: 'ऑफलाइन मोड स्वचालित सक्षम',
+    offline_mode_auto_enabled_title: 'ऑफ़लाइन मोड स्वचालित सक्षम',
     offline_mode_auto_enabled_description: 'Replit HTTPS वातावरण में प्रदर्शन सुधारने के लिए ऑफलाइन मोड स्वचालित रूप से सक्षम हो गया है। सभी ऐप सुविधाएं काम करेंगी लेकिन प्रत्यक्ष सर्वर कनेक्शन के बिना।',
     initializing_app: 'ऐप इनिशियलाइज़ हो रहा है...',
     please_wait: 'कृपया प्रतीक्षा करें...',
@@ -2264,7 +2172,7 @@ const translations: Translations = {
     fxpro: 'एफएक्स प्रो',
     icmarkets: 'आईसी मार्केट्स',
     xm: 'एक्सएम',
-    xtb: 'एक्सटीबी',
+    xtb: 'एक्सटीपी',
     alpari: 'अल्पारी',
     plus500: 'प्लस500',
     etoro: 'ईटोरो',
@@ -2531,10 +2439,10 @@ function applyDirection(lang: Language): void {
 export function initializeLanguageSystem() {
   try {
     console.log('🌐 Starting language system initialization...');
-    
+
     // قراءة اللغة من localStorage مع تنظيف الإعدادات المتضاربة
     let targetLanguage = getCurrentLanguage();
-    
+
     console.log('Target language determined:', targetLanguage);
 
     // تطبيق اللغة والاتجاه بشكل مستمر
@@ -2567,7 +2475,7 @@ function applyLanguageSettings(lang: Language): void {
 
     // حفظ اللغة في localStorage
     localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
-    
+
     // تحديث الإعدادات
     try {
       const settings = JSON.parse(localStorage.getItem('settings') || '{}');
