@@ -1,0 +1,189 @@
+Early setup: Applied en (1tr) to document
+
+Mixed Content: The page a at https://72f87ecc-455d-4dd9-81a2-7521b8a4372c-00-20821po84chox sisko, repli client.sse REV was loaded over HTTPS, but attempted to connect to the insecure WebSocket endpoint ws: 1/72f87eec-465d-4dd9 -8182-7521blla4372-00-2n821poll4chox.sisko.replit.dev: 5000/7token=-x18pLpsPHNG. This request has been blocked, this endpoint must be available over w55.
+
+[vite] failed to connect to websocket (SecurityError: Failed to construct webSocket An insecure WebSocket connection may not be initiated from a page loaded over HTTPS.). books:00
+
+overrideMethod e hork.00
+
+Initial language system setup with English
+
+Initial language system setup with English
+
+Error handler initialized
+
+Starting app initialization...
+
+Early setup Applying en (itr) to document
+
+Early language setup completed en
+
+Theme config loaded
+
+Initial theme system setup with system
+
+Theme from localstorage settings: system.
+
+Applied system theme: light
+
+Theme changed to: systen Save to DR False
+
+Theme saved το localstorage
+
+Theme system initialized
+
+Initializing complete language systen
+
+Language system initialized with: en (from fallback)
+
+Language system fully initialized
+
+HTTPS environment detected Setting up websocket error handling
+
+offline node pre-enabled for HTTPS environment
+
+App rendered successfully with language: en
+
+Theme from localstorage settings: system
+
+ThemeProvider initialized with thene: system
+
+Initial theme system setup with system
+
+Theme from localstorage settings: systen
+
+Applied system theme: light
+
+Theme changed to: system Save to DD false
+
+Theme saved to localstorage
+
+Language changed to: en Save to DB: false
+
+Direction changed to: LTR for language en
+
+Direction changed to: LTR for language en
+
+Language cleared an logout, reset to English
+
+User data fetched successfully: admin
+
+Applying user preferred language fron database: en
+
+Normalizing language: en en
+
+setLanguage called with: en nornalized to: en saveToDatabase: false
+
+DOM updated unconditionally: Object
+
+Language saved to localstorage: en
+
+Language change complete: en save to DR: false
+
+Direction changed to: LTR for language: en
+
+Direction changed to: LTR for language: en
+
+User authenticated, redirecting to home...
+
+HTTPS environment detected in auth page preparing for offline-friendly authentication
+
+- تحصیل موقت Market Status Object
+
+Using cacned data from heatmap data, data age: 5
+
+التقيل مؤقت MarketStatus Object
+
+ا بعد العداد التدولي وقت الفتح العالي ف
+
+لا يوجد وات فتح محمد .
+
+11än. Is:2490
+
+118n.ts:2490
+
+errorHandler.ts 2
+
+main ESX:44
+
+main.tsx: 14
+
+main.tsx:56
+
+themesystem.ts:148
+
+themeSysten.ts:30
+
+themeSysten.ts: 30
+
+thenesysten is
+
+themeSysten.ts 04
+
+main.tsx 65
+
+main, Lsx: 72
+
+118η.τς: 2450
+
+maii. 15x174
+
+main tsx:81
+
+main.tax:116
+
+main.tsx:132
+
+thenesystem.i
+
+use thene tis8:39
+
+theme5vsten.ts: 148
+
+ChemeSystem. Us: 10
+
+ThemeSystem.ts:56
+
+ThemeSystem.IS:75
+
+themeSystem.ts.04
+
+118n.ts:2377
+
+118n.ts:2523
+
+118n.ts:252
+
+118n.ts:2470
+
+use-auth.sx:55
+
+use-auth, tax:87
+
+(18n.ts:2237
+
+118n.ts: 2247
+
+11n.ts:2269
+
+118n.ts:2284
+
+118n.ts:2304
+
+118n.ts:2523
+
+118n.ts:2523
+
+auth-page.tsx:40
+
+auth-page.tsX 58
+
+MarketStatus.tax:120
+
+use-neatmap. TSK: 169
+
+MarketStatus.tsx.120
+
+MarketClosedAlert.thx:33
+
+MarketClosedAler 1.1sx: 36
