@@ -104,6 +104,11 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   res.header('X-Frame-Options', 'SAMEORIGIN');
   res.header('Referrer-Policy', 'strict-origin-when-cross-origin');
   
+  // إضافة headers للتعامل مع مشاكل الشبكة في Replit
+  res.header('Keep-Alive', 'timeout=5, max=1000');
+  res.header('Connection', 'keep-alive');
+  res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+  
   next();
 });
 

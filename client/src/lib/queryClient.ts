@@ -11,25 +11,52 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
+  retryCount = 0
 ): Promise<Response> {
-  const res = await fetch(url, {
-    method,
-    headers: {
-      ...(data ? { "Content-Type": "application/json" } : {}),
-      // إضافة هيدر CSRF إذا كان موجوداً
-      ...((window as any).csrfToken ? { 'X-CSRF-Token': (window as any).csrfToken } : {}),
-      // إضافة رؤوس CORS إضافية
-      'Accept': 'application/json, text/plain, */*',
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache'
-    },
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include", // مهم لإرسال ملفات تعريف الارتباط
-    mode: 'cors' // تغيير إلى cors للسماح بطلبات cross-origin
-  });
+  const maxRetries = 3;
+  const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 5000);
 
-  await throwIfResNotOk(res);
-  return res;
+  try {
+    // التأكد من أن URL يبدأ بـ / أو http/https
+    const cleanUrl = url.startsWith('http') ? url : 
+                     url.startsWith('/') ? url : `/${url}`;
+
+    const res = await fetch(cleanUrl, {
+      method,
+      headers: {
+        ...(data ? { "Content-Type": "application/json" } : {}),
+        // إضافة هيدر CSRF إذا كان موجوداً
+        ...((window as any).csrfToken ? { 'X-CSRF-Token': (window as any).csrfToken } : {}),
+        // إضافة رؤوس CORS إضافية
+        'Accept': 'application/json, text/plain, */*',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      },
+      body: data ? JSON.stringify(data) : undefined,
+      credentials: "include", // مهم لإرسال ملفات تعريف الارتباط
+      mode: 'cors', // تغيير إلى cors للسماح بطلبات cross-origin
+      signal: AbortSignal.timeout(15000) // timeout بعد 15 ثانية
+    });
+
+    await throwIfResNotOk(res);
+    return res;
+  } catch (error: any) {
+    // إذا كان خطأ شبكة مؤقت وما زال لدينا محاولات، أعد المحاولة
+    if (retryCount < maxRetries && 
+        (error?.message?.includes('Failed to fetch') ||
+         error?.message?.includes('NetworkError') ||
+         error?.message?.includes('timeout'))) {
+      
+      console.warn(`🔄 إعادة المحاولة ${retryCount + 1}/${maxRetries} للطلب: ${url}`);
+      
+      // انتظار قبل إعادة المحاولة
+      await new Promise(resolve => setTimeout(resolve, retryDelay));
+      
+      return apiRequest(method, url, data, retryCount + 1);
+    }
+
+    throw error;
+  }
 }
 
 // دالة مساعدة للطلبات الخارجية عبر الوكيل

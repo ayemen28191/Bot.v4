@@ -42,11 +42,13 @@ proxyRouter.post('/fetch', isAuthenticated, async (req, res) => {
       headers: {
         'User-Agent': 'Binar-Join-Analytic-Bot/1.0',
         'Accept': 'application/json',
+        'Connection': 'close',
         ...headers
       },
-      timeout: 10000,
-      maxRedirects: 5,
-      data: data || undefined
+      timeout: 8000, // تقليل timeout إلى 8 ثواني
+      maxRedirects: 3, // تقليل عدد redirects
+      data: data || undefined,
+      validateStatus: (status: number) => status < 500 // قبول جميع حالات الحالة أقل من 500
     };
 
     const response = await axios(config);

@@ -32,15 +32,17 @@ export function useConnection(
 
       // فحص الاتصال بالخادم من خلال طلب بسيط
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // timeout بعد 10 ثواني بدلاً من 5
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // timeout بعد 8 ثواني
 
       const response = await fetch(pingUrl, {
         method: 'GET',
         headers: { 
           'Cache-Control': 'no-cache',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Connection': 'keep-alive'
         },
-        signal: controller.signal
+        signal: controller.signal,
+        credentials: 'include'
       });
 
       clearTimeout(timeoutId);
@@ -52,10 +54,21 @@ export function useConnection(
 
       return isConnected;
     } catch (error) {
-      // تجاهل الأخطاء العابرة وتسجيل فقط الأخطاء المهمة
-      if (error instanceof Error && !error.name.includes('AbortError')) {
-        console.error('🌐 Fetch error:', { url: pingUrl, error: error.message });
+      // تجاهل أخطاء الإنهاء والأخطاء المؤقتة
+      const isAbortError = error instanceof Error && 
+                          (error.name === 'AbortError' || error.message.includes('aborted'));
+      const isNetworkError = error instanceof Error && 
+                           (error.message.includes('Failed to fetch') ||
+                            error.message.includes('NetworkError'));
+
+      // لا تطبع الأخطاء المتوقعة (abort, network)
+      if (!isAbortError && !isNetworkError) {
+        console.warn('🌐 Connection check failed:', { 
+          url: pingUrl, 
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
       }
+
       setIsOnline(false);
       setLastCheckTime(Date.now());
 

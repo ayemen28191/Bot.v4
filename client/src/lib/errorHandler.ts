@@ -174,7 +174,10 @@ window.fetch = function(...args) {
       'localhost:443',
       '127.0.0.1:443',
       'http://localhost:80',
-      'http://127.0.0.1:80'
+      'http://127.0.0.1:80',
+      'chrome-extension://',
+      'moz-extension://',
+      'safari-extension://'
     ];
 
     if (url && blockedPatterns.some(pattern => url.includes(pattern))) {
@@ -184,21 +187,32 @@ window.fetch = function(...args) {
 
     return originalFetch.apply(this, args).catch((error) => {
       try {
-        // تجنب طباعة أخطاء العناوين المحظورة بشكل متكرر
-        if (!url || !blockedPatterns.some(pattern => url.includes(pattern))) {
+        // تحقق من نوع الخطأ وتجنب التقارير غير الضرورية
+        const isNetworkError = error?.message?.includes('Failed to fetch') || 
+                              error?.message?.includes('NetworkError') ||
+                              error?.message?.includes('ERR_NETWORK');
+        
+        const isTemporaryError = error?.message?.includes('timeout') ||
+                               error?.message?.includes('ECONNRESET') ||
+                               error?.message?.includes('ENOTFOUND');
+
+        // فقط اطبع الأخطاء المهمة وليس الأخطاء المؤقتة أو أخطاء الشبكة العادية
+        if (!isNetworkError && !isTemporaryError && 
+            !blockedPatterns.some(pattern => url?.includes(pattern))) {
           console.error('🌐 Fetch error:', {
             url: args[0],
-            error: error?.message || 'Unknown error'
+            error: error?.message || 'Unknown error',
+            type: error?.name || 'Unknown'
           });
+        }
 
-          // Report fetch errors only if throttling allows (exclude blocked URLs)
-          if (shouldReportError()) {
-            reportError({
-              type: 'fetch_error',
-              message: error?.message || 'Unknown fetch error',
-              url: url || 'unknown'
-            });
-          }
+        // فقط أرسل تقارير للأخطاء الحقيقية وليس أخطاء الشبكة المؤقتة
+        if (!isNetworkError && !isTemporaryError && shouldReportError()) {
+          reportError({
+            type: 'fetch_error',
+            message: error?.message || 'Unknown fetch error',
+            url: url || 'unknown'
+          });
         }
       } catch (reportingError) {
         // تجاهل أخطاء تقارير الأخطاء لتجنب حلقة لا نهائية
