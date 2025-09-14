@@ -87,13 +87,21 @@ async function initializeApp() {
         const message = args[0]?.toString() || '';
         if (message.includes('WebSocket') || 
             message.includes('SecurityError') || 
-            message.includes('failed to connect to websocket')) {
+            message.includes('failed to connect to websocket') ||
+            message.includes('ERR_SSL_PROTOCOL_ERROR') ||
+            message.includes('net::ERR_CONNECTION_REFUSED')) {
           console.warn('🌐 WebSocket error suppressed in HTTPS environment:', ...args);
           
           // تفعيل وضع عدم الاتصال تلقائياً
           try {
             localStorage.setItem('offline_mode', 'enabled');
             localStorage.setItem('offline_reason', 'websocket_security_error');
+            
+            // إرسال إشعار للمستخدم
+            const event = new CustomEvent('websocketError', {
+              detail: { message: 'تم تفعيل وضع عدم الاتصال بسبب قيود HTTPS' }
+            });
+            window.dispatchEvent(event);
           } catch (e) {
             console.warn('Could not set offline mode in localStorage');
           }

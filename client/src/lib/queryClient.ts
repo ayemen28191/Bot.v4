@@ -108,8 +108,10 @@ export function getWebSocketUrl(path: string = '/ws'): string {
     const isReplitApp = window.location.hostname.endsWith('.replit.app') || 
                         window.location.hostname.endsWith('.repl.co') ||
                         window.location.hostname === 'replit.com' ||
-                        // إضافة فحص متغيرات البيئة أو مؤشرات أخرى لبيئة Replit
-                        window.location.hostname.includes('replit') ||
+                        window.location.hostname.includes('replit.dev') ||
+                        // فحص في بيئة التطوير المحلية في Replit
+                        (isSecure && (window.location.host.includes('5000') || 
+                                     window.location.host.includes('8080')))ame.includes('replit') ||
                         // فحص في بيئة التطوير المحلية في Replit
                         (isSecure && window.location.host.includes('5000'));
     

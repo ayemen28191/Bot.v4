@@ -28,9 +28,12 @@ export async function setupVite(app: Express, server: Server) {
     hmr: {
       server,
       timeout: 60000,
-      protocol: 'ws', // استخدام WSS للاتصال الآمن
-      clientPort: 5000,
-      host: '0.0.0.0'
+      // تحديد البروتوكول بناءً على بيئة التشغيل
+      protocol: process.env.NODE_ENV === 'production' || process.env.REPL_SLUG ? 'wss' : 'ws',
+      clientPort: process.env.NODE_ENV === 'production' || process.env.REPL_SLUG ? 443 : 5000,
+      host: '0.0.0.0',
+      // إضافة إعدادات إضافية لـ Replit
+      port: process.env.NODE_ENV === 'production' ? undefined : 5000
     },
     allowedHosts: true as const,
   };
