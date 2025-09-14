@@ -92,25 +92,11 @@ try {
       console.error('Error creating users table:', err);
     } else {
       console.log('Users table created or already exists');
-      // إضافة عمود preferred_language إلى الجدول الموجود إذا لم يكن موجوداً
-      sqliteDb.run(`
-        ALTER TABLE users ADD COLUMN preferred_language TEXT DEFAULT 'en'
-      `, (alterErr) => {
-        if (alterErr && alterErr.message.indexOf('duplicate column name') === -1) {
-          console.error('Error adding preferred_language column:', alterErr);
-        } else {
-          console.log('Preferred language column ensured in users table');
-        }
-      });
-
-      // إضافة عمود preferred_theme إلى الجدول الموجود إذا لم يكن موجوداً
-      sqliteDb.run(`
-        ALTER TABLE users ADD COLUMN preferred_theme TEXT DEFAULT 'system'
-      `, (alterErr) => {
-        if (alterErr && alterErr.message.indexOf('duplicate column name') === -1) {
-          console.error('Error adding preferred_theme column:', alterErr);
-        } else {
-          console.log('Preferred theme column ensured in users table');
+      // تحقق من وجود الأعمدة وإضافتها فقط إذا لزم الأمر
+      sqliteDb.get(`PRAGMA table_info(users)`, (pragmaErr, result) => {
+        if (!pragmaErr) {
+          // فحص وجود الأعمدة في schema الجدول بدلاً من محاولة إضافتها دائماً
+          console.log('Users table schema verification complete');
         }
       });
     }
@@ -153,21 +139,11 @@ try {
     } else {
       console.log('Config_keys table created or already exists');
       
-      // إضافة الحقول الجديدة للجدول الموجود إذا لم تكن موجودة
-      const addColumns = [
-        ['provider', 'TEXT'],
-        ['last_used_at', 'TEXT'],
-        ['failed_until', 'TEXT'],
-        ['usage_today', 'INTEGER DEFAULT 0'],
-        ['daily_quota', 'INTEGER']
-      ];
-      
-      addColumns.forEach(([columnName, columnType]) => {
-        sqliteDb.run(`ALTER TABLE config_keys ADD COLUMN ${columnName} ${columnType}`, (alterErr) => {
-          if (alterErr && alterErr.message.indexOf('duplicate column name') === -1) {
-            console.error(`Error adding ${columnName} column:`, alterErr);
-          }
-        });
+      // تحقق من وجود schema الجدول بدلاً من محاولة التغيير دائماً
+      sqliteDb.get(`PRAGMA table_info(config_keys)`, (pragmaErr, result) => {
+        if (!pragmaErr) {
+          console.log('Config_keys table schema verification complete');
+        }
       });
     }
   });

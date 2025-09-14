@@ -53,19 +53,83 @@ export class KeyManager {
   }
 
   /**
-   * اختر المفتاح التالي (دورياً) مع تحديث last_used_at
+   * اختر المفتاح التالي (دورياً) مع تحديث last_used_at بشكل atomic
    */
   async pickNextKey(provider: string): Promise<ConfigKey | null> {
-    const keys = await this.getAvailableKeys(provider);
-    if (!keys.length) {
-      console.warn(`لا توجد مفاتيح متاحة للمزود ${provider}`);
+    try {
+      // استخدام transaction واحد atomic للحصول على المفتاح وتحديث الاستخدام
+      const db = this.storage.getDatabase();
+      
+      return new Promise((resolve, reject) => {
+        db.serialize(() => {
+          db.run('BEGIN TRANSACTION');
+          
+          // البحث عن أفضل مفتاح متاح مع قفل للقراءة
+          const now = new Date().toISOString();
+          const query = `
+            SELECT * FROM config_keys 
+            WHERE provider = ? 
+              AND (failed_until IS NULL OR failed_until <= ?)
+              AND (daily_quota IS NULL OR usage_today < daily_quota OR usage_today IS NULL)
+            ORDER BY 
+              CASE WHEN last_used_at IS NULL THEN 0 ELSE 1 END,
+              last_used_at ASC
+            LIMIT 1
+          `;
+          
+          db.get(query, [provider, now], (err: Error | null, row: any) => {
+            if (err) {
+              db.run('ROLLBACK');
+              reject(err);
+              return;
+            }
+            
+            if (!row) {
+              db.run('ROLLBACK');
+              console.warn(`لا توجد مفاتيح متاحة للمزود ${provider}`);
+              resolve(null);
+              return;
+            }
+            
+            // تحديث الاستخدام atomically
+            const updateQuery = `
+              UPDATE config_keys 
+              SET last_used_at = ?, usage_today = COALESCE(usage_today, 0) + 1, updated_at = ?
+              WHERE id = ?
+            `;
+            
+            db.run(updateQuery, [now, now, row.id], (updateErr: Error | null) => {
+              if (updateErr) {
+                db.run('ROLLBACK');
+                reject(updateErr);
+                return;
+              }
+              
+              db.run('COMMIT', (commitErr: Error | null) => {
+                if (commitErr) {
+                  reject(commitErr);
+                  return;
+                }
+                
+                console.log(`تم اختيار المفتاح (معرف: ${row.id}) للمزود ${provider}`);
+                
+                // إرجاع المفتاح مع القيم المحدثة
+                const updatedKey: ConfigKey = {
+                  ...row,
+                  lastUsedAt: now,
+                  usageToday: (row.usage_today || 0) + 1
+                };
+                
+                resolve(updatedKey);
+              });
+            });
+          });
+        });
+      });
+    } catch (error) {
+      console.error('خطأ في اختيار المفتاح:', error);
       return null;
     }
-
-    const key = keys[0]; // الأقل استخداماً
-    await this.incrementUsage(key.id);
-    console.log(`تم اختيار المفتاح ${key.key} للمزود ${provider}`);
-    return key;
   }
 
   /**
@@ -78,7 +142,7 @@ export class KeyManager {
       // استخدام الوظيفة المحدثة من storage.ts
       await this.storage.markKeyFailed(keyId, failedUntil);
       
-      console.warn(`تم وسم المفتاح ${keyId} كفاشل حتى ${failedUntil}`);
+      console.warn(`تم وسم المفتاح (معرف: ${keyId}) كفاشل حتى ${failedUntil}`);
     } catch (error) {
       console.error('خطأ في وسم المفتاح كفاشل:', error);
     }
@@ -119,7 +183,7 @@ export class KeyManager {
       
       return allKeys.map(key => ({
         id: key.id,
-        key: key.key,
+        key: this.maskApiKey(key.key),
         provider: key.provider,
         lastUsedAt: key.lastUsedAt,
         failedUntil: key.failedUntil,
@@ -145,6 +209,14 @@ export class KeyManager {
     if (key.dailyQuota && (key.usageToday || 0) >= key.dailyQuota) return false;
     
     return true;
+  }
+
+  /**
+   * إخفاء المفتاح للأمان (عرض جزء منه فقط)
+   */
+  private maskApiKey(key: string): string {
+    if (!key || key.length < 8) return '***';
+    return key.substring(0, 4) + '...' + key.substring(key.length - 4);
   }
 
   /**
