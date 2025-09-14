@@ -117,6 +117,8 @@ function MarketStatus(props: MarketStatusProps) {
 
   // تحديث الوقت كل ثانية للتحديث الحي للعد التنازلي
   useEffect(() => {
+    console.log('🔄 تشغيل مؤقت MarketStatus', { isOpen, nextOpenTime, nextCloseTime });
+    
     const timer = setInterval(() => {
       setCurrentTime(new Date());
       
@@ -125,38 +127,48 @@ function MarketStatus(props: MarketStatusProps) {
         try {
           let openTime: Date;
           
+          console.log('📅 معالجة وقت الفتح:', nextOpenTime);
+          
           // تحسين تحليل التاريخ
           if (nextOpenTime.includes('||')) {
             const [displayTime, isoTime] = nextOpenTime.split('||');
+            console.log('🔗 تحليل تاريخ مركب:', { displayTime, isoTime });
             openTime = new Date(isoTime);
           } else {
+            console.log('📊 تحليل تاريخ مباشر:', nextOpenTime);
             openTime = new Date(nextOpenTime);
           }
           
           // التحقق من صحة التاريخ
           if (isNaN(openTime.getTime())) {
-            console.error('Invalid date format in MarketStatus:', nextOpenTime);
+            console.error('❌ تنسيق تاريخ غير صحيح في MarketStatus:', nextOpenTime);
             return;
           }
           
           const now = new Date();
           const diff = Math.floor((openTime.getTime() - now.getTime()) / 1000);
           
+          console.log('⏱️ حساب الفرق (ثواني):', diff, 'بين', now.toISOString(), 'و', openTime.toISOString());
+          
           // الاحتفاظ بإجمالي الثواني إذا لم يتم تعيينه من قبل
           // هذا مهم لحساب نسبة التقدم
           if (totalSeconds === null || diff >= totalSeconds) {
             // نفترض أن الوقت الإجمالي 24 ساعة كحد أقصى إذا كان أكبر من ذلك
             const max = 24 * 60 * 60;
-            setTotalSeconds(diff > max ? max : diff);
+            const calculatedTotal = diff > max ? max : diff;
+            console.log('📊 تعيين إجمالي الثواني:', calculatedTotal);
+            setTotalSeconds(calculatedTotal);
           } else if (diff > 0) {
             // حساب نسبة التقدم - تم استخدام 100 - للحصول على شريط يتقدم مع مرور الوقت
             const calculatedProgress = 100 - ((diff / (totalSeconds || 1)) * 100);
-            setProgress(calculatedProgress > 100 ? 100 : calculatedProgress);
+            const finalProgress = calculatedProgress > 100 ? 100 : calculatedProgress;
+            console.log('📈 نسبة التقدم:', finalProgress.toFixed(2), '%');
+            setProgress(finalProgress);
           }
           
           setSecondsLeft(diff > 0 ? diff : 0);
         } catch (error) {
-          console.error('Error calculating time difference:', error);
+          console.error('❌ خطأ في حساب فرق الوقت:', error);
         }
       }
       // حساب الوقت المتبقي للإغلاق إذا كان السوق مفتوحًا

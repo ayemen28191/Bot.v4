@@ -29,7 +29,12 @@ export default function MarketClosedAlert({ nextOpenTime, nextCloseTime, marketT
   
   // تحسين العد التنازلي بفاصل زمني أكثر تفاعلية
   useEffect(() => {
-    if (!nextOpenTime) return;
+    console.log('🔄 بدء العداد التنازلي، وقت الفتح التالي:', nextOpenTime);
+    
+    if (!nextOpenTime) {
+      console.log('⚠️ لا يوجد وقت فتح محدد');
+      return;
+    }
     
     try {
       // تحسين تحليل التاريخ
@@ -38,24 +43,34 @@ export default function MarketClosedAlert({ nextOpenTime, nextCloseTime, marketT
       if (nextOpenTime.includes('||')) {
         // إذا كان التنسيق مركب (displayString||ISOString)
         const [displayTime, isoTime] = nextOpenTime.split('||');
+        console.log('📊 تحليل تاريخ مركب - عرض:', displayTime, '، ISO:', isoTime);
         openTime = new Date(isoTime);
       } else {
         // محاولة تحليل التاريخ مباشرة
+        console.log('📊 تحليل تاريخ مباشر:', nextOpenTime);
         openTime = new Date(nextOpenTime);
       }
       
       // التحقق من صحة التاريخ
       if (isNaN(openTime.getTime())) {
-        console.error('Invalid date format:', nextOpenTime);
+        console.error('❌ تنسيق تاريخ غير صحيح:', nextOpenTime);
         setTimeLeft(t('time_calculation_error'));
         return;
       }
       
+      console.log('✅ تاريخ الفتح المحلل:', openTime.toISOString());
+      
       const now = new Date();
       const initialTimeDiff = openTime.getTime() - now.getTime();
       
+      console.log('⏰ الوقت الحالي:', now.toISOString());
+      console.log('🎯 وقت الفتح المستهدف:', openTime.toISOString());
+      console.log('⏳ الفرق الزمني الأولي:', initialTimeDiff, 'مللي ثانية');
+      console.log('📊 الفرق بالساعات:', (initialTimeDiff / (1000 * 60 * 60)).toFixed(2));
+      
       if (initialTimeDiff <= 0 || isNaN(initialTimeDiff)) {
         // إذا كان وقت الفتح في الماضي أو غير صالح، نعرض رسالة مختلفة وإعادة تحميل
+        console.log('🔄 وقت الفتح في الماضي أو غير صالح، إعادة التحميل');
         setTimeLeft(t('refreshing_market_data'));
         setProgress(100);
         setTimeout(() => window.location.reload(), 1500);
@@ -65,12 +80,17 @@ export default function MarketClosedAlert({ nextOpenTime, nextCloseTime, marketT
       setInitialDiff(initialTimeDiff);
       setCurrentDiff(initialTimeDiff);
       
+      console.log('⏱️ بدء المؤقت للعد التنازلي');
+      
       // استخدام مؤقت دقيق للتحديث كل ثانية
       const timer = setInterval(() => {
         const currentTime = new Date();
         const diff = openTime.getTime() - currentTime.getTime();
         
+        console.log('🔄 تحديث العداد - الفرق الحالي:', diff, 'مللي ثانية');
+        
         if (diff <= 0) {
+          console.log('🎉 انتهى العد التنازلي - السوق يفتح الآن!');
           clearInterval(timer);
           setTimeLeft(t('refreshing_market_data'));
           setProgress(100);
@@ -103,22 +123,30 @@ export default function MarketClosedAlert({ nextOpenTime, nextCloseTime, marketT
         const progressValue = Math.min(((initialTimeDiff - diff) / initialTimeDiff) * 100, 99.9);
         setProgress(progressValue);
         
+        console.log('📊 نسبة التقدم:', progressValue.toFixed(2), '%');
+        
         // تحويل الفرق الزمني إلى مكونات (ساعات، دقائق، ثواني)
         const hours = Math.floor(diff / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
         
+        console.log('⏰ مكونات الوقت:', { hours, minutes, seconds });
+        
         // تحديث مكونات الوقت لاستخدامها في العرض التفصيلي
         setTimeComponents({ hours, minutes, seconds });
         
         // تنسيق النص حسب المدة المتبقية مع تحسين العرض
+        let formattedTime = '';
         if (hours > 0) {
-          setTimeLeft(`${hours}${t('h')} ${minutes}${t('m')} ${seconds}${t('s')}`);
+          formattedTime = `${hours}${t('h')} ${minutes}${t('m')} ${seconds}${t('s')}`;
         } else if (minutes > 0) {
-          setTimeLeft(`${minutes}${t('m')} ${seconds}${t('s')}`);
+          formattedTime = `${minutes}${t('m')} ${seconds}${t('s')}`;
         } else {
-          setTimeLeft(`${seconds}${t('s')}`);
+          formattedTime = `${seconds}${t('s')}`;
         }
+        
+        console.log('🕐 الوقت المنسق:', formattedTime);
+        setTimeLeft(formattedTime);
         
         // إخفاء شارة الإشعار بعد 5 ثوانٍ
         if (showNotificationBadge && Date.now() - now.getTime() > 5000) {
