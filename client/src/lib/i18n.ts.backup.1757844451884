@@ -808,6 +808,10 @@ const translations: Translations = {
     market_opening_now: 'Market Opening Now',
     refreshing_for_market_open: 'Refreshing data to begin trading',
     time_calculation_error: 'Time calculation error',
+    notifications_enabled: 'Notifications Enabled',
+    market_status_notifications_enabled: 'You will receive notifications when markets open and close',
+    enable_market_notifications: 'Enable Market Notifications',
+    market_closed_message_improved: 'Market is currently closed. It will open at {time}. You can follow the countdown below and will be notified when the market opens.',
     user_management: 'Users',
     admin_panel: 'Admin Panel',
     bot: 'Bot',
@@ -845,19 +849,62 @@ const translations: Translations = {
     admins_only: 'Admins only',
 
     // Settings and general success/error messages
+    settings_saved_successfully: 'Settings saved successfully',
+    language_preference_saved: 'Your language preference has been saved.',
+    error_saving_settings: 'Error saving settings',
+    success: 'Success',
+    error: 'Error',
+    failed: 'Failed',
+    successfully_added: 'Successfully added',
+    successfully_updated: 'Successfully updated',
+    successfully_deleted: 'Successfully deleted',
+    user_added_successfully: 'User added successfully',
+    user_updated_successfully: 'User updated successfully',
+    user_deleted_successfully: 'User deleted successfully',
+    failed_to_add_user: 'Failed to add user',
+    failed_to_update_user: 'Failed to update user',
+    failed_to_delete_user: 'Failed to delete user',
+    failed_to_fetch_users: 'Failed to fetch users list',
 
     // Server and deployment messages
+    server_added_successfully: 'Server added successfully',
+    server_updated_successfully: 'Server updated successfully',
+    server_deleted_successfully: 'Server deleted successfully',
+    connected_successfully: 'Connected successfully',
+    connection_failed: 'Connection failed',
+    deployed_successfully: 'Deployed successfully',
+    deployment_failed: 'Deployment failed',
+    failed_to_fetch_servers: 'Failed to fetch servers list',
+    failed_to_fetch_deployment_logs: 'Failed to fetch deployment logs',
+    text_copied_to_clipboard: 'Text copied to clipboard',
 
     // API Keys messages
+    api_key_saved_successfully: 'API key saved successfully',
+    failed_to_save_api_key: 'Failed to save API key',
+    api_key_deleted_successfully: 'API key deleted successfully',
+    failed_to_delete_api_key: 'Failed to delete API key',
+    failed_to_fetch_api_keys: 'Failed to fetch API keys',
+    key_list_updated_successfully: 'Key list updated successfully',
+    failed_to_update_key_list: 'Failed to update key list',
 
     // Auth messages
+    login_successful: 'Login successful',
+    login_failed: 'Login failed',
+    account_created_successfully: 'Account created successfully',
+    account_creation_failed: 'Account creation failed',
+    logout_successful: 'Logout successful',
+    logout_failed: 'Logout failed',
 
     // Admin messages
     password_must_be_longer_than_6_characters: 'Password must be longer than 6 characters',
 
     // System updater messages
+    system_update_completed: 'System update completed',
+    system_update_failed: 'System update failed',
 
     // Trading and market messages
+    refreshing_data: 'Refreshing data',
+    fetching_latest_prices: 'Fetching latest prices. Please wait or try again later.',
     go_online: 'Go Online',
     offline_mode: 'Offline Mode',
     expected_price_change: 'Expected Price Change',
@@ -876,11 +923,13 @@ const translations: Translations = {
     group_chats: 'Chat',
     settings: 'Settings',
     chat: 'Chat',
+    notifications: 'Notifications',
     timezone: 'Timezone',
     language: 'Language',
     theme: 'Theme',
     save_settings: 'Save Settings',
     settings_saved: 'Settings saved successfully',
+    auto_timezone: 'Auto (Device Time)',
     utc: 'Coordinated Universal Time (UTC)',
     riyadh: 'Riyadh (UTC+3)',
     dubai: 'Dubai (UTC+4)',
@@ -911,6 +960,7 @@ const translations: Translations = {
     app_version: 'App Version',
     dark_mode: 'Dark Mode',
     light_mode: 'Light Mode',
+    system_theme: 'System Theme',
     wait: 'Wait',
     analyzing: 'Analyzing...',
     waiting_for_signal: 'Waiting for signal...',
@@ -924,6 +974,10 @@ const translations: Translations = {
     account_info: 'Account Info',
     app_user: 'User Display Name',
     free_account: 'Premium Annual Subscription',
+    signal_notifications: 'Signal Notifications',
+    receive_signal_notifications: 'Receive notifications for new signals',
+    market_alerts: 'Market Alerts',
+    receive_market_alerts: 'Receive notifications for market open/close',
     choose_timezone: 'Choose Timezone',
     detected_timezone: 'Detected Timezone',
     timezone_description: 'Timezone affects how signal times and market open/close times are displayed',
@@ -937,6 +991,7 @@ const translations: Translations = {
     technical_analysis: 'Technical Analysis',
     get_signal: 'Get Signal',
     signal_cooldown: 'Wait for next signal',
+    second_unit: 'seconds',
     probability: 'Probability',
     current_price: 'Current Price',
     select_trading_platform: 'Select Trading Platform',
@@ -2336,8 +2391,8 @@ export function initializeLanguageSystem() {
     console.log('Target language determined:', targetLanguage);
 
     // تطبيق اللغة والاتجاه بشكل مستمر
-    setCurrentLanguage(targetLanguage as Language);
-    applyLanguageSettings(targetLanguage as Language);
+    setCurrentLanguage(targetLanguage);
+    applyLanguageSettings(targetLanguage);
 
     console.log('✅ Language system initialized successfully:', {
       language: targetLanguage,
@@ -2439,7 +2494,7 @@ if (typeof window !== 'undefined') {
     const isRTL = newLang === 'ar';
 
     // Update HTML attributes
-    document.documentElement.setAttribute('lang', newLang);
+    document.documentElement.setAttribute('lang', newLanguage);
     document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
     currentLanguage = newLang;
 
