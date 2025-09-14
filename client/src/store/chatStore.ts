@@ -340,299 +340,300 @@ export const useStore = create<ChatState>((set, get) => {
         }
       };
 
-      set({ socket: ws });
-
-    } catch (error) {
-      console.error('Failed to initialize WebSocket:', error);
-      set({ isConnected: false, socket: null });
-    }
-  },
-
-  sendMessage: (text: string, sender: string, avatar: string) => {
-    // إنشاء كائن الرسالة بشكل أكثر أماناً مع الختم الزمني الموحد
-    const timestamp = Date.now();
-    const message: Message = {
-      id: `msg_${timestamp}_${Math.floor(Math.random() * 10000)}`,
-      text,
-      sender,
-      avatar,
-      timestamp
-    };
-
-    // الحصول على حالة الاتصال والوضع من المخزن
-    const { socket, isConnected, isOfflineMode, pendingMessages } = get();
-
-    // إذا كان في وضع عدم الاتصال، نخزن الرسالة للمزامنة لاحقاً
-    if (isOfflineMode) {
-      console.log('Message sent in offline mode, will be saved for later sync');
-
-      // إضافة الرسالة إلى قائمة الرسائل المعلقة
-      set(state => ({
-        pendingMessages: [...state.pendingMessages, message]
-      }));
-
-      // حفظ الرسائل المعلقة في التخزين المحلي
+      // محاولة تعيين السوكيت داخل try/catch آمنة
       try {
-        const allPendingMessages = [...pendingMessages, message];
-        saveToLocalStorage('pending_messages', allPendingMessages);
-      } catch (storageError) {
-        console.warn('Failed to save pending messages to local storage:', storageError);
+        set({ socket: ws });
+      } catch (error) {
+        console.error('Failed to initialize WebSocket:', error);
+        set({ isConnected: false, socket: null });
       }
-    }
-    // محاولة الإرسال عبر WebSocket إذا كان الاتصال متاحاً
-    else if (isConnected && socket && 'send' in socket && typeof socket.send === 'function') {
-      try {
-        // إعداد كائن رسالة للإرسال عبر WebSocket مع تشفير بسيط (base64)
-        const wsMessage = {
-          type: 'message',
-          message: {
-            ...message,
-            // تشفير بسيط للعرض فقط
-            encrypted: true,
-            text: btoa(encodeURIComponent(text)) // تشفير بسيط للعرض فقط
-          }
-        };
+    },
 
-        // إرسال الرسالة إلى الخادم
-        socket.send(JSON.stringify(wsMessage));
-        console.log('Message sent to server via WebSocket');
-      } catch (wsError) {
-        console.error('Error sending message via WebSocket, saving locally only:', wsError);
+    sendMessage: (text: string, sender: string, avatar: string) => {
+      // إنشاء كائن الرسالة بشكل أكثر أماناً مع الختم الزمني الموحد
+      const timestamp = Date.now();
+      const message: Message = {
+        id: `msg_${timestamp}_${Math.floor(Math.random() * 10000)}`,
+        text,
+        sender,
+        avatar,
+        timestamp
+      };
 
-        // إضافة الرسالة للمعلقة في حالة فشل الإرسال
+      // الحصول على حالة الاتصال والوضع من المخزن
+      const { socket, isConnected, isOfflineMode, pendingMessages } = get();
+
+      // إذا كان في وضع عدم الاتصال، نخزن الرسالة للمزامنة لاحقاً
+      if (isOfflineMode) {
+        console.log('Message sent in offline mode, will be saved for later sync');
+
+        // إضافة الرسالة إلى قائمة الرسائل المعلقة
         set(state => ({
           pendingMessages: [...state.pendingMessages, message]
         }));
-      }
-    } else {
-      console.log('No active WebSocket connection, saving message locally only');
-    }
 
-    // في جميع الحالات، نضيف الرسالة إلى الرسائل المحلية للعرض الفوري
-    set(state => {
-      const newMessages = [...state.messages, message];
-
-      // حفظ الرسائل في التخزين المحلي (بالتنسيق القديم والجديد)
-      try {
-        localStorage.setItem('chat_messages', JSON.stringify(newMessages));
-        saveToLocalStorage('chat_data', newMessages);
-      } catch (storageError) {
-        console.warn('Failed to save messages to local storage:', storageError);
-      }
-
-      return { messages: newMessages };
-    });
-
-    // تسجيل في وحدة التحكم للتصحيح
-    console.log('New message sent and saved locally:', message);
-
-    // إذا كنا في وضع المحاكاة المحلية أو وضع عدم الاتصال، نستمر في إنشاء ردود افتراضية
-    if (isOfflineMode || !socket || !('send' in socket) || typeof socket.send !== 'function') {
-      // محاكاة الحصول على رسالة رد من مستخدم آخر (فقط للعرض)
-      setTimeout(() => {
-        if (Math.random() > 0.7) { // 30% فرصة للرد التلقائي
-          const autoResponse: Message = {
-            id: `auto_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
-            text: `Auto-reply to: "${text.substring(0, 15)}${text.length > 15 ? '...' : ''}"`,
-            sender: 'Another User',
-            avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${Math.random()}`,
-            timestamp: Date.now() + 1000
-          };
-
-          // إضافة الرسالة إلى الحالة
-          set(state => {
-            const newMessages = [...state.messages, autoResponse];
-            try {
-              localStorage.setItem('chat_messages', JSON.stringify(newMessages));
-              saveToLocalStorage('chat_data', newMessages);
-            } catch (error) {
-              console.warn('Failed to save auto-reply to local storage:', error);
-            }
-            return { messages: newMessages };
-          });
-
-          // إرسال إشعار للرد التلقائي إذا كانت الصفحة غير نشطة
-          try {
-            if (!document.hasFocus()) {
-              NotificationService.sendChatMessage({
-                sender: autoResponse.sender,
-                text: autoResponse.text
-              });
-            }
-          } catch (notifyError) {
-            console.warn('Could not send notification for auto-reply:', notifyError);
-          }
-        }
-      }, 1500 + Math.random() * 2000); // رد عشوائي بين 1.5 و 3.5 ثوانٍ
-    }
-  },
-
-  // تمكين وضع عدم الاتصال بالإنترنت
-  enableOfflineMode: () => {
-    try {
-      if (typeof window === 'undefined') return;
-
-      // التحقق مما إذا كان الوضع مفعل بالفعل
-      if (get().isOfflineMode) {
-        console.log('Offline mode already enabled');
-        return;
-      }
-
-      // إعادة تعيين عداد المحاولات الفاشلة
-      localStorage.removeItem('ws_failed_attempts');
-
-      // تخزين الرسائل الحالية قبل تمكين وضع عدم الاتصال
-      const messages = get().messages;
-      saveToLocalStorage('chat_data_offline', messages);
-
-      // قطع اتصال WebSocket إذا كان موجوداً
-      const socket = get().socket;
-      if (socket && 'close' in socket && typeof socket.close === 'function') {
-        socket.close();
-      }
-
-      set({
-        isOfflineMode: true,
-        isConnected: false,
-        socket: null
-      });
-
-      console.log('Offline mode enabled. Messages will be stored locally only.');
-
-      // إظهار إشعار للمستخدم
-      try {
-        const { toast } = require('@/hooks/use-toast');
-        toast({
-          title: "Offline Mode Activated",
-          description: "Data will be stored locally. You can return to live mode later.",
-          variant: "default",
-          duration: 5000
-        });
-      } catch (toastError) {
-        console.warn('Failed to display offline mode activation notification:', toastError);
-      }
-
-      // تخزين حالة وضع عدم الاتصال
-      localStorage.setItem('offlineMode', 'enabled');
-    } catch (error) {
-      console.error('Error enabling offline mode:', error);
-    }
-  },
-
-  // تعطيل وضع عدم الاتصال بالإنترنت والعودة للوضع الطبيعي
-  disableOfflineMode: () => {
-    try {
-      if (typeof window === 'undefined') return;
-
-      set({ isOfflineMode: false });
-      // إزالة كلا المفتاحين للتوافق مع الإصدارات السابقة
-      localStorage.removeItem('offlineMode');
-      localStorage.removeItem('offline_mode');
-      localStorage.removeItem('ws_failed_attempts');
-
-      // إظهار إشعار للمستخدم
-      try {
-        const { toast } = require('@/hooks/use-toast');
-        toast({
-          title: "Connecting to Server",
-          description: "Attempting to connect and sync data...",
-          variant: "default",
-          duration: 3000
-        });
-      } catch (toastError) {
-        console.warn('Failed to display offline mode deactivation notification:', toastError);
-      }
-
-      // إعادة تهيئة اتصال WebSocket
-      get().initializeWebSocket();
-
-      // مزامنة الرسائل المخزنة محلياً بعد تأخير قصير (لضمان إنشاء الاتصال أولاً)
-      setTimeout(() => {
-        get().syncMessages();
-      }, 2000);
-
-      console.log('Offline mode disabled, attempting to reconnect.');
-    } catch (error) {
-      console.error('Error disabling offline mode:', error);
-    }
-  },
-
-  // مزامنة الرسائل المخزنة محلياً مع الخادم
-  syncMessages: async () => {
-    try {
-      if (typeof window === 'undefined') return;
-
-      const { socket, pendingMessages, messages, isConnected } = get();
-
-      // التحقق من وجود اتصال نشط
-      if (!isConnected || !socket || !('send' in socket) || typeof socket.send !== 'function') {
-        console.warn('Cannot sync messages: no active server connection');
-        return;
-      }
-
-      // تحضير الرسائل للمزامنة - استخدام الرسائل المعلقة أو استعادة من التخزين المحلي
-      let messagesToSync: Message[] = [...pendingMessages];
-
-      // إذا لم يكن هناك رسائل معلقة في الذاكرة، نحاول استعادتها من التخزين المحلي
-      if (messagesToSync.length === 0) {
-        const savedPending = getFromLocalStorage<Message[]>('pending_messages', []);
-        messagesToSync = savedPending;
-      }
-
-      // إذا لم نجد أي رسائل معلقة للمزامنة، نخرج
-      if (messagesToSync.length === 0) {
-        console.log('No pending messages to sync');
-        return;
-      }
-
-      console.log(`Syncing ${messagesToSync.length} messages with the server...`);
-
-      // إرسال الرسائل للمزامنة بشكل متعاقب
-      for (const message of messagesToSync) {
+        // حفظ الرسائل المعلقة في التخزين المحلي
         try {
+          const allPendingMessages = [...pendingMessages, message];
+          saveToLocalStorage('pending_messages', allPendingMessages);
+        } catch (storageError) {
+          console.warn('Failed to save pending messages to local storage:', storageError);
+        }
+      }
+      // محاولة الإرسال عبر WebSocket إذا كان الاتصال متاحاً
+      else if (isConnected && socket && 'send' in socket && typeof socket.send === 'function') {
+        try {
+          // إعداد كائن رسالة للإرسال عبر WebSocket مع تشفير بسيط (base64)
           const wsMessage = {
             type: 'message',
-            message,
-            isSync: true
+            message: {
+              ...message,
+              // تشفير بسيط للعرض فقط
+              encrypted: true,
+              text: btoa(encodeURIComponent(text)) // تشفير بسيط للعرض فقط
+            }
           };
 
+          // إرسال الرسالة إلى الخادم
           socket.send(JSON.stringify(wsMessage));
-          await new Promise(resolve => setTimeout(resolve, 100)); // انتظار قصير بين كل رسالة
-        } catch (sendError) {
-          console.error('Error syncing message:', sendError);
-          // تسجيل الرسالة كمعلقة
+          console.log('Message sent to server via WebSocket');
+        } catch (wsError) {
+          console.error('Error sending message via WebSocket, saving locally only:', wsError);
+
+          // إضافة الرسالة للمعلقة في حالة فشل الإرسال
           set(state => ({
             pendingMessages: [...state.pendingMessages, message]
           }));
         }
+      } else {
+        console.log('No active WebSocket connection, saving message locally only');
       }
 
-      // تحديث وقت آخر مزامنة وحفظه
-      const syncTime = Date.now();
-      set({ lastSyncTimestamp: syncTime, pendingMessages: [] });
-      localStorage.setItem('last_sync_timestamp', syncTime.toString());
+      // في جميع الحالات، نضيف الرسالة إلى الرسائل المحلية للعرض الفوري
+      set(state => {
+        const newMessages = [...state.messages, message];
 
-      console.log('Messages synced successfully');
+        // حفظ الرسائل في التخزين المحلي (بالتنسيق القديم والجديد)
+        try {
+          localStorage.setItem('chat_messages', JSON.stringify(newMessages));
+          saveToLocalStorage('chat_data', newMessages);
+        } catch (storageError) {
+          console.warn('Failed to save messages to local storage:', storageError);
+        }
 
-      // تحديث التخزين المؤقت بالبيانات المحدثة
-      saveToLocalStorage('chat_data', get().messages);
-    } catch (error) {
-      console.error('Error syncing messages:', error);
+        return { messages: newMessages };
+      });
+
+      // تسجيل في وحدة التحكم للتصحيح
+      console.log('New message sent and saved locally:', message);
+
+      // إذا كنا في وضع المحاكاة المحلية أو وضع عدم الاتصال، نستمر في إنشاء ردود افتراضية
+      if (isOfflineMode || !socket || !('send' in socket) || typeof socket.send !== 'function') {
+        // محاكاة الحصول على رسالة رد من مستخدم آخر (فقط للعرض)
+        setTimeout(() => {
+          if (Math.random() > 0.7) { // 30% فرصة للرد التلقائي
+            const autoResponse: Message = {
+              id: `auto_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+              text: `Auto-reply to: "${text.substring(0, 15)}${text.length > 15 ? '...' : ''}"`,
+              sender: 'Another User',
+              avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${Math.random()}`,
+              timestamp: Date.now() + 1000
+            };
+
+            // إضافة الرسالة إلى الحالة
+            set(state => {
+              const newMessages = [...state.messages, autoResponse];
+              try {
+                localStorage.setItem('chat_messages', JSON.stringify(newMessages));
+                saveToLocalStorage('chat_data', newMessages);
+              } catch (error) {
+                console.warn('Failed to save auto-reply to local storage:', error);
+              }
+              return { messages: newMessages };
+            });
+
+            // إرسال إشعار للرد التلقائي إذا كانت الصفحة غير نشطة
+            try {
+              if (!document.hasFocus()) {
+                NotificationService.sendChatMessage({
+                  sender: autoResponse.sender,
+                  text: autoResponse.text
+                });
+              }
+            } catch (notifyError) {
+              console.warn('Could not send notification for auto-reply:', notifyError);
+            }
+          }
+        }, 1500 + Math.random() * 2000); // رد عشوائي بين 1.5 و 3.5 ثوانٍ
+      }
+    },
+
+    // تمكين وضع عدم الاتصال بالإنترنت
+    enableOfflineMode: () => {
+      try {
+        if (typeof window === 'undefined') return;
+
+        // التحقق مما إذا كان الوضع مفعل بالفعل
+        if (get().isOfflineMode) {
+          console.log('Offline mode already enabled');
+          return;
+        }
+
+        // إعادة تعيين عداد المحاولات الفاشلة
+        localStorage.removeItem('ws_failed_attempts');
+
+        // تخزين الرسائل الحالية قبل تمكين وضع عدم الاتصال
+        const messages = get().messages;
+        saveToLocalStorage('chat_data_offline', messages);
+
+        // قطع اتصال WebSocket إذا كان موجوداً
+        const socket = get().socket;
+        if (socket && 'close' in socket && typeof socket.close === 'function') {
+          socket.close();
+        }
+
+        set({
+          isOfflineMode: true,
+          isConnected: false,
+          socket: null
+        });
+
+        console.log('Offline mode enabled. Messages will be stored locally only.');
+
+        // إظهار إشعار للمستخدم
+        try {
+          const { toast } = require('@/hooks/use-toast');
+          toast({
+            title: "Offline Mode Activated",
+            description: "Data will be stored locally. You can return to live mode later.",
+            variant: "default",
+            duration: 5000
+          });
+        } catch (toastError) {
+          console.warn('Failed to display offline mode activation notification:', toastError);
+        }
+
+        // تخزين حالة وضع عدم الاتصال
+        localStorage.setItem('offlineMode', 'enabled');
+      } catch (error) {
+        console.error('Error enabling offline mode:', error);
+      }
+    },
+
+    // تعطيل وضع عدم الاتصال بالإنترنت والعودة للوضع الطبيعي
+    disableOfflineMode: () => {
+      try {
+        if (typeof window === 'undefined') return;
+
+        set({ isOfflineMode: false });
+        // إزالة كلا المفتاحين للتوافق مع الإصدارات السابقة
+        localStorage.removeItem('offlineMode');
+        localStorage.removeItem('offline_mode');
+        localStorage.removeItem('ws_failed_attempts');
+
+        // إظهار إشعار للمستخدم
+        try {
+          const { toast } = require('@/hooks/use-toast');
+          toast({
+            title: "Connecting to Server",
+            description: "Attempting to connect and sync data...",
+            variant: "default",
+            duration: 3000
+          });
+        } catch (toastError) {
+          console.warn('Failed to display offline mode deactivation notification:', toastError);
+        }
+
+        // إعادة تهيئة اتصال WebSocket
+        get().initializeWebSocket();
+
+        // مزامنة الرسائل المخزنة محلياً بعد تأخير قصير (لضمان إنشاء الاتصال أولاً)
+        setTimeout(() => {
+          get().syncMessages();
+        }, 2000);
+
+        console.log('Offline mode disabled, attempting to reconnect.');
+      } catch (error) {
+        console.error('Error disabling offline mode:', error);
+      }
+    },
+
+    // مزامنة الرسائل المخزنة محلياً مع الخادم
+    syncMessages: async () => {
+      try {
+        if (typeof window === 'undefined') return;
+
+        const { socket, pendingMessages, messages, isConnected } = get();
+
+        // التحقق من وجود اتصال نشط
+        if (!isConnected || !socket || !('send' in socket) || typeof socket.send !== 'function') {
+          console.warn('Cannot sync messages: no active server connection');
+          return;
+        }
+
+        // تحضير الرسائل للمزامنة - استخدام الرسائل المعلقة أو استعادة من التخزين المحلي
+        let messagesToSync: Message[] = [...pendingMessages];
+
+        // إذا لم يكن هناك رسائل معلقة في الذاكرة، نحاول استعادتها من التخزين المحلي
+        if (messagesToSync.length === 0) {
+          const savedPending = getFromLocalStorage<Message[]>('pending_messages', []);
+          messagesToSync = savedPending;
+        }
+
+        // إذا لم نجد أي رسائل معلقة للمزامنة، نخرج
+        if (messagesToSync.length === 0) {
+          console.log('No pending messages to sync');
+          return;
+        }
+
+        console.log(`Syncing ${messagesToSync.length} messages with the server...`);
+
+        // إرسال الرسائل للمزامنة بشكل متعاقب
+        for (const message of messagesToSync) {
+          try {
+            const wsMessage = {
+              type: 'message',
+              message,
+              isSync: true
+            };
+
+            socket.send(JSON.stringify(wsMessage));
+            await new Promise(resolve => setTimeout(resolve, 100)); // انتظار قصير بين كل رسالة
+          } catch (sendError) {
+            console.error('Error syncing message:', sendError);
+            // تسجيل الرسالة كمعلقة
+            set(state => ({
+              pendingMessages: [...state.pendingMessages, message]
+            }));
+          }
+        }
+
+        // تحديث وقت آخر مزامنة وحفظه
+        const syncTime = Date.now();
+        set({ lastSyncTimestamp: syncTime, pendingMessages: [] });
+        localStorage.setItem('last_sync_timestamp', syncTime.toString());
+
+        console.log('Messages synced successfully');
+
+        // تحديث التخزين المؤقت بالبيانات المحدثة
+        saveToLocalStorage('chat_data', get().messages);
+      } catch (error) {
+        console.error('Error syncing messages:', error);
+      }
+    },
+
+    // مسح جميع الرسائل من المخزن المؤقت
+    clearMessages: () => {
+      try {
+        if (typeof window === 'undefined') return;
+
+        set({ messages: [] });
+        localStorage.removeItem('chat_messages');
+        localStorage.removeItem('chat_data');
+        console.log('All messages cleared from cache');
+      } catch (error) {
+        console.error('Error clearing messages:', error);
+      }
     }
-  },
-
-  // مسح جميع الرسائل من المخزن المؤقت
-  clearMessages: () => {
-    try {
-      if (typeof window === 'undefined') return;
-
-      set({ messages: [] });
-      localStorage.removeItem('chat_messages');
-      localStorage.removeItem('chat_data');
-      console.log('All messages cleared from cache');
-    } catch (error) {
-      console.error('Error clearing messages:', error);
-    }
-  }
-};
+  };
 });
