@@ -9,11 +9,28 @@ interface ConnectionErrorProps {
   onRetry?: () => void;
   error?: Error | null;
   type?: 'network' | 'server' | 'websocket';
+  message?: string;
+  onEnableOfflineMode?: () => void;
+  showOfflineModeOption?: boolean;
+  autoRetry?: boolean;
+  retryInterval?: number;
+  className?: string;
 }
 
-export default function ConnectionError({ onRetry, error, type = 'network' }: ConnectionErrorProps) {
+export default function ConnectionError({ 
+  onRetry, 
+  error, 
+  type = 'network',
+  message,
+  onEnableOfflineMode,
+  showOfflineModeOption = false,
+  autoRetry = false,
+  retryInterval = 30,
+  className = ''
+}: ConnectionErrorProps) {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [autoRetryCount, setAutoRetryCount] = useState(0);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -27,6 +44,20 @@ export default function ConnectionError({ onRetry, error, type = 'network' }: Co
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  // Auto-retry functionality
+  useEffect(() => {
+    if (autoRetry && !isRetrying && autoRetryCount < 5) {
+      const retryTimer = setTimeout(() => {
+        if (!isOnline) {
+          setAutoRetryCount(prev => prev + 1);
+          handleRetry();
+        }
+      }, retryInterval * 1000);
+
+      return () => clearTimeout(retryTimer);
+    }
+  }, [autoRetry, isRetrying, autoRetryCount, retryInterval, isOnline]);
 
   const handleRetry = async () => {
     setIsRetrying(true);
@@ -58,14 +89,23 @@ export default function ConnectionError({ onRetry, error, type = 'network' }: Co
   };
 
   const getErrorMessage = () => {
+    // Use custom message if provided
+    if (message) return message;
+    
     if (!isOnline) return t('check_internet_connection');
     if (type === 'websocket') return t('websocket_connection_description');
     if (type === 'server') return t('server_unavailable');
     return error?.message || t('connection_error_description');
   };
 
+  const handleEnableOfflineMode = () => {
+    if (onEnableOfflineMode) {
+      onEnableOfflineMode();
+    }
+  };
+
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+    <div className={`min-h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4 ${className}`}>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
@@ -94,23 +134,44 @@ export default function ConnectionError({ onRetry, error, type = 'network' }: Co
             )}
           </div>
 
-          <Button 
-            onClick={handleRetry} 
-            disabled={isRetrying}
-            className="w-full"
-          >
-            {isRetrying ? (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                {t('retrying')}
-              </>
-            ) : (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                {t('retry_connection')}
-              </>
+          <div className="space-y-2">
+            <Button 
+              onClick={handleRetry} 
+              disabled={isRetrying}
+              className="w-full"
+              data-testid="button-retry-connection"
+            >
+              {isRetrying ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  {t('retrying')}
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  {t('retry_connection')}
+                </>
+              )}
+            </Button>
+            
+            {showOfflineModeOption && onEnableOfflineMode && (
+              <Button
+                onClick={handleEnableOfflineMode}
+                variant="outline"
+                className="w-full"
+                data-testid="button-enable-offline-mode"
+              >
+                <WifiOff className="h-4 w-4 mr-2" />
+                {t('enable_offline_mode')}
+              </Button>
             )}
-          </Button>
+            
+            {autoRetry && autoRetryCount > 0 && (
+              <div className="text-center text-xs text-muted-foreground">
+                {t('auto_retry_attempt')}: {autoRetryCount}/5
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>
