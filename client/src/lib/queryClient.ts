@@ -214,12 +214,13 @@ export function getWebSocketUrl(path: string = '/ws'): string {
 
     const websocketUrl = `${protocol}//${host}${path}`;
     console.log(`🌐 اختيار البروتوكول التلقائي: ${websocketUrl}`);
-    return websocketUrl;ق إذا كنا في بيئة Replit
-      const isReplitApp = window.location.hostname.endsWith('.replit.app') || 
-                          window.location.hostname.endsWith('.repl.co') ||
-                          window.location.hostname === 'replit.com' ||
-                          window.location.hostname.includes('.replit.dev') ||
-                          window.location.hostname.includes('.pike.replit.dev');
+    return websocketUrl;
+  } catch (error) {
+    console.error('خطأ في إنشاء عنوان WebSocket:', error);
+    // في حالة الخطأ، أرجع عنوان آمن افتراضي
+    return 'wss://fallback-offline-mode.local/ws';
+  }
+}
       
       if (isReplitApp) {
         console.log('تم اكتشاف بيئة Replit HTTPS - تفعيل وضع عدم الاتصال تلقائيًا');
