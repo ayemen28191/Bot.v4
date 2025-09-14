@@ -43,18 +43,18 @@ export default function IndicatorsPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('all');
   const [indicators, setIndicators] = useState<Indicator[]>([]);
-  
+
   // استخدام حالة افتراضية للسوق لتجنب الانتظار أثناء التحميل
   const [localMarketStatus, setLocalMarketStatus] = useState<MarketStatusData>({
     isOpen: true,
     message: t('market_open')
   });
-  
+
   // دالة توليد بيانات رسم بياني عشوائية للعرض
   const generateChartData = (signal: 'buy' | 'sell' | 'neutral', length = 12) => {
     const data = [];
     let baseValue = signal === 'buy' ? 50 : (signal === 'sell' ? 70 : 60);
-    
+
     for (let i = 0; i < length; i++) {
       // تغيير الاتجاه بناءً على نوع الإشارة
       const randomFactor = signal === 'buy' 
@@ -62,24 +62,24 @@ export default function IndicatorsPage() {
         : (signal === 'sell' 
           ? Math.random() * 10 - 7  // اتجاه تنازلي مع تذبذبات
           : Math.random() * 6 - 3); // تذبذب محايد
-          
+
       baseValue += randomFactor;
-      
+
       // التأكد من أن القيم ضمن نطاق معقول
       baseValue = Math.max(0, Math.min(100, baseValue));
-      
+
       const time = new Date();
       time.setHours(time.getHours() - (length - i));
-      
+
       data.push({
         time: time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         value: parseFloat(baseValue.toFixed(2))
       });
     }
-    
+
     return data;
   };
-  
+
   // دالة لتحميل المؤشرات
   const loadIndicators = () => {
     // نماذج تجريبية للمؤشرات مع رموز مرئية محسنة وبيانات رسم بياني
@@ -189,50 +189,54 @@ export default function IndicatorsPage() {
         strengthValue: 50
       }
     ];
-    
+
     setIndicators(demoIndicators);
   };
-  
+
   // التحميل الأولي للمؤشرات
   useEffect(() => {
     loadIndicators();
   }, []);
-  
+
   // استخدام تأثير جانبي لتحديث حالة السوق بشكل منفصل عن التحديث العام للصفحة
   useEffect(() => {
     // نستخدم المنطقة الزمنية للمستخدم أو UTC كافتراضي
     const tz = timezone === 'auto' ? 'UTC' : timezone;
-    
-    // استدعاء حالة السوق
-    fetch(`/api/market-status?market=forex&timezone=${encodeURIComponent(tz)}`)
-      .then(response => {
+
+    // جلب حالة السوق مع معالجة أفضل للأخطاء
+    const fetchMarketStatus = async () => {
+      try {
+        const response = await fetch(`/api/market-status?market=forex&timezone=${encodeURIComponent(tz)}`);
+
         if (!response.ok) {
-          throw new Error(t('market_status_api_error'));
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-        return response.json();
-      })
-      .then(data => {
+
+        const data = await response.json();
+        console.log('Market status data received:', data);
         setLocalMarketStatus(data);
-      })
-      .catch(error => {
+      } catch (error) {
         console.error(t('market_status_fetch_error'), error);
-        // استخدام حالة افتراضية
+        // استخدام حالة افتراضية مع معلومات أكثر تفصيلاً
         setLocalMarketStatus({
-          isOpen: true,
-          message: t('market_open')
+          isOpen: false,
+          message: t('market_status_unavailable'),
+          nextOpenTime: null,
+          nextCloseTime: null
         });
-      });
-      
-    // تحديث كل 5 دقائق
-    const intervalId = setInterval(() => {
-      fetch(`/api/market-status?market=forex&timezone=${encodeURIComponent(tz)}`)
-        .then(response => response.json())
-        .then(data => setLocalMarketStatus(data))
-        .catch(error => console.error(t('market_status_update_error'), error));
-    }, 300000);
-    
-    // تنظيف عند إزالة المكون
-    return () => clearInterval(intervalId);
+      }
+    };
+
+    // جلب البيانات مباشرة
+    fetchMarketStatus();
+
+    // تحديث البيانات كل دقيقة
+    const marketStatusInterval = setInterval(fetchMarketStatus, 60000);
+
+    // تنظيف المؤقتات عند إلغاء التحميل
+    return () => {
+      clearInterval(marketStatusInterval);
+    };
   }, [timezone]);
 
   // حدث تغيير اللغة
@@ -241,10 +245,10 @@ export default function IndicatorsPage() {
       // إعادة تحميل المؤشرات لتطبيق الترجمات الجديدة
       loadIndicators();
     };
-    
+
     // إضافة مستمع لحدث تغيير اللغة
     window.addEventListener('languageChanged', handleLanguageChange);
-    
+
     // تنظيف عند إزالة المكون
     return () => {
       window.removeEventListener('languageChanged', handleLanguageChange);

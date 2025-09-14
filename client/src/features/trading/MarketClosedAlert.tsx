@@ -32,10 +32,25 @@ export default function MarketClosedAlert({ nextOpenTime, nextCloseTime, marketT
     if (!nextOpenTime) return;
     
     try {
-      // استخراج تنسيق ISO من النص المركب (formattedString||ISOString)
-      const [displayTime, isoTime] = nextOpenTime.split('||');
-      // استخدام تنسيق ISO لتحليل التاريخ بدقة
-      const openTime = new Date(isoTime || nextOpenTime);
+      // تحسين تحليل التاريخ
+      let openTime: Date;
+      
+      if (nextOpenTime.includes('||')) {
+        // إذا كان التنسيق مركب (displayString||ISOString)
+        const [displayTime, isoTime] = nextOpenTime.split('||');
+        openTime = new Date(isoTime);
+      } else {
+        // محاولة تحليل التاريخ مباشرة
+        openTime = new Date(nextOpenTime);
+      }
+      
+      // التحقق من صحة التاريخ
+      if (isNaN(openTime.getTime())) {
+        console.error('Invalid date format:', nextOpenTime);
+        setTimeLeft(t('time_calculation_error'));
+        return;
+      }
+      
       const now = new Date();
       const initialTimeDiff = openTime.getTime() - now.getTime();
       

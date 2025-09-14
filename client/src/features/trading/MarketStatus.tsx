@@ -123,7 +123,22 @@ function MarketStatus(props: MarketStatusProps) {
       // حساب الوقت المتبقي إذا كان السوق مغلقًا
       if (!isOpen && nextOpenTime) {
         try {
-          const openTime = new Date(nextOpenTime);
+          let openTime: Date;
+          
+          // تحسين تحليل التاريخ
+          if (nextOpenTime.includes('||')) {
+            const [displayTime, isoTime] = nextOpenTime.split('||');
+            openTime = new Date(isoTime);
+          } else {
+            openTime = new Date(nextOpenTime);
+          }
+          
+          // التحقق من صحة التاريخ
+          if (isNaN(openTime.getTime())) {
+            console.error('Invalid date format in MarketStatus:', nextOpenTime);
+            return;
+          }
+          
           const now = new Date();
           const diff = Math.floor((openTime.getTime() - now.getTime()) / 1000);
           
@@ -147,7 +162,22 @@ function MarketStatus(props: MarketStatusProps) {
       // حساب الوقت المتبقي للإغلاق إذا كان السوق مفتوحًا
       else if (isOpen && nextCloseTime) {
         try {
-          const closeTime = new Date(nextCloseTime);
+          let closeTime: Date;
+          
+          // تحسين تحليل التاريخ
+          if (nextCloseTime.includes('||')) {
+            const [displayTime, isoTime] = nextCloseTime.split('||');
+            closeTime = new Date(isoTime);
+          } else {
+            closeTime = new Date(nextCloseTime);
+          }
+          
+          // التحقق من صحة التاريخ
+          if (isNaN(closeTime.getTime())) {
+            console.error('Invalid date format for close time:', nextCloseTime);
+            return;
+          }
+          
           const now = new Date();
           const diff = Math.floor((closeTime.getTime() - now.getTime()) / 1000);
           
