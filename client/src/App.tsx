@@ -33,9 +33,15 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
       try {
         console.log('Checking authentication...');
         setIsLoading(true);
+        setError(null);
+        
+        // تحديد العنوان الصحيح للـ API
+        const apiUrl = window.location.protocol === 'https:' 
+          ? `${window.location.origin}/api/user`
+          : `http://localhost:5000/api/user`;
         
         // محاولة الحصول على معلومات المستخدم
-        const response = await fetch('/api/user', {
+        const response = await fetch(apiUrl, {
           credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
@@ -46,21 +52,26 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
           const userData = await response.json();
           console.log('User authenticated:', userData);
           setUser(userData);
-        } else {
+        } else if (response.status === 401) {
           console.log('No authenticated user');
+          setUser(null);
+        } else {
+          console.warn('Auth check failed with status:', response.status);
           setUser(null);
         }
       } catch (error) {
         console.error('Auth check error:', error);
         setUser(null);
-        setError('فشل في التحقق من حالة المصادقة');
+        // لا نعرض خطأ للمستخدم في حالة فشل فحص المصادقة
       } finally {
         setIsLoading(false);
       }
     };
 
+    // تجنب الفحص المتكرر
+    if (isLoading) return;
     checkAuth();
-  }, []);
+  }, []); // إزالة التبعيات لتجنب التكرار
 
   const contextValue = {
     user,
@@ -69,7 +80,12 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     setUser,
     login: async (credentials: any) => {
       try {
-        const response = await fetch('/api/login', {
+        setError(null);
+        const apiUrl = window.location.protocol === 'https:' 
+          ? `${window.location.origin}/api/login`
+          : `http://localhost:5000/api/login`;
+          
+        const response = await fetch(apiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -78,27 +94,40 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
         if (response.ok) {
           const userData = await response.json();
+          console.log('Login successful:', userData);
           setUser(userData);
+          setError(null);
           return userData;
         } else {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'فشل تسجيل الدخول');
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.message || 'فشل تسجيل الدخول';
+          setError(errorMessage);
+          throw new Error(errorMessage);
         }
       } catch (error) {
         console.error('Login error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'فشل تسجيل الدخول';
+        setError(errorMessage);
         throw error;
       }
     },
     logout: async () => {
       try {
-        await fetch('/api/logout', {
+        const apiUrl = window.location.protocol === 'https:' 
+          ? `${window.location.origin}/api/logout`
+          : `http://localhost:5000/api/logout`;
+          
+        await fetch(apiUrl, {
           method: 'POST',
           credentials: 'include',
         });
         setUser(null);
+        setError(null);
       } catch (error) {
         console.error('Logout error:', error);
+        // نستكمل تسجيل الخروج حتى لو فشل الطلب
         setUser(null);
+        setError(null);
       }
     },
     register: async (userData: any) => {
@@ -212,10 +241,13 @@ function AppContent() {
             {/* مسارات المصادقة */}
             {!user ? (
               <>
-                <Route path="/" component={AuthPage} />
                 <Route path="/login" component={AuthPage} />
                 <Route path="/register" component={AuthPage} />
-                <Route path="*" component={AuthPage} />
+                <Route path="/" component={AuthPage} />
+                <Route path="*">
+                  {/* إعادة توجيه أي مسار آخر إلى صفحة المصادقة */}
+                  <AuthPage />
+                </Route>
               </>
             ) : (
               <>

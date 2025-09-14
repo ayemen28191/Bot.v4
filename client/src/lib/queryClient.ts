@@ -1,5 +1,20 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+// إعداد العنوان الأساسي للـ API
+const getBaseURL = () => {
+  if (typeof window === 'undefined') return '';
+
+  // في بيئة التطوير، استخدم العنوان الحالي
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return `http://localhost:5000`;
+  }
+
+  // في بيئة Replit، استخدم العنوان الحالي مع البروتوكول الصحيح
+  return `${window.location.protocol}//${window.location.host}`;
+};
+
+const baseURL = getBaseURL();
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -90,20 +105,20 @@ export function getWebSocketUrl(path: string = '/ws'): string {
   // تحديد البروتوكول بناء على بروتوكول الموقع
   const isSecure = window.location.protocol === 'https:';
   const host = window.location.host;
-  
+
   // التحقق إذا كان وضع عدم الاتصال مفعل بالفعل
   const isOfflineMode = localStorage.getItem('offlineMode') === 'enabled' || 
                         localStorage.getItem('offline_mode') === 'enabled';
-  
+
   if (isOfflineMode) {
     console.log('وضع عدم الاتصال مفعل، إعادة مسار WebSocket غير قابل للاتصال');
     return 'wss://offline-mode-enabled-do-not-connect.local/ws';
   }
-  
+
   // إذا التطبيق على HTTPS في بيئة Replit
   if (isSecure) {
     console.log('HTTPS طريقة الاتصال - التحقق من بيئة التشغيل');
-    
+
     // التحقق إذا كنا في بيئة Replit
     const isReplitApp = window.location.hostname.endsWith('.replit.app') || 
                         window.location.hostname.endsWith('.repl.co') ||
@@ -113,10 +128,10 @@ export function getWebSocketUrl(path: string = '/ws'): string {
                         // فحص في بيئة التطوير المحلية في Replit
                         (isSecure && (window.location.host.includes('5000') || 
                                      window.location.host.includes('8080')));
-    
+
     if (isReplitApp) {
       console.log('تم اكتشاف بيئة Replit HTTPS - تفعيل وضع عدم الاتصال تلقائيًا');
-      
+
       // تفعيل وضع عدم الاتصال بشكل فوري
       try {
         // إنشاء حدث مخصص لتفعيل وضع عدم الاتصال
@@ -128,7 +143,7 @@ export function getWebSocketUrl(path: string = '/ws'): string {
         });
         window.dispatchEvent(event);
         console.log('تم تفعيل وضع عدم الاتصال تلقائيًا');
-        
+
         // تخزين حالة وضع عدم الاتصال
         try {
           localStorage.setItem('offlineMode', 'enabled');
@@ -139,12 +154,12 @@ export function getWebSocketUrl(path: string = '/ws'): string {
       } catch (e) {
         console.error('فشل في تفعيل وضع عدم الاتصال:', e);
       }
-      
+
       // إرجاع URL خاص للإشارة إلى وضع عدم الاتصال
       return 'wss://offline-mode-enabled-in-replit-https.local/ws';
     }
   }
-  
+
   // استخدام البروتوكول المناسب بناءً على بروتوكول الصفحة
   const protocol = isSecure ? 'wss:' : 'ws:';
   return `${protocol}//${host}${path}`;
