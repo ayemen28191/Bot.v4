@@ -14,15 +14,15 @@
         const DIRECTION_STORAGE_KEY = 'app-direction';
         
         // Default values
-        let language = 'ar';
-        let direction = 'rtl';
+        let language = 'en';
+        let direction = 'ltr';
         
         try {
           // Try to read stored preferences
           const storedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
           const storedDirection = localStorage.getItem(DIRECTION_STORAGE_KEY);
           
-          if (storedLanguage && ['en', 'ar'].includes(storedLanguage)) {
+          if (storedLanguage && ['en', 'ar', 'hi'].includes(storedLanguage)) {
             language = storedLanguage;
             direction = storedLanguage === 'ar' ? 'rtl' : 'ltr';
           } else if (storedDirection && ['ltr', 'rtl'].includes(storedDirection)) {

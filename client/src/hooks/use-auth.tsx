@@ -33,7 +33,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Update user state when query data changes
   useEffect(() => {
     if (meQuery.data && typeof meQuery.data === 'object') {
-      setUser(meQuery.data as User);
+      const userData = meQuery.data as User;
+      setUser(userData);
+      
+      // Only apply user's preferred language if user hasn't explicitly set a language locally
+      try {
+        const hasLocalLanguageSettings = localStorage.getItem('settings') || localStorage.getItem('language');
+        if (!hasLocalLanguageSettings && userData.preferredLanguage) {
+          console.log('Applying user preferred language (no local override):', userData.preferredLanguage);
+          // Import language functions dynamically to avoid circular dependency
+          import('@/lib/i18n').then(({ setLanguage }) => {
+            setLanguage(userData.preferredLanguage, false);
+          });
+        }
+      } catch (error) {
+        console.error('Error checking local language settings:', error);
+      }
     } else {
       setUser(null);
     }

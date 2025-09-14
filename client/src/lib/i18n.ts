@@ -2277,23 +2277,17 @@ export const t = (key: string, user?: any): string => {
 };
 
 // Function to get current language with user context support
-// Order: user.preferredLanguage > localStorage > 'en'
+// Order: localStorage > user.preferredLanguage > 'en' (local storage has priority)
 export const getCurrentLanguage = (user?: any): string => {
-  // Priority 1: User is logged in and has preferred language in database
-  if (user && user.preferredLanguage && translations[user.preferredLanguage]) {
-    console.log('Language from user preferences:', user.preferredLanguage);
-    return user.preferredLanguage;
-  }
-  
   try {
-    // Priority 2: check saved settings in localStorage
+    // Priority 1: check saved settings in localStorage (user's explicit choice)
     const settings = JSON.parse(localStorage.getItem('settings') || '{}');
     if (settings.language && translations[settings.language]) {
       console.log('Language from localStorage settings:', settings.language);
       return settings.language;
     }
 
-    // Priority 3: check old localStorage
+    // Priority 2: check old localStorage
     const storedLang = localStorage.getItem('language');
     if (storedLang && translations[storedLang]) {
       console.log('Language from old localStorage:', storedLang);
@@ -2301,6 +2295,12 @@ export const getCurrentLanguage = (user?: any): string => {
     }
   } catch (error) {
     console.error('Error reading language from localStorage:', error);
+  }
+  
+  // Priority 3: User is logged in and has preferred language in database (only if no local preference)
+  if (user && user.preferredLanguage && translations[user.preferredLanguage]) {
+    console.log('Language from user preferences (no local override):', user.preferredLanguage);
+    return user.preferredLanguage;
   }
 
   // Priority 4: Default to English (no browser language detection)
@@ -2371,22 +2371,22 @@ export const changeLanguage = (newLanguage: string, saveToStorage: boolean = tru
 
 export const initializeLanguageSystem = (user?: any) => {
   if (typeof window !== 'undefined') {
-    // Get language using proper fallback order
+    // Get language using proper fallback order (local storage takes priority)
     const lang = getCurrentLanguage(user);
     
-    // Only save to localStorage if user has a preference and it's different from current
-    const shouldSaveToStorage = user && user.preferredLanguage;
-    
-    if (shouldSaveToStorage) {
-      try {
-        const settings = JSON.parse(localStorage.getItem('settings') || '{}');
-        if (!settings.language || user.preferredLanguage !== settings.language) {
-          settings.language = lang;
-          localStorage.setItem('settings', JSON.stringify(settings));
-        }
-      } catch {
-        localStorage.setItem('settings', JSON.stringify({ language: lang }));
+    // Don't override local language settings with user preferences
+    // Only save user preference to localStorage if no local setting exists
+    try {
+      const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+      const hasLocalSetting = settings.language || localStorage.getItem('language');
+      
+      if (!hasLocalSetting && user && user.preferredLanguage) {
+        settings.language = user.preferredLanguage;
+        localStorage.setItem('settings', JSON.stringify(settings));
+        console.log('Saved user preferred language to localStorage:', user.preferredLanguage);
       }
+    } catch (error) {
+      console.error('Error handling language settings:', error);
     }
 
     // Apply language settings to document
@@ -2394,16 +2394,24 @@ export const initializeLanguageSystem = (user?: any) => {
     document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
     currentLanguage = lang;
 
-    // Add Arabic-specific classes if needed
+    // Remove all language classes first
+    document.documentElement.classList.remove('ar', 'en', 'hi', 'rtl', 'ltr');
+    document.body.classList.remove('font-arabic');
+
+    // Add appropriate classes
     if (lang === 'ar') {
-      document.documentElement.classList.add('ar');
+      document.documentElement.classList.add('ar', 'rtl');
       document.body.classList.add('font-arabic');
     } else {
-      document.documentElement.classList.remove('ar');
-      document.body.classList.remove('font-arabic');
+      document.documentElement.classList.add('ltr');
+      if (lang === 'hi') {
+        document.documentElement.classList.add('hi');
+      } else {
+        document.documentElement.classList.add('en');
+      }
     }
 
-    console.log('Language system initialized with:', lang, user ? '(from user data)' : '(from fallback)');
+    console.log('Language system initialized with:', lang, user ? '(user data available)' : '(fallback)');
   }
 };
 
