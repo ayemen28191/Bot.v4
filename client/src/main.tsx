@@ -3,6 +3,7 @@ import App from "./App";
 import "./styles/common.css"; // Load common styles first instead of index.css
 import { initializeLanguageSystem } from "./lib/i18n";
 import { initializeDefaultTheme, setupSystemThemeListener } from "./lib/themeSystem";
+import './lib/errorHandler'; // تحميل معالج الأخطاء العام
 // @ts-ignore - theme.json is read-only config
 import themeConfig from "../../theme.json";
 
@@ -20,7 +21,12 @@ if (typeof window !== 'undefined') {
 if (typeof window !== 'undefined') {
   try {
     console.log('🚀 main.tsx: Initializing language system without user context');
-    initializeLanguageSystem(); // النظام الجديد الموحد - بدون user context
+    // التأكد من وجود الدالة قبل استدعائها
+    if (typeof initializeLanguageSystem === 'function') {
+      initializeLanguageSystem(); // النظام الجديد الموحد - بدون user context
+    } else {
+      console.warn('⚠️ initializeLanguageSystem function not found');
+    }
   } catch (error) {
     console.warn('❌ Language initialization error:', error);
   }

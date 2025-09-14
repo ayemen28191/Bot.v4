@@ -28,8 +28,9 @@ export async function setupVite(app: Express, server: Server) {
     hmr: {
       server,
       timeout: 60000,
-      protocol: 'ws',
-      clientPort: 5000
+      protocol: 'wss', // استخدام WSS للاتصال الآمن
+      clientPort: 5000,
+      host: '0.0.0.0'
     },
     allowedHosts: true as const,
   };

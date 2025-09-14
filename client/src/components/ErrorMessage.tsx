@@ -40,6 +40,11 @@ const ErrorMessage: React.FC<ErrorMessageProps> = ({
   // استخراج رسالة الخطأ من الخطأ إذا لم تكن محددة صراحة
   const errorMessage = message || (error ? extractErrorMessage(error) : '');
   
+  // تسجيل الأخطاء في وضع التطوير
+  if (error && process.env.NODE_ENV === 'development') {
+    console.warn('Error in ErrorMessage component:', error);
+  }
+  
   // حالة الترجمة والتوسيع
   const [expanded, setExpanded] = useState<boolean>(false);
   const [translation, setTranslation] = useState<ErrorTranslation | null>(null);

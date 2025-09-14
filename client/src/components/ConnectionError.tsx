@@ -66,8 +66,10 @@ const ConnectionError: React.FC<ConnectionErrorProps> = ({
     setRetryCount((prev) => prev + 1);
     
     try {
-      if (onRetry) {
+      if (onRetry && typeof onRetry === 'function') {
         await onRetry();
+      } else {
+        console.warn('onRetry function not provided or not a function');
       }
       
       // إعادة ضبط العداد التنازلي بعد المحاولة
