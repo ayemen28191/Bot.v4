@@ -362,6 +362,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // إعادة تعيين جميع مفاتيح API يدوياً - للمشرفين فقط
+  app.put('/api/admin/reset-keys', isAdmin, async (req, res) => {
+    try {
+      console.log('Admin reset keys triggered by:', req.user?.username);
+      
+      // إعادة تعيين جميع المفاتيح (usage_today و failed_until)
+      await storage.resetDailyUsage();
+      
+      console.log('Manual key reset completed successfully');
+      
+      res.json({
+        success: true,
+        message: 'تم إعادة تعيين جميع مفاتيح API بنجاح',
+        timestamp: new Date().toISOString()
+      });
+    } catch (error: any) {
+      console.error('Error in manual key reset:', error);
+      res.status(500).json({ 
+        error: error.message || 'حدث خطأ أثناء إعادة تعيين المفاتيح' 
+      });
+    }
+  });
+
   // حذف مستخدم - للمشرفين فقط
   app.delete('/api/users/:id', isAdmin, async (req, res) => {
     const userId = parseInt(req.params.id);

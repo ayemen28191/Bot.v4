@@ -1,5 +1,6 @@
 import express, { type Request, type Response, type NextFunction } from "express";
 import cors from 'cors';
+import cron from 'node-cron';
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { setupAuth } from './auth';
@@ -154,6 +155,24 @@ async function killProcessOnPort(port: number) {
     // تهيئة مفاتيح API في قاعدة البيانات
     console.log('تهيئة مفاتيح API...');
     await initConfigKeys(storage);
+
+    // إعداد المؤقت اليومي لإعادة تعيين المفاتيح الفاشلة
+    console.log('إعداد المؤقت اليومي لإعادة تعيين المفاتيح الفاشلة...');
+    
+    // مؤقت يعمل يومياً في منتصف الليل UTC (0 0 * * *)
+    cron.schedule('0 0 * * *', async () => {
+      try {
+        console.log('🔄 بدء تشغيل التنظيف اليومي للمفاتيح...');
+        await storage.resetDailyUsage();
+        console.log('✅ تم إعادة تعيين استخدام المفاتيح اليومي بنجاح');
+      } catch (error) {
+        console.error('❌ خطأ في إعادة تعيين استخدام المفاتيح اليومي:', error);
+      }
+    }, {
+      timezone: 'UTC' // استخدام التوقيت العالمي UTC
+    });
+    
+    console.log('✅ تم إعداد المؤقت اليومي بنجاح (منتصف الليل UTC)');
 
     console.log('Starting routes registration...');
     const server = await registerRoutes(app);
