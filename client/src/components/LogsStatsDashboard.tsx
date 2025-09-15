@@ -242,21 +242,21 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
   }
 
   return (
-    <div className="mb-6 space-y-6" data-testid="stats-dashboard-expanded">
-      {/* الرأس القابل للطي */}
+    <div className="mb-4 space-y-4" data-testid="stats-dashboard-expanded">
+      {/* الرأس المضغوط */}
       <Card className="border-primary/20">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-2 pt-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3 space-x-reverse">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Activity className="h-5 w-5 text-primary" />
+            <div className="flex items-center space-x-2 space-x-reverse">
+              <div className="p-1.5 bg-primary/10 rounded-md">
+                <Activity className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-lg flex items-center space-x-2 space-x-reverse" data-testid="dashboard-title">
+                <CardTitle className="text-base flex items-center space-x-1.5 space-x-reverse" data-testid="dashboard-title">
                   <span>{t('stats_dashboard_title')}</span>
-                  <TrendingUp className="h-4 w-4 text-primary animate-pulse" />
+                  <TrendingUp className="h-3 w-3 text-primary animate-pulse" />
                 </CardTitle>
-                <CardDescription data-testid="dashboard-description">{t('dashboard_description')}</CardDescription>
+                <CardDescription className="text-xs" data-testid="dashboard-description">{t('dashboard_description')}</CardDescription>
               </div>
             </div>
             <Button 
@@ -271,17 +271,19 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
         </CardHeader>
       </Card>
 
-      {/* بطاقات المقاييس السريعة */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3" data-testid="quick-metrics-grid">
+      {/* المقاييس السريعة المضغوطة */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" data-testid="quick-metrics-grid">
         {/* إجمالي السجلات */}
-        <Card className="hover:shadow-md transition-shadow cursor-pointer" data-testid="metric-total-logs">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2 space-x-reverse">
-              <Database className="h-4 w-4 text-blue-500" />
-              <div className="text-xs text-muted-foreground">{t('total_logs')}</div>
-            </div>
-            <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
-              {stats.totalLogs.toLocaleString()}
+        <Card className="hover:shadow-md transition-shadow" data-testid="metric-total-logs">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">{t('total_logs')}</div>
+                <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                  {stats.totalLogs.toLocaleString()}
+                </div>
+              </div>
+              <Database className="h-5 w-5 text-blue-500" />
             </div>
           </CardContent>
         </Card>
@@ -290,16 +292,18 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
         <Card className="hover:shadow-md transition-shadow cursor-pointer" 
               onClick={() => handleChartClick({ level: 'error' }, 'level')}
               data-testid="metric-errors">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2 space-x-reverse">
-              <AlertTriangle className="h-4 w-4 text-red-500" />
-              <div className="text-xs text-muted-foreground">{t('total_errors')}</div>
-            </div>
-            <div className="text-lg font-bold text-red-600 dark:text-red-400">
-              {stats.errors.toLocaleString()}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {stats.errorRate}% {t('percentage_of_total')}
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">{t('total_errors')}</div>
+                <div className="text-lg font-bold text-red-600 dark:text-red-400">
+                  {stats.errors.toLocaleString()}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {stats.errorRate}% {t('percentage_of_total')}
+                </div>
+              </div>
+              <AlertTriangle className="h-5 w-5 text-red-500" />
             </div>
           </CardContent>
         </Card>
@@ -308,16 +312,18 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
         <Card className="hover:shadow-md transition-shadow cursor-pointer" 
               onClick={() => handleChartClick({ level: 'warn' }, 'level')}
               data-testid="metric-warnings">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2 space-x-reverse">
-              <AlertTriangle className="h-4 w-4 text-yellow-500" />
-              <div className="text-xs text-muted-foreground">{t('total_warnings')}</div>
-            </div>
-            <div className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
-              {stats.warnings.toLocaleString()}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {stats.warningRate}% {t('percentage_of_total')}
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">{t('total_warnings')}</div>
+                <div className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
+                  {stats.warnings.toLocaleString()}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {stats.warningRate}% {t('percentage_of_total')}
+                </div>
+              </div>
+              <AlertTriangle className="h-5 w-5 text-yellow-500" />
             </div>
           </CardContent>
         </Card>
@@ -326,120 +332,132 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
         <Card className="hover:shadow-md transition-shadow cursor-pointer" 
               onClick={() => handleChartClick({ level: 'info' }, 'level')}
               data-testid="metric-info">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2 space-x-reverse">
-              <Info className="h-4 w-4 text-blue-500" />
-              <div className="text-xs text-muted-foreground">{t('total_info')}</div>
-            </div>
-            <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
-              {stats.info.toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* معدل الأخطاء */}
-        <Card className="hover:shadow-md transition-shadow" data-testid="metric-error-rate">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2 space-x-reverse">
-              <Target className="h-4 w-4 text-red-500" />
-              <div className="text-xs text-muted-foreground">{t('error_rate')}</div>
-            </div>
-            <div className="text-lg font-bold text-red-600 dark:text-red-400">
-              {stats.errorRate}%
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">{t('total_info')}</div>
+                <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                  {stats.info.toLocaleString()}
+                </div>
+              </div>
+              <Info className="h-5 w-5 text-blue-500" />
             </div>
           </CardContent>
         </Card>
+      </div>
 
-        {/* معدل التحذيرات */}
-        <Card className="hover:shadow-md transition-shadow" data-testid="metric-warning-rate">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2 space-x-reverse">
-              <Target className="h-4 w-4 text-yellow-500" />
-              <div className="text-xs text-muted-foreground">{t('warning_rate')}</div>
-            </div>
-            <div className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
-              {stats.warningRate}%
-            </div>
-          </CardContent>
-        </Card>
-
+      {/* مقاييس إضافية مضغوطة */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" data-testid="additional-metrics-grid">
         {/* المستخدمين النشطين */}
         <Card className="hover:shadow-md transition-shadow" data-testid="metric-active-users">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2 space-x-reverse">
-              <Users className="h-4 w-4 text-green-500" />
-              <div className="text-xs text-muted-foreground">{t('active_users')}</div>
-            </div>
-            <div className="text-lg font-bold text-green-600 dark:text-green-400">
-              {stats.activeUsers}
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">{t('active_users')}</div>
+                <div className="text-lg font-bold text-green-600 dark:text-green-400">
+                  {stats.activeUsers}
+                </div>
+              </div>
+              <Users className="h-5 w-5 text-green-500" />
             </div>
           </CardContent>
         </Card>
 
         {/* المصادر النشطة */}
         <Card className="hover:shadow-md transition-shadow" data-testid="metric-active-sources">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2 space-x-reverse">
-              <Zap className="h-4 w-4 text-purple-500" />
-              <div className="text-xs text-muted-foreground">{t('active_sources')}</div>
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">{t('active_sources')}</div>
+                <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
+                  {stats.activeSources}
+                </div>
+              </div>
+              <Zap className="h-5 w-5 text-purple-500" />
             </div>
-            <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
-              {stats.activeSources}
+          </CardContent>
+        </Card>
+
+        {/* معدل الأخطاء */}
+        <Card className="hover:shadow-md transition-shadow" data-testid="metric-error-rate">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">{t('error_rate')}</div>
+                <div className="text-lg font-bold text-red-600 dark:text-red-400">
+                  {stats.errorRate}%
+                </div>
+              </div>
+              <Target className="h-5 w-5 text-red-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* معدل التحذيرات */}
+        <Card className="hover:shadow-md transition-shadow" data-testid="metric-warning-rate">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">{t('warning_rate')}</div>
+                <div className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
+                  {stats.warningRate}%
+                </div>
+              </div>
+              <Target className="h-5 w-5 text-yellow-500" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* الرسوم البيانية */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" data-testid="charts-grid">
+      {/* الرسوم البيانية المضغوطة */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4" data-testid="charts-grid">
         {/* السجلات عبر الزمن */}
-        <Card className="col-span-1 lg:col-span-2" data-testid="chart-logs-over-time">
-          <CardHeader>
-            <CardTitle className="text-base flex items-center space-x-2 space-x-reverse">
-              <TrendingUp className="h-4 w-4" />
+        <Card className="col-span-1 lg:col-span-3" data-testid="chart-logs-over-time">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center space-x-1.5 space-x-reverse">
+              <TrendingUp className="h-3 w-3" />
               <span>{t('logs_over_time')} - {t('last_24_hours')}</span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="h-64">
+          <CardContent className="pt-0">
+            <div className="h-40">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={stats.timeDistribution}>
                   <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} />
                   <XAxis 
                     dataKey="time" 
-                    tick={{ fontSize: 12 }}
+                    tick={{ fontSize: 10 }}
                     stroke="currentColor"
                     opacity={0.7}
                   />
                   <YAxis 
-                    tick={{ fontSize: 12 }}
+                    tick={{ fontSize: 10 }}
                     stroke="currentColor"
                     opacity={0.7}
                   />
                   <Tooltip content={<CustomTooltip />} />
-                  <Legend />
                   <Line 
                     type="monotone" 
                     dataKey="total" 
                     stroke={CHART_COLORS.primary} 
-                    strokeWidth={2}
-                    dot={{ fill: CHART_COLORS.primary, strokeWidth: 2 }}
+                    strokeWidth={1.5}
+                    dot={false}
                     name={t('total_logs')}
                   />
                   <Line 
                     type="monotone" 
                     dataKey="errors" 
                     stroke={CHART_COLORS.error} 
-                    strokeWidth={2}
-                    dot={{ fill: CHART_COLORS.error, strokeWidth: 2 }}
+                    strokeWidth={1.5}
+                    dot={false}
                     name={t('total_errors')}
                   />
                   <Line 
                     type="monotone" 
                     dataKey="warnings" 
                     stroke={CHART_COLORS.warn} 
-                    strokeWidth={2}
-                    dot={{ fill: CHART_COLORS.warn, strokeWidth: 2 }}
+                    strokeWidth={1.5}
+                    dot={false}
                     name={t('total_warnings')}
                   />
                 </LineChart>
@@ -450,19 +468,19 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
 
         {/* توزيع السجلات حسب النوع */}
         <Card data-testid="chart-logs-distribution">
-          <CardHeader>
-            <CardTitle className="text-base">{t('logs_distribution')}</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">{t('logs_distribution')}</CardTitle>
             <CardDescription className="text-xs">{t('click_to_filter')}</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="h-64">
+          <CardContent className="pt-0">
+            <div className="h-40">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={stats.levelDistribution}
                     cx="50%"
                     cy="50%"
-                    outerRadius={80}
+                    outerRadius={60}
                     dataKey="value"
                     onClick={(data) => handleChartClick(data, 'level')}
                     className="cursor-pointer"
@@ -472,7 +490,6 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
                     ))}
                   </Pie>
                   <Tooltip content={<CustomTooltip />} />
-                  <Legend />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -481,28 +498,28 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
 
         {/* أكثر المصادر نشاطاً */}
         <Card data-testid="chart-top-sources">
-          <CardHeader>
-            <CardTitle className="text-base">{t('top_sources')}</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">{t('top_sources')}</CardTitle>
             <CardDescription className="text-xs">{t('click_to_filter')}</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="h-64">
+          <CardContent className="pt-0">
+            <div className="h-40">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats.sourceActivity} layout="horizontal">
+                <BarChart data={stats.sourceActivity.slice(0, 5)} layout="horizontal">
                   <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} />
                   <XAxis 
                     type="number"
-                    tick={{ fontSize: 11 }}
+                    tick={{ fontSize: 10 }}
                     stroke="currentColor"
                     opacity={0.7}
                   />
                   <YAxis 
                     type="category" 
                     dataKey="source" 
-                    tick={{ fontSize: 11 }}
+                    tick={{ fontSize: 10 }}
                     stroke="currentColor"
                     opacity={0.7}
-                    width={80}
+                    width={60}
                   />
                   <Tooltip content={<CustomTooltip />} />
                   <Bar 
@@ -516,44 +533,45 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
             </div>
           </CardContent>
         </Card>
+
+        {/* المستخدمين النشطين */}
+        {stats.userActivity.length > 0 && (
+          <Card data-testid="chart-active-users">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">{t('active_users_chart')}</CardTitle>
+              <CardDescription className="text-xs">{t('click_to_filter')}</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="h-40">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={stats.userActivity.slice(0, 5)}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} />
+                    <XAxis 
+                      dataKey="username" 
+                      tick={{ fontSize: 10 }}
+                      stroke="currentColor"
+                      opacity={0.7}
+                    />
+                    <YAxis 
+                      tick={{ fontSize: 10 }}
+                      stroke="currentColor"
+                      opacity={0.7}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar 
+                      dataKey="count" 
+                      fill={CHART_COLORS.accent}
+                      onClick={(data) => handleChartClick(data, 'user')}
+                      className="cursor-pointer"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
-      {/* المستخدمين النشطين */}
-      {stats.userActivity.length > 0 && (
-        <Card data-testid="chart-active-users">
-          <CardHeader>
-            <CardTitle className="text-base">{t('active_users_chart')}</CardTitle>
-            <CardDescription className="text-xs">{t('click_to_filter')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats.userActivity}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} />
-                  <XAxis 
-                    dataKey="username" 
-                    tick={{ fontSize: 11 }}
-                    stroke="currentColor"
-                    opacity={0.7}
-                  />
-                  <YAxis 
-                    tick={{ fontSize: 11 }}
-                    stroke="currentColor"
-                    opacity={0.7}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar 
-                    dataKey="count" 
-                    fill={CHART_COLORS.accent}
-                    onClick={(data) => handleChartClick(data, 'user')}
-                    className="cursor-pointer"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* رسالة عدم وجود بيانات */}
       {stats.totalLogs === 0 && (

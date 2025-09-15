@@ -40,14 +40,6 @@ interface LogsHeaderProps {
   onSourceChange: (value: string | null) => void;
   totalLogs: number;
   filteredLogs: number;
-  stats: {
-    errors: number;
-    warnings: number;
-    info: number;
-    debug: number;
-    users: number;
-    sources: number;
-  };
   onRefresh: () => void;
   onDownload: () => void;
   onClearLogs: () => void;
@@ -64,7 +56,6 @@ export function LogsHeader({
   onSourceChange,
   totalLogs,
   filteredLogs,
-  stats,
   onRefresh,
   onDownload,
   onClearLogs
@@ -170,52 +161,6 @@ export function LogsHeader({
         </div>
       )}
 
-      {/* الإحصائيات السريعة المحسّنة */}
-      <Card className="mx-3 sm:mx-4 mb-3 sm:mb-4 bg-gradient-to-r from-muted/30 to-muted/20 backdrop-blur-sm border-2">
-        <CardContent className="p-3 sm:p-4">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:gap-4">
-            <div className="text-center p-2 rounded-lg bg-red-50/50 dark:bg-red-950/20 border border-red-200/50 dark:border-red-800/50 transition-all duration-200 hover:scale-105 hover:shadow-md">
-              <div className="flex items-center justify-center text-red-600 dark:text-red-400 mb-2">
-                <AlertCircle className="h-4 w-4 mr-1" />
-                <span className="text-xs font-medium hidden sm:block">{t('stats_errors')}</span>
-              </div>
-              <div className="text-lg sm:text-xl font-bold text-red-700 dark:text-red-300" data-testid="stat-errors">
-                {stats.errors}
-              </div>
-            </div>
-            
-            <div className="text-center p-2 rounded-lg bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-800/50 transition-all duration-200 hover:scale-105 hover:shadow-md">
-              <div className="flex items-center justify-center text-amber-600 dark:text-amber-400 mb-2">
-                <AlertCircle className="h-4 w-4 mr-1" />
-                <span className="text-xs font-medium hidden sm:block">{t('stats_warnings')}</span>
-              </div>
-              <div className="text-lg sm:text-xl font-bold text-amber-700 dark:text-amber-300" data-testid="stat-warnings">
-                {stats.warnings}
-              </div>
-            </div>
-            
-            <div className="text-center p-2 rounded-lg bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/50 dark:border-blue-800/50 transition-all duration-200 hover:scale-105 hover:shadow-md">
-              <div className="flex items-center justify-center text-blue-600 dark:text-blue-400 mb-2">
-                <TrendingUp className="h-4 w-4 mr-1" />
-                <span className="text-xs font-medium hidden sm:block">{t('stats_info')}</span>
-              </div>
-              <div className="text-lg sm:text-xl font-bold text-blue-700 dark:text-blue-300" data-testid="stat-info">
-                {stats.info}
-              </div>
-            </div>
-            
-            <div className="text-center p-2 rounded-lg bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/50 dark:border-emerald-800/50 transition-all duration-200 hover:scale-105 hover:shadow-md">
-              <div className="flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-2">
-                <Users className="h-4 w-4 mr-1" />
-                <span className="text-xs font-medium hidden sm:block">{t('stats_users')}</span>
-              </div>
-              <div className="text-lg sm:text-xl font-bold text-emerald-700 dark:text-emerald-300" data-testid="stat-users">
-                {stats.users}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* تبويبات الفلترة المحسّنة */}
       <div className="px-3 sm:px-4 pb-3">
@@ -235,18 +180,12 @@ export function LogsHeader({
                 <Users className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>{t('filter_users')}</span>
               </span>
-              <Badge variant="secondary" className="ml-1.5 text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
-                {stats.users}
-              </Badge>
             </TabsTrigger>
             <TabsTrigger value="system" className="text-xs sm:text-sm font-medium transition-all duration-200" data-testid="tab-system">
               <span className="flex items-center space-x-1.5 space-x-reverse">
                 <Activity className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>{t('filter_system')}</span>
               </span>
-              <Badge variant="secondary" className="ml-1.5 text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
-                {stats.sources}
-              </Badge>
             </TabsTrigger>
           </TabsList>
         </Tabs>

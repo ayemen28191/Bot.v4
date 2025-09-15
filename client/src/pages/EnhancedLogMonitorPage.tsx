@@ -367,7 +367,6 @@ export default function EnhancedLogMonitorPage() {
         onSourceChange={setSelectedSource}
         totalLogs={logs.length}
         filteredLogs={filteredLogs.length}
-        stats={stats}
         onRefresh={handleRefresh}
         onDownload={handleDownload}
         onClearLogs={handleClearLogs}
