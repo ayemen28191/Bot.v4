@@ -15,6 +15,62 @@ class LogsService {
   private notificationConfigs: Map<string, NotificationConfig> = new Map();
   private newLogCallbacks: Array<(log: SystemLog) => void> = [];
 
+  // حساب العدادات التراكمية قبل إنشاء السجل الجديد
+  private async calculateCumulativeCounters(
+    userId: number | null, 
+    action: string | undefined
+  ): Promise<{
+    previousTotal: number | null;
+    dailyTotal: number | null;
+    monthlyTotal: number | null;
+  }> {
+    // إذا لم يكن هناك عمل محدد، ارجع null للجميع
+    if (!action) {
+      return {
+        previousTotal: null,
+        dailyTotal: null,
+        monthlyTotal: null
+      };
+    }
+
+    try {
+      const now = new Date();
+      const dailyDate = now.toISOString().split('T')[0]; // YYYY-MM-DD
+      const monthlyDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`; // YYYY-MM-01
+
+      // الحصول على العدادات الحالية بشكل متوازي
+      const [dailyCounter, monthlyCounter] = await Promise.allSettled([
+        storage.getCounter(userId, action, dailyDate, 'daily'),
+        storage.getCounter(userId, action, monthlyDate, 'monthly')
+      ]);
+
+      // استخراج القيم الحالية أو استخدام 0 كافتراضي
+      const currentDailyCount = dailyCounter.status === 'fulfilled' && dailyCounter.value ? dailyCounter.value.count : 0;
+      const currentMonthlyCount = monthlyCounter.status === 'fulfilled' && monthlyCounter.value ? monthlyCounter.value.count : 0;
+
+      // حساب العدادات التراكمية
+      const previousTotal = currentDailyCount; // العدد قبل هذا الحدث
+      const dailyTotal = currentDailyCount + 1; // العدد اليومي بعد هذا الحدث
+      const monthlyTotal = currentMonthlyCount + 1; // العدد الشهري بعد هذا الحدث
+
+      console.log(`[LogsService] Calculated cumulative counters for user ${userId}, action ${action}: previous=${previousTotal}, daily=${dailyTotal}, monthly=${monthlyTotal}`);
+
+      return {
+        previousTotal,
+        dailyTotal,
+        monthlyTotal
+      };
+    } catch (error) {
+      console.error('[LogsService] Failed to calculate cumulative counters:', error);
+      // في حالة الخطأ، ارجع null للجميع
+      return {
+        previousTotal: null,
+        dailyTotal: null,
+        monthlyTotal: null
+      };
+    }
+  }
+
   // تسجيل سجل جديد مع دعم السياق التلقائي من AsyncLocalStorage
   async log(logData: Omit<InsertSystemLog, 'timestamp'>, res?: Response): Promise<SystemLog> {
     // الحصول على السياق من AsyncLocalStorage أولاً، ثم من res.locals كـ fallback
@@ -34,10 +90,24 @@ class LogsService {
     const sessionId = logData.sessionId ?? context?.sessionId;
     const combinedTrackingId = this.generateCombinedTrackingId(requestId, sessionId);
 
+    // حساب العدادات التراكمية قبل إنشاء السجل
+    const userId = logData.userId ?? context?.userId;
+    // استخراج العمل من logData.action مباشرة أو من meta إذا تم تمريره كـ JSON
+    let action = logData.action;
+    if (!action && logData.meta) {
+      try {
+        const metaData = JSON.parse(logData.meta);
+        action = metaData.action;
+      } catch (error) {
+        // إذا فشل parse، تجاهل واستخدم undefined
+      }
+    }
+    const cumulativeCounters = await this.calculateCumulativeCounters(userId || null, action || undefined);
+
     const newLog: InsertSystemLog = {
       ...logData,
       // استخدام القيم من السياق كـ fallback إذا لم تكن موجودة في logData
-      userId: logData.userId ?? context?.userId,
+      userId,
       username: logData.username ?? context?.username,
       userDisplayName: logData.userDisplayName ?? context?.userDisplayName,
       userAvatar: logData.userAvatar ?? (context?.username ? this.generateUserColor(context.username) : undefined),
@@ -45,10 +115,10 @@ class LogsService {
       requestId,
       sessionId,
       combinedTrackingId,
-      // إضافة القيم الافتراضية للحقول التراكمية
-      previousTotal: logData.previousTotal ?? null,
-      dailyTotal: logData.dailyTotal ?? null,
-      monthlyTotal: logData.monthlyTotal ?? null,
+      // استخدام العدادات التراكمية المحسوبة بدلاً من null
+      previousTotal: logData.previousTotal ?? cumulativeCounters.previousTotal,
+      dailyTotal: logData.dailyTotal ?? cumulativeCounters.dailyTotal,
+      monthlyTotal: logData.monthlyTotal ?? cumulativeCounters.monthlyTotal,
       // إضافة معلومات السياق الإضافية إلى meta إذا متوفرة
       meta: this.enrichMetaWithContext(logData.meta ?? undefined, context)
     };
