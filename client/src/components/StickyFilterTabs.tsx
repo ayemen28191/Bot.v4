@@ -36,7 +36,7 @@ export function StickyFilterTabs({
   systemLogsCount
 }: StickyFilterTabsProps) {
   return (
-    <div className="sticky top-[140px] z-40 bg-gradient-to-r from-background/95 to-background/90 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 border-b shadow-sm">
+    <div className="sticky top-0 z-40 bg-gradient-to-r from-background/95 to-background/90 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 border-b shadow-sm">
       {/* تبويبات الفلترة المحسّنة */}
       <div className="px-3 sm:px-4 py-3">
         <Tabs value={selectedTab} onValueChange={onTabChange} className="w-full">
