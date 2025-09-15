@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import { MoreHorizontal, Clock, User, Monitor, AlertTriangle, Info, CheckCircle, XCircle, Activity, Settings, LogIn, LogOut, Signal, Edit, MessageCircle, Power, PowerOff } from "lucide-react";
+import { MoreHorizontal, Clock, User, Monitor, AlertTriangle, Info, CheckCircle, XCircle, Activity, Settings, LogIn, LogOut, Signal, Edit, MessageCircle, Power, PowerOff, Copy, Search, MapPin, Smartphone, Globe, Hash, Calendar, TrendingUp } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -22,6 +22,14 @@ interface LogEntry {
   action?: string | null;
   result?: string | null;
   details?: string | null;
+  // Request tracking fields
+  requestId?: string | null;
+  sessionId?: string | null;
+  combinedTrackingId?: string | null;
+  // Cumulative counter fields
+  previousTotal?: number | null;
+  dailyTotal?: number | null;
+  monthlyTotal?: number | null;
   // Legacy fields for backward compatibility
   userId?: number | null;
   username?: string | null;
@@ -33,6 +41,7 @@ interface LogCardProps {
   log: LogEntry;
   onClick?: () => void;
   isSelected?: boolean;
+  onSearch?: (filters: { userId?: number; requestId?: string; sessionId?: string }) => void;
 }
 
 // دالة لتوليد الألوان للمستخدمين والمصادر
@@ -71,7 +80,7 @@ const getLevelIcon = (level: string) => {
 };
 
 // دالة للحصول على أيقونة الإجراء
-const getActionIcon = (action?: string) => {
+const getActionIcon = (action?: string | null) => {
   if (!action) return <Activity className="h-3 w-3 text-muted-foreground" />;
   
   switch (action.toLowerCase()) {
@@ -99,7 +108,7 @@ const getActionIcon = (action?: string) => {
 };
 
 // دالة للحصول على النص الوصفي للإجراء
-const getActionDisplayName = (action?: string): string => {
+const getActionDisplayName = (action?: string | null): string => {
   if (!action) return 'نشاط عام';
   
   switch (action.toLowerCase()) {
@@ -189,17 +198,74 @@ const getLevelBgColor = (level: string): string => {
   }
 };
 
-export function LogCard({ log, onClick, isSelected }: LogCardProps) {
+// دالة لتحليل معلومات الجهاز والموقع الجغرافي من meta
+const parseDeviceAndLocationInfo = (meta?: string | null) => {
+  if (!meta) return null;
+  
+  try {
+    const metaObj = typeof meta === 'string' ? JSON.parse(meta) : meta;
+    return {
+      device: metaObj.device || metaObj.userAgent,
+      location: metaObj.location || metaObj.country || metaObj.city,
+      ip: metaObj.ip || metaObj.requestIp,
+      browser: metaObj.browser,
+      os: metaObj.os,
+      country: metaObj.country,
+      city: metaObj.city,
+      timezone: metaObj.timezone
+    };
+  } catch (error) {
+    return null;
+  }
+};
+
+// دالة لتنسيق معرفات التتبع
+const formatTrackingId = (id?: string | null): string => {
+  if (!id) return '';
+  return id.length > 8 ? `${id.slice(0, 8)}...` : id;
+};
+
+// دالة لتنسيق العدادات التراكمية
+const formatCumulativeCounts = (log: LogEntry): string | null => {
+  const parts = [];
+  
+  if (log.previousTotal !== undefined && log.previousTotal !== null) {
+    parts.push(`التراكمي (قبل): ${log.previousTotal}`);
+  }
+  
+  if (log.dailyTotal !== undefined && log.dailyTotal !== null) {
+    parts.push(`إجمالي يومي: ${log.dailyTotal}`);
+  }
+  
+  if (log.monthlyTotal !== undefined && log.monthlyTotal !== null) {
+    parts.push(`إجمالي شهري: ${log.monthlyTotal}`);
+  }
+  
+  return parts.length > 0 ? parts.join(' • ') : null;
+};
+
+export function LogCard({ log, onClick, isSelected, onSearch }: LogCardProps) {
   const { toast } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const copyToClipboard = (text: string) => {
+  const copyToClipboard = (text: string, label?: string) => {
     navigator.clipboard.writeText(text);
     toast({
       title: t('copy_success_title'),
-      description: t('copy_success_description'),
+      description: label ? `تم نسخ ${label}` : t('copy_success_description'),
       duration: 2000
     });
+  };
+
+  const handleSearch = (filters: { userId?: number; requestId?: string; sessionId?: string }) => {
+    if (onSearch) {
+      onSearch(filters);
+      toast({
+        title: 'بحث',
+        description: 'تم تطبيق مرشح البحث',
+        duration: 2000
+      });
+    }
   };
 
   const formatTime = (timestamp: string) => {
@@ -371,6 +437,150 @@ export function LogCard({ log, onClick, isSelected }: LogCardProps) {
             {/* البيانات الإضافية عند التوسع */}
             {isExpanded && (
               <div className="mt-2 sm:mt-3 xl:mt-2 space-y-2">
+                {/* العدادات التراكمية */}
+                {formatCumulativeCounts(log) && (
+                  <div className="p-2 sm:p-3 xl:p-2 bg-purple-50/50 dark:bg-purple-950/20 rounded-lg border border-purple-200/50 dark:border-purple-800/50">
+                    <h4 className="text-xs font-semibold mb-1.5 text-purple-700 dark:text-purple-300 flex items-center space-x-1 space-x-reverse">
+                      <TrendingUp className="h-3 w-3" />
+                      <span>الإحصائيات التراكمية</span>
+                    </h4>
+                    <div className="text-xs text-purple-600 dark:text-purple-400">
+                      {formatCumulativeCounts(log)}
+                    </div>
+                  </div>
+                )}
+                
+                {/* معرفات التتبع */}
+                {(log.requestId || log.sessionId || log.combinedTrackingId) && (
+                  <div className="p-2 sm:p-3 xl:p-2 bg-indigo-50/50 dark:bg-indigo-950/20 rounded-lg border border-indigo-200/50 dark:border-indigo-800/50">
+                    <h4 className="text-xs font-semibold mb-1.5 text-indigo-700 dark:text-indigo-300 flex items-center space-x-1 space-x-reverse">
+                      <Hash className="h-3 w-3" />
+                      <span>معرفات التتبع</span>
+                    </h4>
+                    <div className="text-xs text-indigo-600 dark:text-indigo-400 space-y-1">
+                      {log.requestId && (
+                        <div className="flex items-center justify-between">
+                          <span>معرف الطلب: {formatTrackingId(log.requestId)}</span>
+                          <div className="flex items-center space-x-1 space-x-reverse">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-5 w-5 p-0 text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                copyToClipboard(log.requestId!, 'معرف الطلب');
+                              }}
+                              data-testid="copy-request-id"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                            {onSearch && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-5 w-5 p-0 text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSearch({ requestId: log.requestId! });
+                                }}
+                                data-testid="search-request-id"
+                              >
+                                <Search className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {log.sessionId && (
+                        <div className="flex items-center justify-between">
+                          <span>معرف الجلسة: {formatTrackingId(log.sessionId)}</span>
+                          <div className="flex items-center space-x-1 space-x-reverse">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-5 w-5 p-0 text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                copyToClipboard(log.sessionId!, 'معرف الجلسة');
+                              }}
+                              data-testid="copy-session-id"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                            {onSearch && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-5 w-5 p-0 text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSearch({ sessionId: log.sessionId! });
+                                }}
+                                data-testid="search-session-id"
+                              >
+                                <Search className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {log.combinedTrackingId && (
+                        <div className="flex items-center justify-between">
+                          <span>معرف مركب: {formatTrackingId(log.combinedTrackingId)}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-5 w-5 p-0 text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyToClipboard(log.combinedTrackingId!, 'المعرف المركب');
+                            }}
+                            data-testid="copy-combined-id"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                {/* معلومات الجهاز والموقع الجغرافي */}
+                {parseDeviceAndLocationInfo(log.meta) && (
+                  <div className="p-2 sm:p-3 xl:p-2 bg-orange-50/50 dark:bg-orange-950/20 rounded-lg border border-orange-200/50 dark:border-orange-800/50">
+                    <h4 className="text-xs font-semibold mb-1.5 text-orange-700 dark:text-orange-300 flex items-center space-x-1 space-x-reverse">
+                      <Globe className="h-3 w-3" />
+                      <span>معلومات الجهاز والموقع</span>
+                    </h4>
+                    <div className="text-xs text-orange-600 dark:text-orange-400 space-y-1">
+                      {parseDeviceAndLocationInfo(log.meta)?.device && (
+                        <div className="flex items-center space-x-1 space-x-reverse">
+                          <Smartphone className="h-3 w-3" />
+                          <span>الجهاز: {parseDeviceAndLocationInfo(log.meta)?.device}</span>
+                        </div>
+                      )}
+                      {parseDeviceAndLocationInfo(log.meta)?.location && (
+                        <div className="flex items-center space-x-1 space-x-reverse">
+                          <MapPin className="h-3 w-3" />
+                          <span>الموقع: {parseDeviceAndLocationInfo(log.meta)?.location}</span>
+                        </div>
+                      )}
+                      {parseDeviceAndLocationInfo(log.meta)?.country && (
+                        <div>البلد: {parseDeviceAndLocationInfo(log.meta)?.country}</div>
+                      )}
+                      {parseDeviceAndLocationInfo(log.meta)?.city && (
+                        <div>المدينة: {parseDeviceAndLocationInfo(log.meta)?.city}</div>
+                      )}
+                      {parseDeviceAndLocationInfo(log.meta)?.browser && (
+                        <div>المتصفح: {parseDeviceAndLocationInfo(log.meta)?.browser}</div>
+                      )}
+                      {parseDeviceAndLocationInfo(log.meta)?.os && (
+                        <div>نظام التشغيل: {parseDeviceAndLocationInfo(log.meta)?.os}</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
                 {/* تفاصيل محسنة */}
                 {log.details && (
                   <div className="p-2 sm:p-3 xl:p-2 bg-blue-50/50 dark:bg-blue-950/20 rounded-lg border border-blue-200/50 dark:border-blue-800/50">
@@ -384,7 +594,7 @@ export function LogCard({ log, onClick, isSelected }: LogCardProps) {
                 {/* معلومات إضافية */}
                 {log.meta && (
                   <div className="p-2 sm:p-3 xl:p-2 bg-muted/30 rounded-lg">
-                    <h4 className="text-xs font-semibold mb-1.5 text-muted-foreground">معلومات إضافية</h4>
+                    <h4 className="text-xs font-semibold mb-1.5 text-muted-foreground">معلومات إضافية (خام)</h4>
                     <pre className="text-xs text-muted-foreground whitespace-pre-wrap overflow-x-auto">
                       {log.meta}
                     </pre>
@@ -394,11 +604,29 @@ export function LogCard({ log, onClick, isSelected }: LogCardProps) {
                 {/* معلومات المستخدم المحسنة */}
                 {(log.actorId || log.userId) && (
                   <div className="p-2 sm:p-3 xl:p-2 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-lg border border-emerald-200/50 dark:border-emerald-800/50">
-                    <h4 className="text-xs font-semibold mb-1.5 text-emerald-700 dark:text-emerald-300">معلومات المستخدم</h4>
+                    <h4 className="text-xs font-semibold mb-1.5 text-emerald-700 dark:text-emerald-300 flex items-center space-x-1 space-x-reverse">
+                      <User className="h-3 w-3" />
+                      <span>معلومات المستخدم</span>
+                      {onSearch && log.userId && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-5 w-5 p-0 text-emerald-500 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 mr-auto"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSearch({ userId: log.userId! });
+                          }}
+                          data-testid="search-user"
+                        >
+                          <Search className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </h4>
                     <div className="text-xs text-emerald-600 dark:text-emerald-400 space-y-1">
                       <div>النوع: {actorType === 'user' ? 'مستخدم' : 'نظام'}</div>
                       {log.actorId && <div>المعرف: {log.actorId}</div>}
                       {log.actorDisplayName && <div>الاسم: {log.actorDisplayName}</div>}
+                      {log.userId && <div>معرف المستخدم: {log.userId}</div>}
                     </div>
                   </div>
                 )}

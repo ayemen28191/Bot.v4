@@ -4,6 +4,9 @@ import { notificationService, NotificationConfig } from "./notification-service"
 import { Response } from "express";
 import { LoggingContext } from "../middleware/logging-context";
 import { getCurrentContext, RequestContext, formatRequestContext } from "../middleware/request-context";
+import { UAParser } from "ua-parser-js";
+// @ts-ignore - geoip-lite doesn't have TypeScript declarations
+import geoip from "geoip-lite";
 
 // مدير السجلات مع إشعارات ذكية
 class LogsService {
@@ -115,11 +118,105 @@ class LogsService {
     }
   }
 
-  // إثراء المعطيات بمعلومات السياق - محدث لدعم RequestContext و LoggingContext
+  // دالة مساعدة لاستخراج معلومات الجهاز والموقع الجغرافي
+  private enrichWithDeviceAndLocation(userAgent?: string | null, ip?: string | null): {
+    deviceInfo: {
+      device?: string;
+      os?: string;
+      browser?: string;
+      model?: string;
+      deviceType?: string;
+    };
+    locationInfo: {
+      country?: string;
+      city?: string;
+      region?: string;
+      timezone?: string;
+    };
+  } {
+    const result = {
+      deviceInfo: {},
+      locationInfo: {}
+    };
+
+    // تحليل user agent لمعلومات الجهاز
+    if (userAgent && typeof userAgent === 'string' && userAgent.trim() !== '') {
+      try {
+        const parser = new UAParser(userAgent);
+        const parsedResult = parser.getResult();
+        
+        // تحسينات إضافية لتحديد نوع الجهاز
+        let deviceType = 'desktop';
+        if (parsedResult.device?.type) {
+          deviceType = parsedResult.device.type;
+        } else {
+          // تحديد نوع الجهاز بناءً على OS أو browser
+          const osName = parsedResult.os?.name?.toLowerCase() || '';
+          const browserName = parsedResult.browser?.name?.toLowerCase() || '';
+          
+          if (osName.includes('android') || osName.includes('ios') || 
+              browserName.includes('mobile') || userAgent.toLowerCase().includes('mobile')) {
+            deviceType = 'mobile';
+          } else if (osName.includes('ipad') || userAgent.toLowerCase().includes('tablet')) {
+            deviceType = 'tablet';
+          }
+        }
+        
+        result.deviceInfo = {
+          device: parsedResult.device?.type || deviceType,
+          deviceType,
+          os: `${parsedResult.os?.name || 'Unknown'} ${parsedResult.os?.version || ''}`.trim(),
+          browser: `${parsedResult.browser?.name || 'Unknown'} ${parsedResult.browser?.version || ''}`.trim(),
+          model: parsedResult.device?.model || parsedResult.device?.vendor || undefined
+        };
+      } catch (error) {
+        console.warn('[LogsService] Error parsing user agent:', error);
+        result.deviceInfo = { device: 'unknown', deviceType: 'unknown' };
+      }
+    }
+
+    // تحليل IP لمعلومات الموقع الجغرافي
+    if (ip && typeof ip === 'string' && ip.trim() !== '' && 
+        ip !== '127.0.0.1' && ip !== '::1' && 
+        !ip.startsWith('10.') && !ip.startsWith('192.168.') && 
+        !ip.startsWith('172.16.') && !ip.startsWith('172.17.') &&
+        !ip.startsWith('172.18.') && !ip.startsWith('172.19.') &&
+        !ip.startsWith('172.2') && !ip.startsWith('172.30.') &&
+        !ip.startsWith('172.31.')) {
+      try {
+        const geo = geoip.lookup(ip);
+        if (geo) {
+          result.locationInfo = {
+            country: geo.country || undefined,
+            city: geo.city || undefined,
+            region: geo.region || undefined,
+            timezone: geo.timezone || undefined
+          };
+        }
+      } catch (error) {
+        console.warn('[LogsService] Error looking up IP location:', error);
+      }
+    } else if (ip) {
+      // للـ IPs المحلية، أضف معلومة أنه محلي
+      result.locationInfo = {
+        country: 'Local',
+        city: 'Local Network',
+        region: 'Private',
+        timezone: undefined
+      };
+    }
+
+    return result;
+  }
+
+  // إثراء المعطيات بمعلومات السياق - محدث لدعم RequestContext و LoggingContext مع Device & Geo data
   private enrichMetaWithContext(existingMeta?: string, context?: RequestContext | LoggingContext): string | undefined {
     if (!context) {
       return existingMeta;
     }
+
+    // استخراج معلومات الجهاز والموقع الجغرافي
+    const deviceGeoData = this.enrichWithDeviceAndLocation(context.userAgent, context.clientIP);
 
     // استخراج المعلومات الأساسية من أي نوع من السياق
     const contextInfo = {
@@ -128,6 +225,9 @@ class LogsService {
       clientIP: context.clientIP,
       userAgent: context.userAgent,
       timestamp: context.timestamp,
+      // إضافة معلومات الجهاز والموقع الجغرافي
+      deviceInfo: deviceGeoData.deviceInfo,
+      locationInfo: deviceGeoData.locationInfo,
       // إضافة معلومات خاصة بـ RequestContext إذا كانت متوفرة
       ...(('route' in context) && {
         route: context.route,
