@@ -72,6 +72,9 @@ export const systemLogs = sqliteTable("system_logs", {
   message: text("message").notNull(),
   meta: text("meta"), // JSON string for additional data
   userId: integer("user_id"), // المستخدم المتعلق بالسجل (اختياري)
+  username: text("username"), // اسم المستخدم للعرض السريع
+  userDisplayName: text("user_display_name"), // الاسم المعروض للمستخدم
+  userAvatar: text("user_avatar"), // رابط صورة المستخدم أو لون للأفاتار
   createdAt: text("created_at").notNull().default(new Date().toISOString()),
 });
 
@@ -185,6 +188,9 @@ export const insertSystemLogSchema = createInsertSchema(systemLogs).pick({
   message: true,
   meta: true,
   userId: true,
+  username: true,
+  userDisplayName: true,
+  userAvatar: true,
 });
 
 // سكيما لإعدادات الإشعارات

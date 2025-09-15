@@ -1,6 +1,7 @@
 import axios from 'axios';
 import env, { getKeyFromDatabase } from '../env';
 import { storage } from '../storage';
+import { signalLogger } from './signal-logger';
 
 // تعريف واجهة نتيجة المؤشرات الفنية
 export interface TechnicalIndicatorResult {
@@ -570,10 +571,45 @@ async function getADX(symbol: string, timeframe: string): Promise<TechnicalIndic
 
 // =============== الدالة الرئيسية للتحليل الفني =================
 
+// واجهة معاملات التسجيل الاختيارية
+interface AnalysisLoggingParams {
+  userId?: number;
+  username?: string;
+  platform?: string;
+  requestIp?: string;
+  userAgent?: string;
+  sessionId?: string;
+  marketOpen?: boolean;
+  offlineMode?: boolean;
+}
+
 // تجميع كل المؤشرات وتحليل السوق
-export async function analyzeMarket(symbol: string, timeframe: string, marketType: 'forex' | 'crypto' | 'stocks'): Promise<MarketAnalysisResult> {
+export async function analyzeMarket(
+  symbol: string, 
+  timeframe: string, 
+  marketType: 'forex' | 'crypto' | 'stocks',
+  loggingParams?: AnalysisLoggingParams
+): Promise<MarketAnalysisResult> {
+  // بدء تسجيل طلب التحليل
+  let requestId: string | null = null;
+  
   try {
-    console.log(`تحليل السوق للرمز ${symbol} - الإطار الزمني: ${timeframe} - نوع السوق: ${marketType}`);
+    // بدء تسجيل الطلب باستخدام SignalLogger
+    requestId = await signalLogger.startSignalRequest({
+      userId: loggingParams?.userId,
+      username: loggingParams?.username,
+      symbol,
+      marketType,
+      timeframe,
+      platform: loggingParams?.platform,
+      requestIp: loggingParams?.requestIp,
+      userAgent: loggingParams?.userAgent,
+      sessionId: loggingParams?.sessionId,
+      marketOpen: loggingParams?.marketOpen,
+      offlineMode: loggingParams?.offlineMode
+    });
+    
+    console.log(`تحليل السوق للرمز ${symbol} - الإطار الزمني: ${timeframe} - نوع السوق: ${marketType} - طلب التسجيل: ${requestId}`);
     
     // محاولة جلب السعر الحالي من خدمة TwelveData أو من مصادر السعر المتاحة
     let currentPrice: number;
@@ -586,6 +622,14 @@ export async function analyzeMarket(symbol: string, timeframe: string, marketTyp
       if (priceResult.price !== null) {
         currentPrice = priceResult.price;
         console.log(`تم جلب السعر الحالي من المصدر: ${priceResult.source || 'unknown'}: ${currentPrice}`);
+        
+        // تسجيل جلب السعر الناجح (fire-and-forget)
+        if (requestId) {
+          void signalLogger.logTechnicalData(requestId, {
+            currentPrice: currentPrice.toString(),
+            priceSource: priceResult.source || 'price-sources'
+          }).catch(err => console.warn('فشل في تسجيل جلب السعر:', err));
+        }
       } else {
         throw new Error('لم يتم العثور على سعر من المصادر المتاحة');
       }
@@ -614,6 +658,15 @@ export async function analyzeMarket(symbol: string, timeframe: string, marketTyp
         if (priceResponse.data?.price) {
           currentPrice = parseFloat(priceResponse.data.price);
           console.log(`تم جلب السعر الحالي مباشرة من TwelveData: ${currentPrice}`);
+          
+          // تسجيل جلب السعر الناجح (fire-and-forget)
+          if (requestId) {
+            void signalLogger.logTechnicalData(requestId, {
+              currentPrice: currentPrice.toString(),
+              priceSource: 'TwelveData API',
+              apiKeysUsed: [usedKeyName] // تمرير معرف المفتاح فقط
+            }).catch(err => console.warn('فشل في تسجيل جلب السعر من TwelveData:', err));
+          }
         } else {
           throw new Error('لا يوجد بيانات سعر متاحة من TwelveData');
         }
@@ -630,13 +683,29 @@ export async function analyzeMarket(symbol: string, timeframe: string, marketTyp
         // استخدام قيمة تقديرية للسعر بناءً على نوع السوق والرمز
         currentPrice = getApproximatePrice(symbol, marketType);
         console.log(`استخدام سعر تقديري للرمز ${symbol}: ${currentPrice}`);
+        
+        // تسجيل استخدام سعر تقديري (fire-and-forget)
+        if (requestId) {
+          void signalLogger.logTechnicalData(requestId, {
+            currentPrice: currentPrice.toString(),
+            priceSource: 'approximate_price',
+            analysisData: `تم استخدام سعر تقديري بسبب فشل المصادر الأخرى - ${symbol}: ${currentPrice}`
+          }).catch(err => console.warn('فشل في تسجيل السعر التقديري:', err));
+        }
       }
     }
     
-    // جلب المؤشرات بالتوازي
+    // جلب المؤشرات بالتوازي مع تسجيل تفصيلي
     let indicators = {};
     
     try {
+      // تسجيل بداية حساب المؤشرات (fire-and-forget)
+      if (requestId) {
+        void signalLogger.logTechnicalData(requestId, {
+          analysisData: `بدء حساب المؤشرات الفنية للرمز ${symbol} - ${timeframe}`
+        }).catch(err => console.warn('فشل في تسجيل بداية المؤشرات:', err));
+      }
+      
       const [rsi, macd, ema, bband, adx] = await Promise.all([
         getRSI(symbol, timeframe),
         getMACD(symbol, timeframe),
@@ -653,26 +722,116 @@ export async function analyzeMarket(symbol: string, timeframe: string, marketTyp
         bband,
         adx
       };
+      
+      // تسجيل تفصيلي لكل مؤشر (fire-and-forget)
+      if (requestId) {
+        void signalLogger.logTechnicalData(requestId, {
+          indicators: JSON.stringify(indicators),
+          analysisData: JSON.stringify({
+            step: 'indicators_calculated_parallel',
+            rsi: { value: rsi.value, signal: rsi.signal },
+            macd: { value: macd.value, signal: macd.signal },
+            ema: { value: ema.value, signal: ema.signal },
+            bband: { value: bband.value, signal: bband.signal },
+            adx: { value: adx.value, signal: adx.signal }
+          })
+        }).catch(err => console.warn('فشل في تسجيل المؤشرات المحسوبة:', err));
+      }
     } catch (indicatorsError) {
       console.error('خطأ في جلب المؤشرات بالتوازي:', indicatorsError);
       
-      // محاولة جلب كل مؤشر على حدة
-      const rsi = await getRSI(symbol, timeframe).catch(() => ({ value: 50, signal: 'neutral', timeframe }));
-      const macd = await getMACD(symbol, timeframe).catch(() => ({ value: 0, signal: 'neutral', timeframe }));
-      const ema = await getMovingAverages(symbol, timeframe).catch(() => ({ value: 0, signal: 'neutral', timeframe }));
-      const bband = await getBollingerBands(symbol, timeframe).catch(() => ({ value: 50, signal: 'neutral', timeframe }));
-      const adx = await getADX(symbol, timeframe).catch(() => ({ value: 15, signal: 'neutral', timeframe }));
+      // تسجيل فشل الحساب بالتوازي (fire-and-forget)
+      if (requestId) {
+        void signalLogger.logTechnicalData(requestId, {
+          analysisData: `فشل الحساب بالتوازي، المحاولة الفردية: ${indicatorsError}`
+        }).catch(err => console.warn('فشل في تسجيل فشل المؤشرات:', err));
+      }
+      
+      // محاولة جلب كل مؤشر على حدة مع تسجيل منفصل
+      const rsi = await getRSI(symbol, timeframe).catch(() => {
+        // تسجيل فشل RSI (fire-and-forget)
+        if (requestId) {
+          void signalLogger.logTechnicalData(requestId, {
+            analysisData: 'فشل حساب مؤشر RSI - استخدام القيمة الافتراضية 50'
+          }).catch(err => console.warn('فشل في تسجيل فشل RSI:', err));
+        }
+        return { value: 50, signal: 'neutral', timeframe };
+      });
+      
+      const macd = await getMACD(symbol, timeframe).catch(() => {
+        // تسجيل فشل MACD (fire-and-forget)
+        if (requestId) {
+          void signalLogger.logTechnicalData(requestId, {
+            analysisData: 'فشل حساب مؤشر MACD - استخدام القيمة الافتراضية 0'
+          }).catch(err => console.warn('فشل في تسجيل فشل MACD:', err));
+        }
+        return { value: 0, signal: 'neutral', timeframe };
+      });
+      
+      const ema = await getMovingAverages(symbol, timeframe).catch(() => {
+        // تسجيل فشل EMA (fire-and-forget)
+        if (requestId) {
+          void signalLogger.logTechnicalData(requestId, {
+            analysisData: 'فشل حساب المتوسطات المتحركة - استخدام القيمة الافتراضية 0'
+          }).catch(err => console.warn('فشل في تسجيل فشل EMA:', err));
+        }
+        return { value: 0, signal: 'neutral', timeframe };
+      });
+      
+      const bband = await getBollingerBands(symbol, timeframe).catch(() => {
+        // تسجيل فشل Bollinger Bands (fire-and-forget)
+        if (requestId) {
+          void signalLogger.logTechnicalData(requestId, {
+            analysisData: 'فشل حساب Bollinger Bands - استخدام القيمة الافتراضية 50'
+          }).catch(err => console.warn('فشل في تسجيل فشل Bollinger:', err));
+        }
+        return { value: 50, signal: 'neutral', timeframe };
+      });
+      
+      const adx = await getADX(symbol, timeframe).catch(() => {
+        // تسجيل فشل ADX (fire-and-forget)
+        if (requestId) {
+          void signalLogger.logTechnicalData(requestId, {
+            analysisData: 'فشل حساب مؤشر ADX - استخدام القيمة الافتراضية 15'
+          }).catch(err => console.warn('فشل في تسجيل فشل ADX:', err));
+        }
+        return { value: 15, signal: 'neutral', timeframe };
+      });
       
       indicators = { rsi, macd, ema, bband, adx };
+      
+      // تسجيل نجاح الحساب الفردي (fire-and-forget)
+      if (requestId) {
+        void signalLogger.logTechnicalData(requestId, {
+          indicators: JSON.stringify(indicators),
+          analysisData: JSON.stringify({
+            step: 'indicators_calculated_individually',
+            rsi: { value: rsi.value, signal: rsi.signal },
+            macd: { value: macd.value, signal: macd.signal },
+            ema: { value: ema.value, signal: ema.signal },
+            bband: { value: bband.value, signal: bband.signal },
+            adx: { value: adx.value, signal: adx.signal }
+          })
+        }).catch(err => console.warn('فشل في تسجيل المؤشرات الفردية:', err));
+      }
     }
     
     // تحديد الوزن لكل مؤشر حسب نوع السوق والإطار الزمني
     const weights = getIndicatorWeights(marketType, timeframe);
     
-    // حساب النقاط لكل اتجاه
+    // تسجيل أوزان المؤشرات المحسوبة
+    if (requestId) {
+      void signalLogger.logTechnicalData(requestId, {
+        analysisData: `تم حساب أوزان المؤشرات لنوع السوق ${marketType} والإطار الزمني ${timeframe}`,
+        indicators: JSON.stringify({ weights, indicatorsData: indicators })
+      }).catch(err => console.warn('فشل في تسجيل أوزان المؤشرات:', err));
+    }
+    
+    // حساب النقاط لكل اتجاه مع تسجيل تفصيلي
     let buyPoints = 0;
     let sellPoints = 0;
     let totalWeight = 0;
+    let pointsBreakdown: Record<string, { value: number; signal: string; weight: number; points: number }> = {};
     
     // جمع النقاط من المؤشرات
     for (const [indicator, data] of Object.entries(indicators)) {
@@ -682,12 +841,37 @@ export async function analyzeMarket(symbol: string, timeframe: string, marketTyp
       // التحقق من نوع البيانات وتوفر حقل signal
       const indicatorData = data as any;
       if (indicatorData && typeof indicatorData === 'object') {
+        let points = 0;
         if (indicatorData.signal === 'buy') {
           buyPoints += weight;
+          points = weight;
         } else if (indicatorData.signal === 'sell') {
           sellPoints += weight;
+          points = -weight;
         }
+        
+        // تسجيل تفصيلي لمساهمة كل مؤشر
+        pointsBreakdown[indicator] = {
+          value: indicatorData.value,
+          signal: indicatorData.signal,
+          weight,
+          points
+        };
       }
+    }
+    
+    // تسجيل حساب النقاط والأوزان (fire-and-forget)
+    if (requestId) {
+      void signalLogger.logTechnicalData(requestId, {
+        analysisData: JSON.stringify({
+          step: 'points_calculation',
+          buyPoints,
+          sellPoints,
+          totalWeight,
+          pointsBreakdown,
+          weights
+        })
+      }).catch(err => console.warn('فشل في تسجيل حساب النقاط:', err));
     }
     
     // حساب قوة الإشارة (0-100)
@@ -727,26 +911,130 @@ export async function analyzeMarket(symbol: string, timeframe: string, marketTyp
     // ضمان أن الاحتمالية لا تتجاوز الحدود المنطقية
     probability = Math.min(Math.max(probability, 0), 100);
     
-    // تحديد الإشارة النهائية
+    // تحديد الإشارة النهائية مع تسجيل مراحل اتخاذ القرار
     let signal: 'buy' | 'sell' | 'wait' = 'wait';
     
     // تحديد عتبات القرار حسب نوع السوق
     const thresholds = getSignalThresholds(marketType, timeframe);
     
-    // إضافة منطق أكثر تفصيلاً لاتخاذ القرار
+    // تسجيل بيانات اتخاذ القرار (fire-and-forget)
+    if (requestId) {
+      void signalLogger.logTechnicalData(requestId, {
+        analysisData: JSON.stringify({
+          step: 'decision_making_data',
+          trend,
+          buyPoints,
+          sellPoints,
+          totalWeight,
+          probability,
+          thresholds,
+          strength: Math.max((buyPoints / totalWeight) * 100, (sellPoints / totalWeight) * 100)
+        })
+      }).catch(err => console.warn('فشل في تسجيل بيانات اتخاذ القرار:', err));
+    }
+    
+    // إضافة منطق أكثر تفصيلاً لاتخاذ القرار مع تسجيل كل خطوة
     if (trend === 'bullish') {
       if (probability >= thresholds.buy) {
         signal = 'buy';
+        // تسجيل سبب قرار الشراء (fire-and-forget)
+        if (requestId) {
+          void signalLogger.logTechnicalData(requestId, {
+            analysisData: JSON.stringify({
+              step: 'final_decision',
+              decision: 'buy',
+              reason: `probability ${probability.toFixed(2)} >= threshold ${thresholds.buy}`,
+              trend,
+              rsi_value: (indicators as any).rsi?.value
+            })
+          }).catch(err => console.warn('فشل في تسجيل قرار الشراء:', err));
+        }
       } else if (probability >= thresholds.buy - 5 && (indicators as any).rsi?.value > 55) {
         // إذا كان الاحتمال قريب من العتبة وقيمة RSI تدعم ذلك
         signal = 'buy';
+        // تسجيل سبب قرار الشراء المشروط (fire-and-forget)
+        if (requestId) {
+          void signalLogger.logTechnicalData(requestId, {
+            analysisData: JSON.stringify({
+              step: 'final_decision',
+              decision: 'conditional_buy',
+              reason: `probability ${probability.toFixed(2)} near threshold and RSI ${(indicators as any).rsi?.value} > 55`,
+              trend,
+              rsi_value: (indicators as any).rsi?.value
+            })
+          }).catch(err => console.warn('فشل في تسجيل قرار الشراء المشروط:', err));
+        }
+      } else {
+        // تسجيل سبب عدم الشراء (fire-and-forget)
+        if (requestId) {
+          void signalLogger.logTechnicalData(requestId, {
+            analysisData: JSON.stringify({
+              step: 'final_decision',
+              decision: 'no_buy',
+              reason: `bullish trend but probability ${probability.toFixed(2)} < threshold ${thresholds.buy}`,
+              trend,
+              rsi_value: (indicators as any).rsi?.value
+            })
+          }).catch(err => console.warn('فشل في تسجيل عدم الشراء:', err));
+        }
       }
     } else if (trend === 'bearish') {
       if (probability >= thresholds.sell) {
         signal = 'sell';
+        // تسجيل سبب قرار البيع (fire-and-forget)
+        if (requestId) {
+          void signalLogger.logTechnicalData(requestId, {
+            analysisData: JSON.stringify({
+              step: 'final_decision',
+              decision: 'sell',
+              reason: `probability ${probability.toFixed(2)} >= threshold ${thresholds.sell}`,
+              trend,
+              rsi_value: (indicators as any).rsi?.value
+            })
+          }).catch(err => console.warn('فشل في تسجيل قرار البيع:', err));
+        }
       } else if (probability >= thresholds.sell - 5 && (indicators as any).rsi?.value < 45) {
         // إذا كان الاحتمال قريب من العتبة وقيمة RSI تدعم ذلك
         signal = 'sell';
+        // تسجيل سبب قرار البيع المشروط (fire-and-forget)
+        if (requestId) {
+          void signalLogger.logTechnicalData(requestId, {
+            analysisData: JSON.stringify({
+              step: 'final_decision',
+              decision: 'conditional_sell',
+              reason: `probability ${probability.toFixed(2)} near threshold and RSI ${(indicators as any).rsi?.value} < 45`,
+              trend,
+              rsi_value: (indicators as any).rsi?.value
+            })
+          }).catch(err => console.warn('فشل في تسجيل قرار البيع المشروط:', err));
+        }
+      } else {
+        // تسجيل سبب عدم البيع (fire-and-forget)
+        if (requestId) {
+          void signalLogger.logTechnicalData(requestId, {
+            analysisData: JSON.stringify({
+              step: 'final_decision',
+              decision: 'no_sell',
+              reason: `bearish trend but probability ${probability.toFixed(2)} < threshold ${thresholds.sell}`,
+              trend,
+              rsi_value: (indicators as any).rsi?.value
+            })
+          }).catch(err => console.warn('فشل في تسجيل عدم البيع:', err));
+        }
+      }
+    } else {
+      // تسجيل قرار الانتظار (fire-and-forget)
+      if (requestId) {
+        void signalLogger.logTechnicalData(requestId, {
+          analysisData: JSON.stringify({
+            step: 'final_decision',
+            decision: 'wait',
+            reason: `neutral trend with probability ${probability.toFixed(2)}`,
+            trend,
+            buyPoints,
+            sellPoints
+          })
+        }).catch(err => console.warn('فشل في تسجيل قرار الانتظار:', err));
       }
     }
     
@@ -763,7 +1051,7 @@ export async function analyzeMarket(symbol: string, timeframe: string, marketTyp
     const nextUpdateMinutes = getNextUpdateTime(timeframe);
     const nextUpdate = new Date(now.getTime() + nextUpdateMinutes * 60 * 1000);
     
-    return {
+    const analysisResult = {
       trend,
       strength,
       volatility: (indicators as any).adx.value, // استخدام قيمة ADX كمؤشر للتقلب
@@ -776,8 +1064,48 @@ export async function analyzeMarket(symbol: string, timeframe: string, marketTyp
       signal,
       dataSource: 'real_time_api' // إعداد مصدر البيانات
     };
+    
+    // تسجيل نجاح التحليل
+    if (requestId) {
+      await signalLogger.logSignalSuccess(requestId, {
+        signal,
+        probability: probability.toFixed(2),
+        currentPrice: currentPrice.toString(),
+        priceSource: analysisResult.dataSource,
+        analysisData: JSON.stringify({
+          trend,
+          strength,
+          volatility: analysisResult.volatility,
+          support,
+          resistance,
+          buyPoints,
+          sellPoints,
+          totalWeight
+        }),
+        indicators: JSON.stringify(indicators),
+        cacheUsed: false
+      });
+    }
+    
+    return analysisResult;
   } catch (error) {
     console.error('خطأ في تحليل السوق:', error);
+    
+    // تسجيل الخطأ في نظام SignalLogger مع ضمان التنظيف
+    if (requestId) {
+      await signalLogger.logSignalError(requestId, {
+        errorCode: 'ANALYSIS_FAILED',
+        errorMessage: error instanceof Error ? error.message : String(error),
+        analysisData: JSON.stringify({
+          symbol,
+          timeframe, 
+          marketType,
+          errorStep: 'تحليل السوق - خطأ عام',
+          timestamp: new Date().toISOString()
+        }),
+        indicators: '{}'
+      });
+    }
     
     // إعادة تحليل أساسي في حالة الفشل
     return {
@@ -798,6 +1126,11 @@ export async function analyzeMarket(symbol: string, timeframe: string, marketTyp
       probability: 50,
       signal: 'wait'
     };
+  } finally {
+    // ضمان التنظيف في جميع الحالات
+    if (requestId) {
+      console.log(`[analyzeMarket] تم الانتهاء من معالجة الطلب: ${requestId}`);
+    }
   }
 }
 
