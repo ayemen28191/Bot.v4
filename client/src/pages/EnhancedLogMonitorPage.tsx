@@ -400,12 +400,12 @@ export default function EnhancedLogMonitorPage() {
       {/* قائمة السجلات مع نظام التبويبات المحسّن */}
       <div className="px-3 sm:px-4 pb-20">
         <div className="mb-4">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-foreground flex items-center space-x-2 space-x-reverse">
               <Activity className="h-5 w-5 text-primary" />
               <span>{getTabTitle()}</span>
             </h3>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-muted-foreground bg-muted/30 px-3 py-1 rounded-full border">
               {getTabDescription()}
             </div>
           </div>
