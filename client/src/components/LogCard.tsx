@@ -6,6 +6,7 @@ import { MoreHorizontal, Clock, User, Monitor, AlertTriangle, Info } from "lucid
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { t } from "@/lib/i18n";
 
 interface LogEntry {
   id: string;
@@ -100,8 +101,8 @@ export function LogCard({ log, onClick, isSelected }: LogCardProps) {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({
-      title: "تم النسخ",
-      description: "تم نسخ النص إلى الحافظة",
+      title: t('copy_success_title'),
+      description: t('copy_success_description'),
       duration: 2000
     });
   };
@@ -169,7 +170,7 @@ export function LogCard({ log, onClick, isSelected }: LogCardProps) {
                 {isUserAction && (
                   <Badge variant="secondary" className="text-xs">
                     <User className="h-3 w-3 mr-1" />
-                    مستخدم
+                    {t('user_badge')}
                   </Badge>
                 )}
               </div>
@@ -191,19 +192,19 @@ export function LogCard({ log, onClick, isSelected }: LogCardProps) {
                       e.stopPropagation();
                       copyToClipboard(log.message);
                     }}>
-                      نسخ الرسالة
+                      {t('copy_message')}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={(e) => {
                       e.stopPropagation();
                       copyToClipboard(JSON.stringify(log, null, 2));
                     }}>
-                      نسخ التفاصيل الكاملة
+                      {t('copy_full_details')}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={(e) => {
                       e.stopPropagation();
                       setIsExpanded(!isExpanded);
                     }}>
-                      {isExpanded ? 'إخفاء التفاصيل' : 'إظهار التفاصيل'}
+                      {isExpanded ? t('hide_details') : t('show_details_card')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -233,7 +234,7 @@ export function LogCard({ log, onClick, isSelected }: LogCardProps) {
             {/* البيانات الإضافية عند التوسع */}
             {isExpanded && log.meta && (
               <div className="mt-3 p-3 bg-muted/30 rounded-lg">
-                <h4 className="text-xs font-semibold mb-2 text-muted-foreground">البيانات الإضافية:</h4>
+                <h4 className="text-xs font-semibold mb-2 text-muted-foreground">{t('additional_data')}</h4>
                 <pre className="text-xs text-muted-foreground whitespace-pre-wrap overflow-x-auto">
                   {typeof log.meta === 'string' ? log.meta : JSON.stringify(log.meta, null, 2)}
                 </pre>

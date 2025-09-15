@@ -463,3 +463,13 @@ html, body {
     margin-bottom: 0.25rem;
   }
 }
+
+/* إخفاء scrollbar للمتصفحات المختلفة */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
