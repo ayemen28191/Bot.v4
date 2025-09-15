@@ -184,7 +184,7 @@ export default function SignalIndicator({
   
   // إضافة معلومات الاحتمالية إذا كانت متوفرة مع تنسيق العدد
   const probabilityText = probability !== undefined 
-    ? `${Number(probability).toFixed(2)}%` 
+    ? `${Number(probability).toFixed(1)}%` 
     : '';
   
   return (

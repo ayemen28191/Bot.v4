@@ -375,7 +375,7 @@ export default function IndicatorsPage() {
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>{t('signal_strength')}</span>
-                        <span className="font-medium">{indicator.strengthValue}%</span>
+                        <span className="font-medium">{Number(indicator.strengthValue).toFixed(1)}%</span>
                       </div>
                       <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                         <div 
