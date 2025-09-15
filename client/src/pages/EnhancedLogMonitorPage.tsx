@@ -2,12 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { LogCard } from "@/components/LogCard";
 import { LogsHeader } from "@/components/LogsHeader";
+import { LogsStatsDashboard } from "@/components/LogsStatsDashboard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ChevronUp, Wifi, WifiOff, Activity, Zap } from "lucide-react";
+import { ChevronUp, Wifi, WifiOff, Activity, Zap, Users, Monitor } from "lucide-react";
 import { t } from "@/lib/i18n";
 
 interface LogEntry {
@@ -262,6 +263,82 @@ export default function EnhancedLogMonitorPage() {
     scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // معالج فلترة السجلات من لوحة الإحصائيات
+  const handleDashboardFilter = (filters: { level?: string; source?: string; userId?: number }) => {
+    if (filters.level) {
+      setSelectedLevel(filters.level);
+    }
+    if (filters.source) {
+      setSelectedSource(filters.source);
+    }
+    // يمكن إضافة فلترة المستخدمين لاحقاً إذا لزم الأمر
+    
+    // إظهار toast للإشارة للفلترة
+    toast({
+      title: t('stats_updated'),
+      description: `${t('click_to_filter')}: ${filters.level || filters.source || 'user'}`,
+      duration: 2000
+    });
+  };
+
+  // تحديد محتوى التبويبات المحسّن
+  const getTabTitle = () => {
+    switch (selectedTab) {
+      case 'user':
+        return t('user_activity_logs');
+      case 'system':
+        return t('system_activity_logs');
+      default:
+        return t('all_logs_activity');
+    }
+  };
+
+  const getTabDescription = () => {
+    switch (selectedTab) {
+      case 'user':
+        return t('showing_user_logs_desc');
+      case 'system':
+        return t('showing_system_logs_desc');
+      default:
+        return t('showing_all_logs_desc');
+    }
+  };
+
+  const getTabIcon = () => {
+    switch (selectedTab) {
+      case 'user':
+        return <div className="h-12 w-12 mx-auto text-muted-foreground flex items-center justify-center bg-emerald-100 dark:bg-emerald-900/30 rounded-full"><Users className="h-6 w-6" /></div>;
+      case 'system':
+        return <div className="h-12 w-12 mx-auto text-muted-foreground flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 rounded-full"><Monitor className="h-6 w-6" /></div>;
+      default:
+        return <Activity className="h-12 w-12 mx-auto text-muted-foreground" />;
+    }
+  };
+
+  const getEmptyStateTitle = () => {
+    switch (selectedTab) {
+      case 'user':
+        return t('no_user_logs_found');
+      case 'system':
+        return t('no_system_logs_found');
+      default:
+        return t('no_logs_match_filters');
+    }
+  };
+
+  const getEmptyStateDescription = () => {
+    switch (selectedTab) {
+      case 'user':
+        return t('no_user_logs_found_desc');
+      case 'system':
+        return t('no_system_logs_found_desc');
+      default:
+        return searchTerm || selectedLevel || selectedSource 
+          ? t('no_logs_match_filters')
+          : t('loading_logs');
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-background to-muted/50">
@@ -347,22 +424,39 @@ export default function EnhancedLogMonitorPage() {
         </Card>
       </div>
 
-      {/* قائمة السجلات المحسّنة */}
+      {/* لوحة الإحصائيات التفاعلية */}
+      <div className="px-3 sm:px-4">
+        <LogsStatsDashboard 
+          logs={logs} 
+          onFilterChange={handleDashboardFilter}
+        />
+      </div>
+
+      {/* قائمة السجلات مع نظام التبويبات المحسّن */}
       <div className="relative flex-1 px-3 sm:px-4">
-        <ScrollArea ref={scrollRef} className="h-[calc(100vh-420px)] sm:h-[calc(100vh-400px)]">
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-semibold text-foreground flex items-center space-x-2 space-x-reverse">
+              <Activity className="h-5 w-5 text-primary" />
+              <span>{getTabTitle()}</span>
+            </h3>
+            <div className="text-sm text-muted-foreground">
+              {getTabDescription()}
+            </div>
+          </div>
+        </div>
+        
+        <ScrollArea ref={scrollRef} className="h-[calc(100vh-480px)] sm:h-[calc(100vh-460px)]">
           <div className="pb-20 space-y-3">
             {filteredLogs.length === 0 ? (
               <Card className="border-dashed border-2 bg-muted/30 backdrop-blur-sm" data-testid="no-logs-card">
                 <CardContent className="p-8 sm:p-12 text-center">
                   <div className="mb-4 opacity-50">
-                    <Activity className="h-12 w-12 mx-auto text-muted-foreground" />
+                    {getTabIcon()}
                   </div>
-                  <h3 className="text-lg font-semibold mb-2 text-foreground">{t('no_logs_match_filters')}</h3>
+                  <h3 className="text-lg font-semibold mb-2 text-foreground">{getEmptyStateTitle()}</h3>
                   <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                    {searchTerm || selectedLevel || selectedSource 
-                      ? t('no_logs_match_filters')
-                      : t('loading_logs')
-                    }
+                    {getEmptyStateDescription()}
                   </p>
                 </CardContent>
               </Card>
