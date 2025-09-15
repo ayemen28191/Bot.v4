@@ -249,7 +249,19 @@ try {
       source TEXT NOT NULL,
       message TEXT NOT NULL,
       meta TEXT,
+      request_id TEXT,
+      session_id TEXT,
+      combined_tracking_id TEXT,
+      actor_type TEXT,
+      actor_id TEXT,
+      actor_display_name TEXT,
+      action TEXT,
+      result TEXT,
+      details TEXT,
       user_id INTEGER,
+      username TEXT,
+      user_display_name TEXT,
+      user_avatar TEXT,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id)
     )
@@ -258,6 +270,32 @@ try {
       console.error('Error creating system_logs table:', err);
     } else {
       console.log('System_logs table created or already exists');
+      
+      // إضافة الأعمدة الجديدة للجداول الموجودة
+      const columnsToAdd = [
+        'ADD COLUMN request_id TEXT',
+        'ADD COLUMN session_id TEXT',
+        'ADD COLUMN combined_tracking_id TEXT',
+        'ADD COLUMN actor_type TEXT',
+        'ADD COLUMN actor_id TEXT',
+        'ADD COLUMN actor_display_name TEXT',
+        'ADD COLUMN action TEXT',
+        'ADD COLUMN result TEXT',
+        'ADD COLUMN details TEXT',
+        'ADD COLUMN username TEXT',
+        'ADD COLUMN user_display_name TEXT',
+        'ADD COLUMN user_avatar TEXT'
+      ];
+      
+      columnsToAdd.forEach((alteration, index) => {
+        sqliteDb.run(`ALTER TABLE system_logs ${alteration}`, (alterErr) => {
+          if (alterErr && !alterErr.message.includes('duplicate column name')) {
+            console.warn(`Warning adding column to system_logs (${alteration}):`, alterErr.message);
+          } else if (!alterErr) {
+            console.log(`✓ Added column to system_logs: ${alteration.split(' ')[2]}`);
+          }
+        });
+      });
     }
   });
 
@@ -290,6 +328,8 @@ try {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER,
       username TEXT,
+      request_id TEXT,
+      session_id TEXT,
       symbol TEXT NOT NULL,
       market_type TEXT NOT NULL,
       timeframe TEXT NOT NULL,
@@ -307,7 +347,6 @@ try {
       api_keys_used TEXT,
       request_ip TEXT,
       user_agent TEXT,
-      session_id TEXT,
       market_open INTEGER,
       offline_mode INTEGER DEFAULT 0,
       cache_used INTEGER DEFAULT 0,
@@ -321,6 +360,15 @@ try {
       console.error('Error creating signal_logs table:', err);
     } else {
       console.log('Signal_logs table created or already exists');
+      
+      // إضافة العمود request_id للجداول الموجودة إذا لم يكن موجوداً
+      sqliteDb.run('ALTER TABLE signal_logs ADD COLUMN request_id TEXT', (alterErr) => {
+        if (alterErr && !alterErr.message.includes('duplicate column name')) {
+          console.warn('Warning adding request_id to signal_logs:', alterErr.message);
+        } else if (!alterErr) {
+          console.log('✓ Added request_id column to signal_logs');
+        }
+      });
       
       // إضافة فهارس الأداء للحقول المهمة في جدول سجلات الإشارات
       sqliteDb.exec(`
@@ -1318,8 +1366,20 @@ export class DatabaseStorage implements IStorage {
       const now = new Date().toISOString();
       
       sqliteDb.run(
-        'INSERT INTO system_logs (timestamp, level, source, message, meta, user_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [now, log.level, log.source, log.message, log.meta || null, log.userId || null, now],
+        `INSERT INTO system_logs (
+          timestamp, level, source, message, meta, 
+          request_id, session_id, combined_tracking_id,
+          actor_type, actor_id, actor_display_name, action, result, details,
+          user_id, username, user_display_name, user_avatar, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          now, log.level, log.source, log.message, log.meta || null,
+          log.requestId || null, log.sessionId || null, log.combinedTrackingId || null,
+          log.actorType || null, log.actorId || null, log.actorDisplayName || null, 
+          log.action || null, log.result || null, log.details || null,
+          log.userId || null, log.username || null, log.userDisplayName || null, 
+          log.userAvatar || null, now
+        ],
         function(err) {
           if (err) {
             console.error('Error creating system log:', err);
@@ -1332,7 +1392,22 @@ export class DatabaseStorage implements IStorage {
               source: log.source,
               message: log.message,
               meta: log.meta || null,
+              // Request tracking fields
+              requestId: log.requestId || null,
+              sessionId: log.sessionId || null,
+              combinedTrackingId: log.combinedTrackingId || null,
+              // Enhanced fields
+              actorType: log.actorType || null,
+              actorId: log.actorId || null,
+              actorDisplayName: log.actorDisplayName || null,
+              action: log.action || null,
+              result: log.result || null,
+              details: log.details || null,
+              // Legacy fields for backward compatibility
               userId: log.userId || null,
+              username: log.username || null,
+              userDisplayName: log.userDisplayName || null,
+              userAvatar: log.userAvatar || null,
               createdAt: now
             };
             resolve(newLog);
@@ -1386,7 +1461,22 @@ export class DatabaseStorage implements IStorage {
             source: row.source,
             message: row.message,
             meta: row.meta,
+            // Request tracking fields
+            requestId: row.request_id,
+            sessionId: row.session_id,
+            combinedTrackingId: row.combined_tracking_id,
+            // Enhanced fields
+            actorType: row.actor_type,
+            actorId: row.actor_id,
+            actorDisplayName: row.actor_display_name,
+            action: row.action,
+            result: row.result,
+            details: row.details,
+            // Legacy fields for backward compatibility
             userId: row.user_id,
+            username: row.username,
+            userDisplayName: row.user_display_name,
+            userAvatar: row.user_avatar,
             createdAt: row.created_at
           }));
           resolve(logs);
@@ -1634,14 +1724,14 @@ export class DatabaseStorage implements IStorage {
       
       sqliteDb.run(
         `INSERT INTO signal_logs (
-          user_id, username, symbol, market_type, timeframe, platform, status, signal, 
+          user_id, username, request_id, symbol, market_type, timeframe, platform, status, signal, 
           probability, current_price, price_source, error_code, error_message, 
           analysis_data, indicators, execution_time, api_keys_used, request_ip, 
           user_agent, session_id, market_open, offline_mode, cache_used, 
           requested_at, completed_at, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          log.userId || null, log.username || null, log.symbol, log.marketType, log.timeframe,
+          log.userId || null, log.username || null, log.requestId || null, log.symbol, log.marketType, log.timeframe,
           log.platform || null, log.status, log.signal || null, log.probability || null,
           log.currentPrice || null, log.priceSource || null, log.errorCode || null,
           log.errorMessage || null, log.analysisData || null, log.indicators || null,
@@ -1659,6 +1749,7 @@ export class DatabaseStorage implements IStorage {
               id: this.lastID,
               userId: log.userId || null,
               username: log.username || null,
+              requestId: log.requestId || null,
               symbol: log.symbol,
               marketType: log.marketType,
               timeframe: log.timeframe,
@@ -1756,6 +1847,7 @@ export class DatabaseStorage implements IStorage {
             id: row.id,
             userId: row.user_id,
             username: row.username,
+            requestId: row.request_id,
             symbol: row.symbol,
             marketType: row.market_type,
             timeframe: row.timeframe,
@@ -1801,6 +1893,7 @@ export class DatabaseStorage implements IStorage {
               id: row.id,
               userId: row.user_id,
               username: row.username,
+              requestId: row.request_id,
               symbol: row.symbol,
               marketType: row.market_type,
               timeframe: row.timeframe,
@@ -2001,6 +2094,7 @@ export class DatabaseStorage implements IStorage {
                           id: row.id,
                           userId: row.user_id,
                           username: row.username,
+                          requestId: row.request_id,
                           symbol: row.symbol,
                           marketType: row.market_type,
                           timeframe: row.timeframe,

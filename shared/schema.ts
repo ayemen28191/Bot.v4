@@ -71,6 +71,10 @@ export const systemLogs = sqliteTable("system_logs", {
   source: text("source").notNull(), // مصدر السجل (api, auth, deployment, etc.)
   message: text("message").notNull(),
   meta: text("meta"), // JSON string for additional data
+  // Request tracking fields
+  requestId: text("request_id"), // معرف الطلب الفريد للتتبع الشامل
+  sessionId: text("session_id"), // معرف الجلسة لربط العمليات
+  combinedTrackingId: text("combined_tracking_id"), // معرف مركب للتتبع السريع (requestId-sessionId)
   // New enhanced fields
   actorType: text("actor_type"), // "user" | "system"
   actorId: text("actor_id"), // user ID or system component ID
@@ -106,6 +110,10 @@ export const signalLogs = sqliteTable("signal_logs", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   userId: integer("user_id"), // معرف المستخدم الذي طلب الإشارة
   username: text("username"), // اسم المستخدم للسهولة في التتبع
+  // Request tracking fields
+  requestId: text("request_id"), // معرف الطلب الفريد للتتبع الشامل
+  sessionId: text("session_id"), // **PRIVACY WARNING**: معرف الجلسة - بيانات شخصية حساسة
+  // Signal data fields
   symbol: text("symbol").notNull(), // الرمز المالي (مثل GBP/USD, BTC/USDT)
   marketType: text("market_type").notNull(), // نوع السوق (forex, crypto, stocks)
   timeframe: text("timeframe").notNull(), // الإطار الزمني (1M, 5M, 1H, 1D, etc)
@@ -123,7 +131,6 @@ export const signalLogs = sqliteTable("signal_logs", {
   apiKeysUsed: text("api_keys_used"), // **SECURITY**: معرفات المفاتيح المستخدمة (JSON array of key IDs) - لا تخزن القيم الخام أبداً
   requestIp: text("request_ip"), // **PRIVACY WARNING**: عنوان IP - بيانات شخصية، يجب حمايتها وفقاً لقوانين الخصوصية
   userAgent: text("user_agent"), // **PRIVACY WARNING**: معلومات المتصفح - بيانات شخصية قد تحتوي على معلومات تعريفية
-  sessionId: text("session_id"), // **PRIVACY WARNING**: معرف الجلسة - بيانات شخصية حساسة
   marketOpen: integer("market_open", { mode: "boolean" }), // حالة السوق (مفتوح/مغلق)
   offlineMode: integer("offline_mode", { mode: "boolean" }).default(false), // وضع عدم الاتصال
   cacheUsed: integer("cache_used", { mode: "boolean" }).default(false), // تم استخدام البيانات المخزنة
@@ -195,6 +202,10 @@ export const insertSystemLogSchema = createInsertSchema(systemLogs).pick({
   source: true,
   message: true,
   meta: true,
+  // Request tracking fields
+  requestId: true,
+  sessionId: true,
+  combinedTrackingId: true,
   // New enhanced fields
   actorType: true,
   actorId: true,
@@ -239,6 +250,7 @@ export type NotificationSetting = typeof notificationSettings.$inferSelect;
 export const insertSignalLogSchema = createInsertSchema(signalLogs).pick({
   userId: true,
   username: true,
+  requestId: true,
   symbol: true,
   marketType: true,
   timeframe: true,

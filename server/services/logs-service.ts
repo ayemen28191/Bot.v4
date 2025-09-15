@@ -1,6 +1,9 @@
 import { storage } from "../storage";
 import { InsertSystemLog, SystemLog } from "@shared/schema";
 import { notificationService, NotificationConfig } from "./notification-service";
+import { Response } from "express";
+import { LoggingContext } from "../middleware/logging-context";
+import { getCurrentContext, RequestContext, formatRequestContext } from "../middleware/request-context";
 
 // مدير السجلات مع إشعارات ذكية
 class LogsService {
@@ -9,10 +12,38 @@ class LogsService {
   private notificationConfigs: Map<string, NotificationConfig> = new Map();
   private newLogCallbacks: Array<(log: SystemLog) => void> = [];
 
-  // تسجيل سجل جديد
-  async log(logData: Omit<InsertSystemLog, 'timestamp'>): Promise<SystemLog> {
+  // تسجيل سجل جديد مع دعم السياق التلقائي من AsyncLocalStorage
+  async log(logData: Omit<InsertSystemLog, 'timestamp'>, res?: Response): Promise<SystemLog> {
+    // الحصول على السياق من AsyncLocalStorage أولاً، ثم من res.locals كـ fallback
+    let context: RequestContext | LoggingContext | undefined;
+    
+    // محاولة الحصول على السياق من AsyncLocalStorage (النظام الجديد)
+    const asyncContext = getCurrentContext();
+    if (asyncContext) {
+      context = asyncContext;
+    } else if (res?.locals?.loggingContext) {
+      // Fallback للنظام القديم
+      context = res.locals.loggingContext;
+    }
+    
+    // حساب معرف التتبع المركب
+    const requestId = logData.requestId ?? context?.requestId;
+    const sessionId = logData.sessionId ?? context?.sessionId;
+    const combinedTrackingId = this.generateCombinedTrackingId(requestId, sessionId);
+
     const newLog: InsertSystemLog = {
       ...logData,
+      // استخدام القيم من السياق كـ fallback إذا لم تكن موجودة في logData
+      userId: logData.userId ?? context?.userId,
+      username: logData.username ?? context?.username,
+      userDisplayName: logData.userDisplayName ?? context?.userDisplayName,
+      userAvatar: logData.userAvatar ?? (context?.username ? this.generateUserColor(context.username) : undefined),
+      // إضافة معرفات التتبع من السياق
+      requestId,
+      sessionId,
+      combinedTrackingId,
+      // إضافة معلومات السياق الإضافية إلى meta إذا متوفرة
+      meta: this.enrichMetaWithContext(logData.meta ?? undefined, context)
     };
 
     try {
@@ -41,6 +72,18 @@ class LogsService {
         source: newLog.source,
         message: newLog.message,
         meta: newLog.meta || null,
+        // Request tracking fields - use newLog values which have proper fallback logic
+        requestId: newLog.requestId || null,
+        sessionId: newLog.sessionId || null,
+        combinedTrackingId: newLog.combinedTrackingId || null,
+        // New enhanced fields - use newLog values or null
+        actorType: newLog.actorType || null,
+        actorId: newLog.actorId || null,
+        actorDisplayName: newLog.actorDisplayName || null,
+        action: newLog.action || null,
+        result: newLog.result || null,
+        details: newLog.details || null,
+        // Legacy fields for backward compatibility
         userId: newLog.userId || null,
         username: newLog.username || null,
         userDisplayName: newLog.userDisplayName || null,
@@ -56,6 +99,47 @@ class LogsService {
     this.logBuffer.push(log);
     if (this.logBuffer.length > this.bufferSize) {
       this.logBuffer = this.logBuffer.slice(-this.bufferSize); // حافظ على آخر N سجل
+    }
+  }
+
+  // إثراء المعطيات بمعلومات السياق - محدث لدعم RequestContext و LoggingContext
+  private enrichMetaWithContext(existingMeta?: string, context?: RequestContext | LoggingContext): string | undefined {
+    if (!context) {
+      return existingMeta;
+    }
+
+    // استخراج المعلومات الأساسية من أي نوع من السياق
+    const contextInfo = {
+      requestId: context.requestId,
+      sessionId: context.sessionId,
+      clientIP: context.clientIP,
+      userAgent: context.userAgent,
+      timestamp: context.timestamp,
+      // إضافة معلومات خاصة بـ RequestContext إذا كانت متوفرة
+      ...(('route' in context) && {
+        route: context.route,
+        method: context.method,
+        processingTime: context.startTime ? Date.now() - context.startTime : undefined
+      })
+    };
+
+    if (!existingMeta) {
+      return JSON.stringify(contextInfo);
+    }
+
+    try {
+      const existingData = JSON.parse(existingMeta);
+      const enrichedData = {
+        ...existingData,
+        context: contextInfo
+      };
+      return JSON.stringify(enrichedData);
+    } catch (error) {
+      // في حالة فشل parse، أضف السياق كـ string
+      return JSON.stringify({
+        originalMeta: existingMeta,
+        context: contextInfo
+      });
     }
   }
 
@@ -196,21 +280,56 @@ class LogsService {
     }
   }
 
-  // مساعدات للتسجيل السريع
-  async logError(source: string, message: string, meta?: any, userId?: number): Promise<SystemLog> {
-    return this.log({ level: 'error', source, message, meta: meta ? JSON.stringify(meta) : undefined, userId });
+  // مساعدات للتسجيل السريع مع دعم السياق التلقائي من AsyncLocalStorage
+  // الآن لا حاجة لتمرير userId أو res - سيتم أخذهم من AsyncLocalStorage تلقائياً
+  async logError(source: string, message: string, meta?: any, userId?: number, res?: Response): Promise<SystemLog> {
+    return this.log({ level: 'error', source, message, meta: meta ? JSON.stringify(meta) : undefined, userId }, res);
   }
 
-  async logWarn(source: string, message: string, meta?: any, userId?: number): Promise<SystemLog> {
-    return this.log({ level: 'warn', source, message, meta: meta ? JSON.stringify(meta) : undefined, userId });
+  async logWarn(source: string, message: string, meta?: any, userId?: number, res?: Response): Promise<SystemLog> {
+    return this.log({ level: 'warn', source, message, meta: meta ? JSON.stringify(meta) : undefined, userId }, res);
   }
 
-  async logInfo(source: string, message: string, meta?: any, userId?: number): Promise<SystemLog> {
-    return this.log({ level: 'info', source, message, meta: meta ? JSON.stringify(meta) : undefined, userId });
+  async logInfo(source: string, message: string, meta?: any, userId?: number, res?: Response): Promise<SystemLog> {
+    return this.log({ level: 'info', source, message, meta: meta ? JSON.stringify(meta) : undefined, userId }, res);
   }
 
-  async logDebug(source: string, message: string, meta?: any, userId?: number): Promise<SystemLog> {
-    return this.log({ level: 'debug', source, message, meta: meta ? JSON.stringify(meta) : undefined, userId });
+  async logDebug(source: string, message: string, meta?: any, userId?: number, res?: Response): Promise<SystemLog> {
+    return this.log({ level: 'debug', source, message, meta: meta ? JSON.stringify(meta) : undefined, userId }, res);
+  }
+
+  // دوال جديدة مبسطة تستخدم AsyncLocalStorage فقط (موصى بها للاستخدام الجديد)
+  async error(source: string, message: string, meta?: any): Promise<SystemLog> {
+    return this.log({ level: 'error', source, message, meta: meta ? JSON.stringify(meta) : undefined });
+  }
+
+  async warn(source: string, message: string, meta?: any): Promise<SystemLog> {
+    return this.log({ level: 'warn', source, message, meta: meta ? JSON.stringify(meta) : undefined });
+  }
+
+  async info(source: string, message: string, meta?: any): Promise<SystemLog> {
+    return this.log({ level: 'info', source, message, meta: meta ? JSON.stringify(meta) : undefined });
+  }
+
+  async debug(source: string, message: string, meta?: any): Promise<SystemLog> {
+    return this.log({ level: 'debug', source, message, meta: meta ? JSON.stringify(meta) : undefined });
+  }
+
+  // دوال محسنة للتسجيل مع السياق التلقائي (overload للاستخدام مع Response فقط)
+  async logErrorWithContext(source: string, message: string, res: Response, meta?: any): Promise<SystemLog> {
+    return this.log({ level: 'error', source, message, meta: meta ? JSON.stringify(meta) : undefined }, res);
+  }
+
+  async logWarnWithContext(source: string, message: string, res: Response, meta?: any): Promise<SystemLog> {
+    return this.log({ level: 'warn', source, message, meta: meta ? JSON.stringify(meta) : undefined }, res);
+  }
+
+  async logInfoWithContext(source: string, message: string, res: Response, meta?: any): Promise<SystemLog> {
+    return this.log({ level: 'info', source, message, meta: meta ? JSON.stringify(meta) : undefined }, res);
+  }
+
+  async logDebugWithContext(source: string, message: string, res: Response, meta?: any): Promise<SystemLog> {
+    return this.log({ level: 'debug', source, message, meta: meta ? JSON.stringify(meta) : undefined }, res);
   }
 
   // دوال محسنة لتسجيل السجلات مع بيانات المستخدم
@@ -251,6 +370,23 @@ class LogsService {
       userDisplayName: user.displayName || user.username,
       userAvatar: this.generateUserColor(user.username)
     });
+  }
+
+  // دالة لتوليد معرف التتبع المركب مع حماية sessionId
+  private generateCombinedTrackingId(requestId?: string | null, sessionId?: string | null): string | null {
+    if (!requestId) {
+      return null;
+    }
+    
+    // إنشاء معرف مركب يجمع requestId مع hash مقطوع من sessionId لحماية الخصوصية
+    if (sessionId && sessionId.trim() !== '') {
+      // إنشاء hash مقطوع من sessionId (أول 8 أحرف من SHA-256)
+      const crypto = require('crypto');
+      const sessionHash = crypto.createHash('sha256').update(sessionId).digest('hex').substring(0, 8);
+      return `${requestId}-${sessionHash}`;
+    }
+    
+    return requestId;
   }
 
   // دالة لتوليد لون للمستخدم

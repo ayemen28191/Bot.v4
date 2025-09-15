@@ -10,6 +10,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import env, { initConfigKeys } from './env'; // استيراد ملف البيئة والدالة الجديدة لتهيئة المفاتيح
 import { storage } from './storage'; // استيراد واجهة التخزين للوصول إلى قاعدة البيانات
+import { requestContextMiddleware } from './middleware/request-context'; // استيراد وسائط السياق الجديد
+import { loggingContextMiddleware } from './middleware/logging-context'; // استيراد وسائط السياق القديم للتوافق
 
 // إنشاء بديل لـ __dirname في بيئة ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -121,6 +123,10 @@ app.use(express.urlencoded({ extended: false }));
 app.get('/health', (_, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// إعداد وسائط السياق الجديد مع AsyncLocalStorage (قبل المصادقة لضمان الوصول للسياق)
+console.log('Setting up new request context middleware with AsyncLocalStorage...');
+app.use(requestContextMiddleware);
 
 // إعداد نظام المصادقة
 console.log('Setting up authentication...');

@@ -38,7 +38,7 @@ export async function comparePasswords(supplied: string, stored: string, usernam
           if (isEqual) {
             console.log("Password verification successful");
             if (username) {
-              await logsService.logDebug("auth", `Password verification successful for user: ${username}`, {
+              await logsService.debug("auth", `Password verification successful for user: ${username}`, {
                 action: "password_verification",
                 username,
                 status: "success"
@@ -47,7 +47,7 @@ export async function comparePasswords(supplied: string, stored: string, usernam
           } else {
             console.log("Password verification failed");
             if (username) {
-              await logsService.logWarn("auth", `Password verification failed for user: ${username}`, {
+              await logsService.warn("auth", `Password verification failed for user: ${username}`, {
                 action: "password_verification",
                 username,
                 status: "failed",
@@ -60,7 +60,7 @@ export async function comparePasswords(supplied: string, stored: string, usernam
         } catch (error) {
           console.error("Error comparing hashed passwords:", error);
           if (username) {
-            await logsService.logError("auth", `Error during password comparison for user: ${username}`, {
+            await logsService.error("auth", `Error during password comparison for user: ${username}`, {
               action: "password_verification",
               username,
               status: "error",
@@ -74,7 +74,7 @@ export async function comparePasswords(supplied: string, stored: string, usernam
     // رفض أي كلمة مرور غير مشفرة أو غير صالحة
     console.log("Invalid password format - only properly hashed passwords are accepted");
     if (username) {
-      await logsService.logDebug("auth", "Invalid password format detected", {
+      await logsService.debug("auth", "Invalid password format detected", {
         action: "password_verification",
         status: "failed",
         reason: "invalid_format"
@@ -84,7 +84,7 @@ export async function comparePasswords(supplied: string, stored: string, usernam
   } catch (error) {
     console.error("Error in password comparison:", error);
     if (username) {
-      await logsService.logError("auth", `Critical error in password comparison for user: ${username}`, {
+      await logsService.error("auth", `Critical error in password comparison for user: ${username}`, {
         action: "password_verification",
         username,
         status: "error",
@@ -172,7 +172,7 @@ export function setupAuth(app: Express) {
         console.log('🔐 Use password reset functionality to set a new admin password');
         
         // Log admin creation event securely (without password)
-        await logsService.logInfo("auth", "Admin account created during system initialization", {
+        await logsService.info("auth", "Admin account created during system initialization", {
           action: "admin_account_created",
           username: "admin",
           email: "admin@example.com"
@@ -211,7 +211,7 @@ export function setupAuth(app: Express) {
     new LocalStrategy(async (username, password, done) => {
       try {
         console.log(`Attempting authentication for user: ${username}`);
-        await logsService.logInfo("auth", `Login attempt for user: ${username}`, {
+        await logsService.info("auth", `Login attempt for user: ${username}`, {
           action: "login_attempt",
           username,
           timestamp: new Date().toISOString()
@@ -221,7 +221,7 @@ export function setupAuth(app: Express) {
 
         if (!user) {
           console.log(`Authentication failed: User ${username} not found`);
-          await logsService.logWarn("auth", `Login failed: User not found - ${username}`, {
+          await logsService.warn("auth", `Login failed: User not found - ${username}`, {
             action: "login_failed",
             username,
             reason: "user_not_found",
@@ -233,7 +233,7 @@ export function setupAuth(app: Express) {
         const isValid = await comparePasswords(password, user.password, username);
         if (!isValid) {
           console.log(`Authentication failed: Invalid password for user ${username}`);
-          await logsService.logWarn("auth", `Login failed: Invalid credentials for user - ${username}`, {
+          await logsService.warn("auth", `Login failed: Invalid credentials for user - ${username}`, {
             action: "login_failed",
             username,
             reason: "invalid_credentials",
@@ -243,7 +243,7 @@ export function setupAuth(app: Express) {
         }
 
         console.log(`Authentication successful for user: ${username}`);
-        await logsService.logInfo("auth", `Login successful for user: ${username}`, {
+        await logsService.info("auth", `Login successful for user: ${username}`, {
           action: "login_success",
           username,
           userId: user.id,
@@ -253,7 +253,7 @@ export function setupAuth(app: Express) {
         return done(null, user);
       } catch (err) {
         console.error('Authentication error:', err);
-        await logsService.logError("auth", `Authentication error for user: ${username}`, {
+        await logsService.error("auth", `Authentication error for user: ${username}`, {
           action: "login_error",
           username,
           error: err instanceof Error ? err.message : String(err),
