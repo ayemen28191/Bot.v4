@@ -90,6 +90,37 @@ export const notificationSettings = sqliteTable("notification_settings", {
   updatedAt: text("updated_at").notNull().default(new Date().toISOString()),
 });
 
+// جدول لتسجيل طلبات الإشارات المالية (شامل ومفصل)
+export const signalLogs = sqliteTable("signal_logs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id"), // معرف المستخدم الذي طلب الإشارة
+  username: text("username"), // اسم المستخدم للسهولة في التتبع
+  symbol: text("symbol").notNull(), // الرمز المالي (مثل GBP/USD, BTC/USDT)
+  marketType: text("market_type").notNull(), // نوع السوق (forex, crypto, stocks)
+  timeframe: text("timeframe").notNull(), // الإطار الزمني (1M, 5M, 1H, 1D, etc)
+  platform: text("platform"), // المنصة المستخدمة لجلب البيانات (twelvedata, binance, etc)
+  status: text("status").notNull(), // حالة الطلب (success, failed, processing)
+  signal: text("signal"), // الإشارة الناتجة (buy, sell, wait/neutral)
+  probability: text("probability"), // احتمالية الإشارة (percentage)
+  currentPrice: text("current_price"), // السعر المستخدم في التحليل
+  priceSource: text("price_source"), // مصدر السعر (twelvedata, binance, etc)
+  errorCode: text("error_code"), // كود الخطأ إن وجد
+  errorMessage: text("error_message"), // رسالة الخطأ المفصلة
+  analysisData: text("analysis_data"), // البيانات التقنية المستخدمة (JSON)
+  indicators: text("indicators"), // المؤشرات المستخدمة (RSI, MACD, etc) JSON
+  executionTime: integer("execution_time"), // الوقت المستغرق بالميلي ثانية
+  apiKeysUsed: text("api_keys_used"), // **SECURITY**: معرفات المفاتيح المستخدمة (JSON array of key IDs) - لا تخزن القيم الخام أبداً
+  requestIp: text("request_ip"), // **PRIVACY WARNING**: عنوان IP - بيانات شخصية، يجب حمايتها وفقاً لقوانين الخصوصية
+  userAgent: text("user_agent"), // **PRIVACY WARNING**: معلومات المتصفح - بيانات شخصية قد تحتوي على معلومات تعريفية
+  sessionId: text("session_id"), // **PRIVACY WARNING**: معرف الجلسة - بيانات شخصية حساسة
+  marketOpen: integer("market_open", { mode: "boolean" }), // حالة السوق (مفتوح/مغلق)
+  offlineMode: integer("offline_mode", { mode: "boolean" }).default(false), // وضع عدم الاتصال
+  cacheUsed: integer("cache_used", { mode: "boolean" }).default(false), // تم استخدام البيانات المخزنة
+  requestedAt: text("requested_at").notNull().default(new Date().toISOString()), // وقت الطلب
+  completedAt: text("completed_at"), // وقت الانتهاء من المعالجة
+  createdAt: text("created_at").notNull().default(new Date().toISOString()),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -173,3 +204,35 @@ export type SystemLog = typeof systemLogs.$inferSelect;
 
 export type InsertNotificationSetting = z.infer<typeof insertNotificationSettingSchema>;
 export type NotificationSetting = typeof notificationSettings.$inferSelect;
+
+// سكيما لإنشاء سجل إشارة جديد
+export const insertSignalLogSchema = createInsertSchema(signalLogs).pick({
+  userId: true,
+  username: true,
+  symbol: true,
+  marketType: true,
+  timeframe: true,
+  platform: true,
+  status: true,
+  signal: true,
+  probability: true,
+  currentPrice: true,
+  priceSource: true,
+  errorCode: true,
+  errorMessage: true,
+  analysisData: true,
+  indicators: true,
+  executionTime: true,
+  apiKeysUsed: true,
+  requestIp: true,
+  userAgent: true,
+  sessionId: true,
+  marketOpen: true,
+  offlineMode: true,
+  cacheUsed: true,
+  requestedAt: true,
+  completedAt: true,
+});
+
+export type InsertSignalLog = z.infer<typeof insertSignalLogSchema>;
+export type SignalLog = typeof signalLogs.$inferSelect;

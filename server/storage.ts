@@ -9,7 +9,8 @@ import {
   deploymentServers, type DeploymentServer, type InsertDeploymentServer,
   deploymentLogs, type DeploymentLog, type InsertDeploymentLog,
   systemLogs, type SystemLog, type InsertSystemLog,
-  notificationSettings, type NotificationSetting, type InsertNotificationSetting
+  notificationSettings, type NotificationSetting, type InsertNotificationSetting,
+  signalLogs, type SignalLog, type InsertSignalLog
 } from "@shared/schema";
 import env from "./env";
 
@@ -66,6 +67,30 @@ export interface IStorage {
   createNotificationSetting(setting: InsertNotificationSetting): Promise<NotificationSetting>;
   updateNotificationSetting(id: number, settingData: Partial<InsertNotificationSetting>): Promise<NotificationSetting>;
   deleteNotificationSetting(id: number): Promise<void>;
+
+  // Signal logs methods
+  createSignalLog(log: InsertSignalLog): Promise<SignalLog>;
+  getSignalLogs(filters: { 
+    since?: string; 
+    status?: string; 
+    symbol?: string; 
+    marketType?: string; 
+    userId?: number;
+    platform?: string;
+    limit?: number; 
+    offset?: number; 
+  }): Promise<SignalLog[]>;
+  getSignalLog(id: number): Promise<SignalLog | undefined>;
+  updateSignalLog(id: number, updates: Partial<InsertSignalLog>): Promise<SignalLog>;
+  getSignalLogStats(): Promise<{
+    total: number;
+    statusCounts: Record<string, number>;
+    symbolCounts: Record<string, number>;
+    platformCounts: Record<string, number>;
+    recentErrors: SignalLog[];
+    averageExecutionTime: number;
+  }>;
+  deleteOldSignalLogs(cutoffDate: string): Promise<number>;
 
   // Database access
   getDatabase(): any;
@@ -256,6 +281,64 @@ try {
       console.error('Error creating notification_settings table:', err);
     } else {
       console.log('Notification_settings table created or already exists');
+    }
+  });
+
+  // تأكد من إنشاء جدول سجلات الإشارات المالية
+  sqliteDb.exec(`
+    CREATE TABLE IF NOT EXISTS signal_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      username TEXT,
+      symbol TEXT NOT NULL,
+      market_type TEXT NOT NULL,
+      timeframe TEXT NOT NULL,
+      platform TEXT,
+      status TEXT NOT NULL,
+      signal TEXT,
+      probability TEXT,
+      current_price TEXT,
+      price_source TEXT,
+      error_code TEXT,
+      error_message TEXT,
+      analysis_data TEXT,
+      indicators TEXT,
+      execution_time INTEGER,
+      api_keys_used TEXT,
+      request_ip TEXT,
+      user_agent TEXT,
+      session_id TEXT,
+      market_open INTEGER,
+      offline_mode INTEGER DEFAULT 0,
+      cache_used INTEGER DEFAULT 0,
+      requested_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      completed_at TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating signal_logs table:', err);
+    } else {
+      console.log('Signal_logs table created or already exists');
+      
+      // إضافة فهارس الأداء للحقول المهمة في جدول سجلات الإشارات
+      sqliteDb.exec(`
+        CREATE INDEX IF NOT EXISTS idx_signal_logs_requested_at ON signal_logs(requested_at);
+        CREATE INDEX IF NOT EXISTS idx_signal_logs_status ON signal_logs(status);
+        CREATE INDEX IF NOT EXISTS idx_signal_logs_symbol ON signal_logs(symbol);
+        CREATE INDEX IF NOT EXISTS idx_signal_logs_platform ON signal_logs(platform);
+        CREATE INDEX IF NOT EXISTS idx_signal_logs_user_id ON signal_logs(user_id);
+        CREATE INDEX IF NOT EXISTS idx_signal_logs_symbol_status ON signal_logs(symbol, status);
+        CREATE INDEX IF NOT EXISTS idx_signal_logs_user_status ON signal_logs(user_id, status);
+        CREATE INDEX IF NOT EXISTS idx_signal_logs_requested_at_status ON signal_logs(requested_at, status);
+      `, (indexErr) => {
+        if (indexErr) {
+          console.error('Error creating signal_logs indexes:', indexErr);
+        } else {
+          console.log('✅ Signal_logs performance indexes created successfully');
+        }
+      });
     }
   });
 
@@ -1540,6 +1623,458 @@ export class DatabaseStorage implements IStorage {
           resolve();
         }
       });
+    });
+  }
+
+  // ========================= دوال إدارة سجلات الإشارات المالية =========================
+
+  async createSignalLog(log: InsertSignalLog): Promise<SignalLog> {
+    return new Promise<SignalLog>((resolve, reject) => {
+      const now = new Date().toISOString();
+      
+      sqliteDb.run(
+        `INSERT INTO signal_logs (
+          user_id, username, symbol, market_type, timeframe, platform, status, signal, 
+          probability, current_price, price_source, error_code, error_message, 
+          analysis_data, indicators, execution_time, api_keys_used, request_ip, 
+          user_agent, session_id, market_open, offline_mode, cache_used, 
+          requested_at, completed_at, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          log.userId || null, log.username || null, log.symbol, log.marketType, log.timeframe,
+          log.platform || null, log.status, log.signal || null, log.probability || null,
+          log.currentPrice || null, log.priceSource || null, log.errorCode || null,
+          log.errorMessage || null, log.analysisData || null, log.indicators || null,
+          log.executionTime || null, log.apiKeysUsed || null, log.requestIp || null,
+          log.userAgent || null, log.sessionId || null, log.marketOpen ? 1 : 0,
+          log.offlineMode ? 1 : 0, log.cacheUsed ? 1 : 0, log.requestedAt || now,
+          log.completedAt || null, now
+        ],
+        function(err) {
+          if (err) {
+            console.error('Error creating signal log:', err);
+            reject(err);
+          } else {
+            const newLog: SignalLog = {
+              id: this.lastID,
+              userId: log.userId || null,
+              username: log.username || null,
+              symbol: log.symbol,
+              marketType: log.marketType,
+              timeframe: log.timeframe,
+              platform: log.platform || null,
+              status: log.status,
+              signal: log.signal || null,
+              probability: log.probability || null,
+              currentPrice: log.currentPrice || null,
+              priceSource: log.priceSource || null,
+              errorCode: log.errorCode || null,
+              errorMessage: log.errorMessage || null,
+              analysisData: log.analysisData || null,
+              indicators: log.indicators || null,
+              executionTime: log.executionTime || null,
+              apiKeysUsed: log.apiKeysUsed || null,
+              requestIp: log.requestIp || null,
+              userAgent: log.userAgent || null,
+              sessionId: log.sessionId || null,
+              marketOpen: log.marketOpen || null,
+              offlineMode: log.offlineMode || false,
+              cacheUsed: log.cacheUsed || false,
+              requestedAt: log.requestedAt || now,
+              completedAt: log.completedAt || null,
+              createdAt: now
+            };
+            resolve(newLog);
+          }
+        }
+      );
+    });
+  }
+
+  async getSignalLogs(filters: {
+    since?: string;
+    status?: string;
+    symbol?: string;
+    marketType?: string;
+    userId?: number;
+    platform?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<SignalLog[]> {
+    return new Promise<SignalLog[]>((resolve, reject) => {
+      let query = 'SELECT * FROM signal_logs WHERE 1=1';
+      const params: any[] = [];
+
+      if (filters.since) {
+        query += ' AND requested_at >= ?';
+        params.push(filters.since);
+      }
+
+      if (filters.status) {
+        query += ' AND status = ?';
+        params.push(filters.status);
+      }
+
+      if (filters.symbol) {
+        query += ' AND symbol = ?';
+        params.push(filters.symbol);
+      }
+
+      if (filters.marketType) {
+        query += ' AND market_type = ?';
+        params.push(filters.marketType);
+      }
+
+      if (filters.userId) {
+        query += ' AND user_id = ?';
+        params.push(filters.userId);
+      }
+
+      if (filters.platform) {
+        query += ' AND platform = ?';
+        params.push(filters.platform);
+      }
+
+      query += ' ORDER BY requested_at DESC';
+
+      if (filters.limit) {
+        query += ' LIMIT ?';
+        params.push(filters.limit);
+
+        if (filters.offset) {
+          query += ' OFFSET ?';
+          params.push(filters.offset);
+        }
+      }
+
+      sqliteDb.all(query, params, (err, rows: any[]) => {
+        if (err) {
+          console.error('Error getting signal logs:', err);
+          reject(err);
+        } else {
+          const logs: SignalLog[] = rows.map(row => ({
+            id: row.id,
+            userId: row.user_id,
+            username: row.username,
+            symbol: row.symbol,
+            marketType: row.market_type,
+            timeframe: row.timeframe,
+            platform: row.platform,
+            status: row.status,
+            signal: row.signal,
+            probability: row.probability,
+            currentPrice: row.current_price,
+            priceSource: row.price_source,
+            errorCode: row.error_code,
+            errorMessage: row.error_message,
+            analysisData: row.analysis_data,
+            indicators: row.indicators,
+            executionTime: row.execution_time,
+            apiKeysUsed: row.api_keys_used,
+            requestIp: row.request_ip,
+            userAgent: row.user_agent,
+            sessionId: row.session_id,
+            marketOpen: !!row.market_open,
+            offlineMode: !!row.offline_mode,
+            cacheUsed: !!row.cache_used,
+            requestedAt: row.requested_at,
+            completedAt: row.completed_at,
+            createdAt: row.created_at
+          }));
+          resolve(logs);
+        }
+      });
+    });
+  }
+
+  async getSignalLog(id: number): Promise<SignalLog | undefined> {
+    return new Promise<SignalLog | undefined>((resolve, reject) => {
+      sqliteDb.get('SELECT * FROM signal_logs WHERE id = ?', [id], (err, row: any) => {
+        if (err) {
+          console.error('Error getting signal log by ID:', err);
+          reject(err);
+        } else {
+          if (!row) {
+            resolve(undefined);
+          } else {
+            const log: SignalLog = {
+              id: row.id,
+              userId: row.user_id,
+              username: row.username,
+              symbol: row.symbol,
+              marketType: row.market_type,
+              timeframe: row.timeframe,
+              platform: row.platform,
+              status: row.status,
+              signal: row.signal,
+              probability: row.probability,
+              currentPrice: row.current_price,
+              priceSource: row.price_source,
+              errorCode: row.error_code,
+              errorMessage: row.error_message,
+              analysisData: row.analysis_data,
+              indicators: row.indicators,
+              executionTime: row.execution_time,
+              apiKeysUsed: row.api_keys_used,
+              requestIp: row.request_ip,
+              userAgent: row.user_agent,
+              sessionId: row.session_id,
+              marketOpen: !!row.market_open,
+              offlineMode: !!row.offline_mode,
+              cacheUsed: !!row.cache_used,
+              requestedAt: row.requested_at,
+              completedAt: row.completed_at,
+              createdAt: row.created_at
+            };
+            resolve(log);
+          }
+        }
+      });
+    });
+  }
+
+  async updateSignalLog(id: number, updates: Partial<InsertSignalLog>): Promise<SignalLog> {
+    return new Promise<SignalLog>(async (resolve, reject) => {
+      try {
+        const updateFields: string[] = [];
+        const updateValues: any[] = [];
+
+        if (updates.status !== undefined) {
+          updateFields.push('status = ?');
+          updateValues.push(updates.status);
+        }
+
+        if (updates.signal !== undefined) {
+          updateFields.push('signal = ?');
+          updateValues.push(updates.signal);
+        }
+
+        if (updates.probability !== undefined) {
+          updateFields.push('probability = ?');
+          updateValues.push(updates.probability);
+        }
+
+        if (updates.currentPrice !== undefined) {
+          updateFields.push('current_price = ?');
+          updateValues.push(updates.currentPrice);
+        }
+
+        if (updates.errorCode !== undefined) {
+          updateFields.push('error_code = ?');
+          updateValues.push(updates.errorCode);
+        }
+
+        if (updates.errorMessage !== undefined) {
+          updateFields.push('error_message = ?');
+          updateValues.push(updates.errorMessage);
+        }
+
+        if (updates.analysisData !== undefined) {
+          updateFields.push('analysis_data = ?');
+          updateValues.push(updates.analysisData);
+        }
+
+        if (updates.indicators !== undefined) {
+          updateFields.push('indicators = ?');
+          updateValues.push(updates.indicators);
+        }
+
+        if (updates.executionTime !== undefined) {
+          updateFields.push('execution_time = ?');
+          updateValues.push(updates.executionTime);
+        }
+
+        if (updates.completedAt !== undefined) {
+          updateFields.push('completed_at = ?');
+          updateValues.push(updates.completedAt);
+        }
+
+        if (updates.cacheUsed !== undefined) {
+          updateFields.push('cache_used = ?');
+          updateValues.push(updates.cacheUsed ? 1 : 0);
+        }
+
+        if (updateFields.length === 0) {
+          throw new Error('لا توجد حقول للتحديث');
+        }
+
+        updateValues.push(id);
+
+        sqliteDb.run(
+          `UPDATE signal_logs SET ${updateFields.join(', ')} WHERE id = ?`,
+          updateValues,
+          async (err) => {
+            if (err) {
+              console.error('Error updating signal log:', err);
+              reject(err);
+            } else {
+              const updatedLog = await this.getSignalLog(id);
+              if (!updatedLog) {
+                reject(new Error('فشل في الحصول على سجل الإشارة المحدث'));
+              } else {
+                resolve(updatedLog);
+              }
+            }
+          }
+        );
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  async getSignalLogStats(): Promise<{
+    total: number;
+    statusCounts: Record<string, number>;
+    symbolCounts: Record<string, number>;
+    platformCounts: Record<string, number>;
+    recentErrors: SignalLog[];
+    averageExecutionTime: number;
+  }> {
+    return new Promise((resolve, reject) => {
+      // احصل على العدد الإجمالي
+      sqliteDb.get('SELECT COUNT(*) as total FROM signal_logs', (err, totalRow: any) => {
+        if (err) {
+          console.error('Error getting signal logs count:', err);
+          reject(err);
+          return;
+        }
+
+        const total = totalRow.total;
+
+        // احصل على إحصائيات الحالة
+        sqliteDb.all(
+          'SELECT status, COUNT(*) as count FROM signal_logs GROUP BY status',
+          (err, statusRows: any[]) => {
+            if (err) {
+              console.error('Error getting status counts:', err);
+              reject(err);
+              return;
+            }
+
+            const statusCounts: Record<string, number> = {};
+            statusRows.forEach(row => {
+              statusCounts[row.status] = row.count;
+            });
+
+            // احصل على إحصائيات الرموز
+            sqliteDb.all(
+              'SELECT symbol, COUNT(*) as count FROM signal_logs GROUP BY symbol ORDER BY count DESC LIMIT 10',
+              (err, symbolRows: any[]) => {
+                if (err) {
+                  console.error('Error getting symbol counts:', err);
+                  reject(err);
+                  return;
+                }
+
+                const symbolCounts: Record<string, number> = {};
+                symbolRows.forEach(row => {
+                  symbolCounts[row.symbol] = row.count;
+                });
+
+                // احصل على إحصائيات المنصات
+                sqliteDb.all(
+                  'SELECT platform, COUNT(*) as count FROM signal_logs WHERE platform IS NOT NULL GROUP BY platform',
+                  (err, platformRows: any[]) => {
+                    if (err) {
+                      console.error('Error getting platform counts:', err);
+                      reject(err);
+                      return;
+                    }
+
+                    const platformCounts: Record<string, number> = {};
+                    platformRows.forEach(row => {
+                      platformCounts[row.platform] = row.count;
+                    });
+
+                    // احصل على الأخطاء الأخيرة
+                    sqliteDb.all(
+                      'SELECT * FROM signal_logs WHERE status = "failed" ORDER BY requested_at DESC LIMIT 10',
+                      (err, errorRows: any[]) => {
+                        if (err) {
+                          console.error('Error getting recent errors:', err);
+                          reject(err);
+                          return;
+                        }
+
+                        const recentErrors: SignalLog[] = errorRows.map(row => ({
+                          id: row.id,
+                          userId: row.user_id,
+                          username: row.username,
+                          symbol: row.symbol,
+                          marketType: row.market_type,
+                          timeframe: row.timeframe,
+                          platform: row.platform,
+                          status: row.status,
+                          signal: row.signal,
+                          probability: row.probability,
+                          currentPrice: row.current_price,
+                          priceSource: row.price_source,
+                          errorCode: row.error_code,
+                          errorMessage: row.error_message,
+                          analysisData: row.analysis_data,
+                          indicators: row.indicators,
+                          executionTime: row.execution_time,
+                          apiKeysUsed: row.api_keys_used,
+                          requestIp: row.request_ip,
+                          userAgent: row.user_agent,
+                          sessionId: row.session_id,
+                          marketOpen: !!row.market_open,
+                          offlineMode: !!row.offline_mode,
+                          cacheUsed: !!row.cache_used,
+                          requestedAt: row.requested_at,
+                          completedAt: row.completed_at,
+                          createdAt: row.created_at
+                        }));
+
+                        // احصل على متوسط وقت التنفيذ
+                        sqliteDb.get(
+                          'SELECT AVG(execution_time) as avg_time FROM signal_logs WHERE execution_time IS NOT NULL',
+                          (err, avgRow: any) => {
+                            if (err) {
+                              console.error('Error getting average execution time:', err);
+                              reject(err);
+                              return;
+                            }
+
+                            const averageExecutionTime = avgRow.avg_time || 0;
+
+                            resolve({
+                              total,
+                              statusCounts,
+                              symbolCounts,
+                              platformCounts,
+                              recentErrors,
+                              averageExecutionTime
+                            });
+                          }
+                        );
+                      }
+                    );
+                  }
+                );
+              }
+            );
+          }
+        );
+      });
+    });
+  }
+
+  async deleteOldSignalLogs(cutoffDate: string): Promise<number> {
+    return new Promise<number>((resolve, reject) => {
+      sqliteDb.run(
+        'DELETE FROM signal_logs WHERE requested_at < ?',
+        [cutoffDate],
+        function(err) {
+          if (err) {
+            console.error('Error deleting old signal logs:', err);
+            reject(err);
+          } else {
+            resolve(this.changes || 0);
+          }
+        }
+      );
     });
   }
 }
