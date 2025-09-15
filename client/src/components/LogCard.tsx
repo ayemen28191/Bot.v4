@@ -50,15 +50,15 @@ const generateColor = (str: string): string => {
 const getLevelIcon = (level: string) => {
   switch (level.toLowerCase()) {
     case 'error':
-      return <AlertTriangle className="h-4 w-4 text-red-500" />;
+      return <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 xl:h-3 xl:w-3 text-red-500" />;
     case 'warn':
-      return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+      return <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 xl:h-3 xl:w-3 text-yellow-500" />;
     case 'info':
-      return <Info className="h-4 w-4 text-blue-500" />;
+      return <Info className="h-3 w-3 sm:h-4 sm:w-4 xl:h-3 xl:w-3 text-blue-500" />;
     case 'debug':
-      return <Monitor className="h-4 w-4 text-gray-500" />;
+      return <Monitor className="h-3 w-3 sm:h-4 sm:w-4 xl:h-3 xl:w-3 text-gray-500" />;
     default:
-      return <Info className="h-4 w-4 text-gray-400" />;
+      return <Info className="h-3 w-3 sm:h-4 sm:w-4 xl:h-3 xl:w-3 text-gray-400" />;
   }
 };
 
@@ -131,60 +131,62 @@ export function LogCard({ log, onClick, isSelected }: LogCardProps) {
 
   return (
     <Card 
-      className={`mb-3 transition-all duration-200 hover:shadow-md border-l-4 ${getLevelBorderColor(log.level)} ${
+      className={`mb-2 sm:mb-3 xl:mb-2 transition-all duration-200 hover:shadow-md border-l-4 ${getLevelBorderColor(log.level)} ${
         isSelected ? 'ring-2 ring-primary bg-primary/5' : ''
       } ${getLevelBgColor(log.level)} cursor-pointer`}
       onClick={onClick}
       data-testid={`log-card-${log.id}`}
     >
-      <CardContent className="p-4">
-        <div className="flex items-start space-x-3 space-x-reverse">
+      <CardContent className="p-3 sm:p-4 xl:p-3">
+        <div className="flex items-start space-x-2 sm:space-x-3 xl:space-x-2 space-x-reverse">
           {/* صورة المستخدم أو أيقونة المصدر */}
           <div className="flex-shrink-0">
             {isUserAction ? (
-              <Avatar className="h-10 w-10 border-2" style={{ borderColor: userColor }}>
+              <Avatar className="h-8 w-8 sm:h-10 sm:w-10 xl:h-8 xl:w-8 border-2" style={{ borderColor: userColor }}>
                 <AvatarFallback 
                   style={{ backgroundColor: userColor, color: 'white' }}
-                  className="text-sm font-bold"
+                  className="text-xs sm:text-sm xl:text-xs font-bold"
                 >
                   {getInitials(displayName)}
                 </AvatarFallback>
               </Avatar>
             ) : (
               <div 
-                className="h-10 w-10 rounded-full flex items-center justify-center border-2"
+                className="h-8 w-8 sm:h-10 sm:w-10 xl:h-8 xl:w-8 rounded-full flex items-center justify-center border-2"
                 style={{ backgroundColor: userColor + '20', borderColor: userColor }}
               >
-                <Monitor className="h-5 w-5" style={{ color: userColor }} />
+                <Monitor className="h-4 w-4 sm:h-5 sm:w-5 xl:h-4 xl:w-4" style={{ color: userColor }} />
               </div>
             )}
           </div>
 
           {/* محتوى السجل */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center space-x-2 space-x-reverse">
-                <h3 className="text-sm font-semibold text-foreground truncate" data-testid="log-display-name">
+            <div className="flex items-center justify-between mb-1 xl:mb-0.5">
+              <div className="flex items-center space-x-1.5 sm:space-x-2 xl:space-x-1.5 space-x-reverse">
+                <h3 className="text-sm xl:text-sm font-semibold text-foreground truncate" data-testid="log-display-name">
                   {displayName}
                 </h3>
                 {isUserAction && (
-                  <Badge variant="secondary" className="text-xs">
-                    <User className="h-3 w-3 mr-1" />
-                    {t('user_badge')}
+                  <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
+                    <User className="h-3 w-3 xl:h-2.5 xl:w-2.5 mr-0.5 sm:mr-1 xl:mr-0.5" />
+                    <span className="hidden sm:inline xl:hidden">{t('user_badge')}</span>
+                    <span className="sm:hidden xl:inline">U</span>
                   </Badge>
                 )}
               </div>
               
               <div className="flex items-center space-x-1 space-x-reverse">
                 <div className="flex items-center text-xs text-muted-foreground">
-                  <Clock className="h-3 w-3 mr-1" />
-                  {formatTime(log.timestamp)}
+                  <Clock className="h-3 w-3 xl:h-2.5 xl:w-2.5 mr-0.5 sm:mr-1 xl:mr-0.5" />
+                  <span className="hidden sm:inline xl:hidden">{formatTime(log.timestamp)}</span>
+                  <span className="sm:hidden xl:inline">{formatTime(log.timestamp).slice(0, 5)}</span>
                 </div>
                 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                      <MoreHorizontal className="h-4 w-4" />
+                    <Button variant="ghost" size="sm" className="h-10 w-10 sm:h-6 sm:w-6 xl:h-6 xl:w-6 p-0">
+                      <MoreHorizontal className="h-4 w-4 sm:h-4 sm:w-4 xl:h-3 xl:w-3" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -212,16 +214,17 @@ export function LogCard({ log, onClick, isSelected }: LogCardProps) {
             </div>
 
             {/* مستوى السجل والمصدر */}
-            <div className="flex items-center space-x-2 space-x-reverse mb-2">
+            <div className="flex items-center space-x-1.5 sm:space-x-2 xl:space-x-1.5 space-x-reverse mb-1.5 sm:mb-2 xl:mb-1.5">
               <Badge 
                 variant={log.level === 'error' ? 'destructive' : 'secondary'}
-                className="text-xs flex items-center space-x-1 space-x-reverse"
+                className="text-xs flex items-center space-x-0.5 sm:space-x-1 xl:space-x-0.5 space-x-reverse px-1.5 sm:px-2 xl:px-1.5 py-0.5"
               >
                 {getLevelIcon(log.level)}
-                <span>{log.level.toUpperCase()}</span>
+                <span className="hidden sm:inline xl:hidden">{log.level.toUpperCase()}</span>
+                <span className="sm:hidden xl:inline">{log.level.slice(0, 3).toUpperCase()}</span>
               </Badge>
               <span className="text-xs text-muted-foreground">•</span>
-              <span className="text-xs text-muted-foreground">{log.source}</span>
+              <span className="text-xs text-muted-foreground truncate flex-1">{log.source}</span>
             </div>
 
             {/* الرسالة */}
@@ -233,8 +236,8 @@ export function LogCard({ log, onClick, isSelected }: LogCardProps) {
 
             {/* البيانات الإضافية عند التوسع */}
             {isExpanded && log.meta && (
-              <div className="mt-3 p-3 bg-muted/30 rounded-lg">
-                <h4 className="text-xs font-semibold mb-2 text-muted-foreground">{t('additional_data')}</h4>
+              <div className="mt-2 sm:mt-3 xl:mt-2 p-2 sm:p-3 xl:p-2 bg-muted/30 rounded-lg">
+                <h4 className="text-xs font-semibold mb-1.5 sm:mb-2 xl:mb-1.5 text-muted-foreground">{t('additional_data')}</h4>
                 <pre className="text-xs text-muted-foreground whitespace-pre-wrap overflow-x-auto">
                   {typeof log.meta === 'string' ? log.meta : JSON.stringify(log.meta, null, 2)}
                 </pre>

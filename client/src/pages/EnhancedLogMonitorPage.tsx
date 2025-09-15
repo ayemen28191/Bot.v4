@@ -445,8 +445,8 @@ export default function EnhancedLogMonitorPage() {
           </div>
         </div>
         
-        <ScrollArea ref={scrollRef} className="h-[calc(100vh-480px)] sm:h-[calc(100vh-460px)]">
-          <div className="pb-20 space-y-3">
+        <ScrollArea ref={scrollRef} className="h-[calc(100vh-460px)] sm:h-[calc(100vh-440px)] xl:h-[calc(100vh-420px)]">
+          <div className="pb-20 space-y-2 sm:space-y-3 xl:space-y-2">
             {filteredLogs.length === 0 ? (
               <Card className="border-dashed border-2 bg-muted/30 backdrop-blur-sm" data-testid="no-logs-card">
                 <CardContent className="p-8 sm:p-12 text-center">
@@ -460,7 +460,7 @@ export default function EnhancedLogMonitorPage() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-2 sm:space-y-3" data-testid="logs-list">
+              <div className="space-y-1.5 sm:space-y-2 xl:space-y-1.5" data-testid="logs-list">
                 {filteredLogs.map((log, index) => (
                   <div 
                     key={log.id} 
