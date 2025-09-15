@@ -41,7 +41,10 @@ class LogsService {
         source: newLog.source,
         message: newLog.message,
         meta: newLog.meta || null,
-        userId: newLog.userId || null
+        userId: newLog.userId || null,
+        username: newLog.username || null,
+        userDisplayName: newLog.userDisplayName || null,
+        userAvatar: newLog.userAvatar || null
       };
       this.addToBuffer(fallbackLog);
       return fallbackLog;
@@ -208,6 +211,65 @@ class LogsService {
 
   async logDebug(source: string, message: string, meta?: any, userId?: number): Promise<SystemLog> {
     return this.log({ level: 'debug', source, message, meta: meta ? JSON.stringify(meta) : undefined, userId });
+  }
+
+  // دوال محسنة لتسجيل السجلات مع بيانات المستخدم
+  async logUserError(source: string, message: string, user: { id: number, username: string, displayName?: string }, meta?: any): Promise<SystemLog> {
+    return this.log({ 
+      level: 'error', 
+      source, 
+      message, 
+      meta: meta ? JSON.stringify(meta) : undefined, 
+      userId: user.id,
+      username: user.username,
+      userDisplayName: user.displayName || user.username,
+      userAvatar: this.generateUserColor(user.username)
+    });
+  }
+
+  async logUserInfo(source: string, message: string, user: { id: number, username: string, displayName?: string }, meta?: any): Promise<SystemLog> {
+    return this.log({ 
+      level: 'info', 
+      source, 
+      message, 
+      meta: meta ? JSON.stringify(meta) : undefined, 
+      userId: user.id,
+      username: user.username,
+      userDisplayName: user.displayName || user.username,
+      userAvatar: this.generateUserColor(user.username)
+    });
+  }
+
+  async logUserWarn(source: string, message: string, user: { id: number, username: string, displayName?: string }, meta?: any): Promise<SystemLog> {
+    return this.log({ 
+      level: 'warn', 
+      source, 
+      message, 
+      meta: meta ? JSON.stringify(meta) : undefined, 
+      userId: user.id,
+      username: user.username,
+      userDisplayName: user.displayName || user.username,
+      userAvatar: this.generateUserColor(user.username)
+    });
+  }
+
+  // دالة لتوليد لون للمستخدم
+  private generateUserColor(username: string): string {
+    const colors = [
+      'hsl(142, 76%, 36%)', // أخضر
+      'hsl(221, 83%, 53%)', // أزرق
+      'hsl(262, 83%, 58%)', // بنفسجي
+      'hsl(346, 87%, 43%)', // أحمر
+      'hsl(33, 100%, 50%)', // برتقالي
+      'hsl(280, 100%, 70%)', // وردي
+      'hsl(200, 100%, 50%)', // سماوي
+      'hsl(120, 100%, 25%)', // أخضر داكن
+    ];
+    let hash = 0;
+    for (let i = 0; i < username.length; i++) {
+      hash = username.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return colors[Math.abs(hash) % colors.length];
   }
 
   // إضافة مستمع للسجلات الجديدة (للـ WebSocket)

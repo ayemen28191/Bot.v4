@@ -6,6 +6,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* CSS Utilities */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 /* Base typography and font settings */
 .font-arabic, .rtl, [lang="ar"] {
   font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, sans-serif;
