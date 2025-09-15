@@ -14,7 +14,8 @@ import {
   Settings, 
   UserCog,
   Users,
-  TestTube
+  TestTube,
+  FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
@@ -65,7 +66,7 @@ export function AdminSidebar({ collapsed = false, onToggle, className }: AdminSi
       path: "/admin", 
       icon: <LayoutGrid className="h-5 w-5" />, 
       label: t('dashboard'),
-      isActive: isActive("/admin") && !location.includes("api-keys") && !location.includes("servers") && !location.includes("settings")
+      isActive: isActive("/admin") && !location.includes("api-keys") && !location.includes("servers") && !location.includes("settings") && !location.includes("users") && !location.includes("system-test") && !location.includes("logs")
     },
     { 
       path: "/admin/users", 
@@ -92,9 +93,16 @@ export function AdminSidebar({ collapsed = false, onToggle, className }: AdminSi
       isActive: isActive("/settings")
     },
     { 
-      icon: TestTube, 
-      label: 'اختبار النظام', 
-      path: '/admin/system-test' 
+      path: "/admin/system-test", 
+      icon: <TestTube className="h-5 w-5" />, 
+      label: 'اختبار النظام',
+      isActive: isActive("/admin/system-test")
+    },
+    { 
+      path: "/admin/logs", 
+      icon: <FileText className="h-5 w-5" />, 
+      label: 'مراقب السجلات',
+      isActive: isActive("/admin/logs")
     },
   ];
 

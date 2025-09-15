@@ -7,7 +7,9 @@ import {
   users, type User, type InsertUser,
   configKeys, type ConfigKey, type InsertConfigKey,
   deploymentServers, type DeploymentServer, type InsertDeploymentServer,
-  deploymentLogs, type DeploymentLog, type InsertDeploymentLog
+  deploymentLogs, type DeploymentLog, type InsertDeploymentLog,
+  systemLogs, type SystemLog, type InsertSystemLog,
+  notificationSettings, type NotificationSetting, type InsertNotificationSetting
 } from "@shared/schema";
 import env from "./env";
 
@@ -49,6 +51,21 @@ export interface IStorage {
   getAllLogs(limit?: number): Promise<DeploymentLog[]>;
   createLog(log: InsertDeploymentLog): Promise<DeploymentLog>;
   updateLog(id: number, status: string, message?: string, details?: string, endTime?: string): Promise<DeploymentLog>;
+
+  // System logs methods
+  createSystemLog(log: InsertSystemLog): Promise<SystemLog>;
+  getSystemLogs(filters: { since?: string; level?: string; source?: string; limit?: number; offset?: number }): Promise<SystemLog[]>;
+  getLogsCount(): Promise<number>;
+  getLogsCountByLevel(): Promise<Record<string, number>>;
+  getLogsCountBySource(): Promise<Record<string, number>>;
+  deleteOldSystemLogs(cutoffDate: string): Promise<number>;
+
+  // Notification settings methods
+  getNotificationSetting(id: number): Promise<NotificationSetting | undefined>;
+  getAllNotificationSettings(): Promise<NotificationSetting[]>;
+  createNotificationSetting(setting: InsertNotificationSetting): Promise<NotificationSetting>;
+  updateNotificationSetting(id: number, settingData: Partial<InsertNotificationSetting>): Promise<NotificationSetting>;
+  deleteNotificationSetting(id: number): Promise<void>;
 
   // Database access
   getDatabase(): any;
@@ -195,6 +212,50 @@ try {
       console.error('Error creating deployment_logs table:', err);
     } else {
       console.log('Deployment_logs table created or already exists');
+    }
+  });
+
+  // تأكد من إنشاء جدول السجلات النظام
+  sqliteDb.exec(`
+    CREATE TABLE IF NOT EXISTS system_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      timestamp TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      level TEXT NOT NULL,
+      source TEXT NOT NULL,
+      message TEXT NOT NULL,
+      meta TEXT,
+      user_id INTEGER,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating system_logs table:', err);
+    } else {
+      console.log('System_logs table created or already exists');
+    }
+  });
+
+  // تأكد من إنشاء جدول إعدادات الإشعارات
+  sqliteDb.exec(`
+    CREATE TABLE IF NOT EXISTS notification_settings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL,
+      name TEXT NOT NULL,
+      is_enabled INTEGER DEFAULT 1,
+      webhook_url TEXT,
+      chat_id TEXT,
+      alert_levels TEXT NOT NULL DEFAULT 'error,warn',
+      threshold INTEGER DEFAULT 1,
+      cooldown_minutes INTEGER DEFAULT 5,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating notification_settings table:', err);
+    } else {
+      console.log('Notification_settings table created or already exists');
     }
   });
 
@@ -1164,6 +1225,321 @@ export class DatabaseStorage implements IStorage {
           }
         }
       );
+    });
+  }
+
+  // ========================= دوال إدارة السجلات النظام =========================
+
+  async createSystemLog(log: InsertSystemLog): Promise<SystemLog> {
+    return new Promise<SystemLog>((resolve, reject) => {
+      const now = new Date().toISOString();
+      
+      sqliteDb.run(
+        'INSERT INTO system_logs (timestamp, level, source, message, meta, user_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [now, log.level, log.source, log.message, log.meta || null, log.userId || null, now],
+        function(err) {
+          if (err) {
+            console.error('Error creating system log:', err);
+            reject(err);
+          } else {
+            const newLog: SystemLog = {
+              id: this.lastID,
+              timestamp: now,
+              level: log.level,
+              source: log.source,
+              message: log.message,
+              meta: log.meta || null,
+              userId: log.userId || null,
+              createdAt: now
+            };
+            resolve(newLog);
+          }
+        }
+      );
+    });
+  }
+
+  async getSystemLogs(filters: { since?: string; level?: string; source?: string; limit?: number; offset?: number }): Promise<SystemLog[]> {
+    return new Promise<SystemLog[]>((resolve, reject) => {
+      let query = 'SELECT * FROM system_logs WHERE 1=1';
+      const params: any[] = [];
+
+      if (filters.since) {
+        query += ' AND timestamp >= ?';
+        params.push(filters.since);
+      }
+
+      if (filters.level) {
+        query += ' AND level = ?';
+        params.push(filters.level);
+      }
+
+      if (filters.source) {
+        query += ' AND source = ?';
+        params.push(filters.source);
+      }
+
+      query += ' ORDER BY timestamp DESC';
+
+      if (filters.limit) {
+        query += ' LIMIT ?';
+        params.push(filters.limit);
+      }
+
+      if (filters.offset) {
+        query += ' OFFSET ?';
+        params.push(filters.offset);
+      }
+
+      sqliteDb.all(query, params, (err, rows: any[]) => {
+        if (err) {
+          console.error('Error getting system logs:', err);
+          reject(err);
+        } else {
+          const logs: SystemLog[] = rows.map(row => ({
+            id: row.id,
+            timestamp: row.timestamp,
+            level: row.level,
+            source: row.source,
+            message: row.message,
+            meta: row.meta,
+            userId: row.user_id,
+            createdAt: row.created_at
+          }));
+          resolve(logs);
+        }
+      });
+    });
+  }
+
+  async getLogsCount(): Promise<number> {
+    return new Promise<number>((resolve, reject) => {
+      sqliteDb.get('SELECT COUNT(*) as count FROM system_logs', [], (err, row: any) => {
+        if (err) {
+          console.error('Error getting logs count:', err);
+          reject(err);
+        } else {
+          resolve(row.count || 0);
+        }
+      });
+    });
+  }
+
+  async getLogsCountByLevel(): Promise<Record<string, number>> {
+    return new Promise<Record<string, number>>((resolve, reject) => {
+      sqliteDb.all('SELECT level, COUNT(*) as count FROM system_logs GROUP BY level', [], (err, rows: any[]) => {
+        if (err) {
+          console.error('Error getting logs count by level:', err);
+          reject(err);
+        } else {
+          const result: Record<string, number> = {};
+          rows.forEach(row => {
+            result[row.level] = row.count;
+          });
+          resolve(result);
+        }
+      });
+    });
+  }
+
+  async getLogsCountBySource(): Promise<Record<string, number>> {
+    return new Promise<Record<string, number>>((resolve, reject) => {
+      sqliteDb.all('SELECT source, COUNT(*) as count FROM system_logs GROUP BY source', [], (err, rows: any[]) => {
+        if (err) {
+          console.error('Error getting logs count by source:', err);
+          reject(err);
+        } else {
+          const result: Record<string, number> = {};
+          rows.forEach(row => {
+            result[row.source] = row.count;
+          });
+          resolve(result);
+        }
+      });
+    });
+  }
+
+  async deleteOldSystemLogs(cutoffDate: string): Promise<number> {
+    return new Promise<number>((resolve, reject) => {
+      sqliteDb.run('DELETE FROM system_logs WHERE timestamp < ?', [cutoffDate], function(err) {
+        if (err) {
+          console.error('Error deleting old system logs:', err);
+          reject(err);
+        } else {
+          resolve(this.changes || 0);
+        }
+      });
+    });
+  }
+
+  // ========================= دوال إدارة إعدادات الإشعارات =========================
+
+  async getNotificationSetting(id: number): Promise<NotificationSetting | undefined> {
+    return new Promise<NotificationSetting | undefined>((resolve, reject) => {
+      sqliteDb.get('SELECT * FROM notification_settings WHERE id = ?', [id], (err, row: any) => {
+        if (err) {
+          console.error('Error getting notification setting:', err);
+          reject(err);
+        } else {
+          if (!row) {
+            resolve(undefined);
+          } else {
+            const setting: NotificationSetting = {
+              id: row.id,
+              type: row.type,
+              name: row.name,
+              isEnabled: !!row.is_enabled,
+              webhookUrl: row.webhook_url,
+              chatId: row.chat_id,
+              alertLevels: row.alert_levels,
+              threshold: row.threshold,
+              cooldownMinutes: row.cooldown_minutes,
+              createdAt: row.created_at,
+              updatedAt: row.updated_at
+            };
+            resolve(setting);
+          }
+        }
+      });
+    });
+  }
+
+  async getAllNotificationSettings(): Promise<NotificationSetting[]> {
+    return new Promise<NotificationSetting[]>((resolve, reject) => {
+      sqliteDb.all('SELECT * FROM notification_settings ORDER BY created_at DESC', [], (err, rows: any[]) => {
+        if (err) {
+          console.error('Error getting all notification settings:', err);
+          reject(err);
+        } else {
+          const settings: NotificationSetting[] = rows.map(row => ({
+            id: row.id,
+            type: row.type,
+            name: row.name,
+            isEnabled: !!row.is_enabled,
+            webhookUrl: row.webhook_url,
+            chatId: row.chat_id,
+            alertLevels: row.alert_levels,
+            threshold: row.threshold,
+            cooldownMinutes: row.cooldown_minutes,
+            createdAt: row.created_at,
+            updatedAt: row.updated_at
+          }));
+          resolve(settings);
+        }
+      });
+    });
+  }
+
+  async createNotificationSetting(setting: InsertNotificationSetting): Promise<NotificationSetting> {
+    return new Promise<NotificationSetting>((resolve, reject) => {
+      const now = new Date().toISOString();
+      
+      sqliteDb.run(
+        'INSERT INTO notification_settings (type, name, is_enabled, webhook_url, chat_id, alert_levels, threshold, cooldown_minutes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [setting.type, setting.name, setting.isEnabled ? 1 : 0, setting.webhookUrl || null, setting.chatId || null, setting.alertLevels, setting.threshold, setting.cooldownMinutes, now, now],
+        function(err) {
+          if (err) {
+            console.error('Error creating notification setting:', err);
+            reject(err);
+          } else {
+            const newSetting: NotificationSetting = {
+              id: this.lastID,
+              type: setting.type,
+              name: setting.name,
+              isEnabled: setting.isEnabled || true,
+              webhookUrl: setting.webhookUrl || null,
+              chatId: setting.chatId || null,
+              alertLevels: setting.alertLevels || 'error,warn',
+              threshold: setting.threshold || 1,
+              cooldownMinutes: setting.cooldownMinutes || 5,
+              createdAt: now,
+              updatedAt: now
+            };
+            resolve(newSetting);
+          }
+        }
+      );
+    });
+  }
+
+  async updateNotificationSetting(id: number, settingData: Partial<InsertNotificationSetting>): Promise<NotificationSetting> {
+    return new Promise<NotificationSetting>(async (resolve, reject) => {
+      try {
+        const updateFields: string[] = [];
+        const updateValues: any[] = [];
+
+        if (settingData.name !== undefined) {
+          updateFields.push('name = ?');
+          updateValues.push(settingData.name);
+        }
+
+        if (settingData.isEnabled !== undefined) {
+          updateFields.push('is_enabled = ?');
+          updateValues.push(settingData.isEnabled ? 1 : 0);
+        }
+
+        if (settingData.webhookUrl !== undefined) {
+          updateFields.push('webhook_url = ?');
+          updateValues.push(settingData.webhookUrl);
+        }
+
+        if (settingData.chatId !== undefined) {
+          updateFields.push('chat_id = ?');
+          updateValues.push(settingData.chatId);
+        }
+
+        if (settingData.alertLevels !== undefined) {
+          updateFields.push('alert_levels = ?');
+          updateValues.push(settingData.alertLevels);
+        }
+
+        if (settingData.threshold !== undefined) {
+          updateFields.push('threshold = ?');
+          updateValues.push(settingData.threshold);
+        }
+
+        if (settingData.cooldownMinutes !== undefined) {
+          updateFields.push('cooldown_minutes = ?');
+          updateValues.push(settingData.cooldownMinutes);
+        }
+
+        updateFields.push('updated_at = ?');
+        updateValues.push(new Date().toISOString());
+        updateValues.push(id);
+
+        sqliteDb.run(
+          `UPDATE notification_settings SET ${updateFields.join(', ')} WHERE id = ?`,
+          updateValues,
+          async (err) => {
+            if (err) {
+              console.error('Error updating notification setting:', err);
+              reject(err);
+            } else {
+              const updatedSetting = await this.getNotificationSetting(id);
+              if (!updatedSetting) {
+                reject(new Error('فشل في الحصول على إعدادات الإشعار المحدثة'));
+              } else {
+                resolve(updatedSetting);
+              }
+            }
+          }
+        );
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  async deleteNotificationSetting(id: number): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      sqliteDb.run('DELETE FROM notification_settings WHERE id = ?', [id], (err) => {
+        if (err) {
+          console.error('Error deleting notification setting:', err);
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
     });
   }
 }

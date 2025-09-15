@@ -26,6 +26,7 @@ const AdminResetPassword = lazy(() => import('@/pages/AdminResetPassword'));
 const AuthPage = lazy(() => import('@/pages/auth-page'));
 const NotFound = lazy(() => import('@/pages/not-found'));
 const SystemTestPage = lazy(() => import('@/pages/SystemTestPage'));
+const LogMonitorPage = lazy(() => import('@/pages/LogMonitorPage'));
 
 // مكون للتعامل مع وضع HTTPS في Replit ومنع حلقة إعادة التحميل
 function HTTPSHandler() {
@@ -156,6 +157,7 @@ function Router() {
         <ProtectedAdminRoute path="/admin/api-keys" component={ApiKeysManagement} />
         <ProtectedAdminRoute path="/admin/deployment" component={DeploymentPage} />
         <ProtectedAdminRoute path="/admin/system-test" component={SystemTestPage} />
+        <ProtectedAdminRoute path="/admin/logs" component={LogMonitorPage} />
         <ProtectedAdminRoute path="/admin/reset-password" component={AdminResetPassword} />
         
         {/* صفحة 404 في النهاية */}

@@ -63,6 +63,33 @@ export const deploymentLogs = sqliteTable("deployment_logs", {
   createdAt: text("created_at").notNull().default(new Date().toISOString()),
 });
 
+// جدول لتخزين السجلات (للمراقبة والتحليل)
+export const systemLogs = sqliteTable("system_logs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  timestamp: text("timestamp").notNull().default(new Date().toISOString()),
+  level: text("level").notNull(), // error | warn | info | debug
+  source: text("source").notNull(), // مصدر السجل (api, auth, deployment, etc.)
+  message: text("message").notNull(),
+  meta: text("meta"), // JSON string for additional data
+  userId: integer("user_id"), // المستخدم المتعلق بالسجل (اختياري)
+  createdAt: text("created_at").notNull().default(new Date().toISOString()),
+});
+
+// جدول لإعدادات الإشعارات
+export const notificationSettings = sqliteTable("notification_settings", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  type: text("type").notNull(), // telegram | slack | webhook
+  name: text("name").notNull(), // اسم التكوين
+  isEnabled: integer("is_enabled", { mode: "boolean" }).default(true),
+  webhookUrl: text("webhook_url"), // URL للـ webhook أو bot token
+  chatId: text("chat_id"), // معرف المحادثة لـ Telegram
+  alertLevels: text("alert_levels").notNull().default("error,warn"), // مستويات التنبيه
+  threshold: integer("threshold").default(1), // عدد الأخطاء قبل الإشعار
+  cooldownMinutes: integer("cooldown_minutes").default(5), // فترة الانتظار بين الإشعارات
+  createdAt: text("created_at").notNull().default(new Date().toISOString()),
+  updatedAt: text("updated_at").notNull().default(new Date().toISOString()),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -119,3 +146,30 @@ export type DeploymentServer = typeof deploymentServers.$inferSelect;
 
 export type InsertDeploymentLog = z.infer<typeof insertDeploymentLogSchema>;
 export type DeploymentLog = typeof deploymentLogs.$inferSelect;
+
+// سكيما لإنشاء سجل نظام جديد
+export const insertSystemLogSchema = createInsertSchema(systemLogs).pick({
+  level: true,
+  source: true,
+  message: true,
+  meta: true,
+  userId: true,
+});
+
+// سكيما لإعدادات الإشعارات
+export const insertNotificationSettingSchema = createInsertSchema(notificationSettings).pick({
+  type: true,
+  name: true,
+  isEnabled: true,
+  webhookUrl: true,
+  chatId: true,
+  alertLevels: true,
+  threshold: true,
+  cooldownMinutes: true,
+});
+
+export type InsertSystemLog = z.infer<typeof insertSystemLogSchema>;
+export type SystemLog = typeof systemLogs.$inferSelect;
+
+export type InsertNotificationSetting = z.infer<typeof insertNotificationSettingSchema>;
+export type NotificationSetting = typeof notificationSettings.$inferSelect;
