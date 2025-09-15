@@ -79,7 +79,14 @@ export function setupAuth(app: Express) {
   });
 
   app.set("trust proxy", 1);
-  app.use(session(sessionSettings));
+  
+  // إنشاء session middleware وحفظه للاستخدام مع Socket.IO
+  const sessionMiddleware = session(sessionSettings);
+  app.use(sessionMiddleware);
+  
+  // حفظ session middleware في app للوصول إليه من Socket.IO
+  app.set('sessionMiddleware', sessionMiddleware);
+  
   app.use(passport.initialize());
   app.use(passport.session());
 

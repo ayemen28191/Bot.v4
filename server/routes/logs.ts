@@ -112,17 +112,24 @@ router.delete('/logs/old', isAdmin, async (req, res) => {
 
 // ========================= مسارات إعدادات الإشعارات =========================
 
-// دالة لإخفاء الحقول الحساسة
+// دالة لإخفاء الحقول الحساسة (دعم snake_case و camelCase)
 function redactSensitiveFields(setting: any) {
   const redacted = { ...setting };
   
-  // إخفاء webhook URL وmajor chat ID للأمان
+  // إخفاء webhook URL (دعم snake_case و camelCase)
   if (redacted.webhookUrl) {
     redacted.webhookUrl = redacted.webhookUrl.substring(0, 20) + '***REDACTED***';
   }
+  if (redacted.webhook_url) {
+    redacted.webhook_url = redacted.webhook_url.substring(0, 20) + '***REDACTED***';
+  }
   
+  // إخفاء chat ID (دعم snake_case و camelCase)
   if (redacted.chatId) {
     redacted.chatId = '***REDACTED***';
+  }
+  if (redacted.chat_id) {
+    redacted.chat_id = '***REDACTED***';
   }
   
   return redacted;

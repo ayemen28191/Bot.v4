@@ -12,6 +12,9 @@ import { heatmapRouter } from "./routes/heatmap";
 import { proxyRouter } from "./routes/proxy";
 import marketStatusRoutes from './routes/market-status';
 import testCountdownRoutes from './routes/test-countdown';
+import { logsRouter } from "./routes/logs";
+import { Server as SocketIOServer } from "socket.io";
+import { logsService } from "./services/logs-service";
 
 
 // التأكد من أن المستخدم مُسجل الدخول
@@ -55,6 +58,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // تسجيل مسارات الوكيل
   app.use("/api/proxy", proxyRouter);
+
+  // تسجيل مسارات السجلات والإشعارات (للمشرفين فقط)
+  app.use("/api", logsRouter);
 
   // ===== مسارات إعدادات المستخدم =====
 
@@ -519,6 +525,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/proxy', proxyRouter);
   app.use('/api/update', updateRouter);
   app.use('/api/config-keys', apiKeysRouter);
+
+  // =================== إعداد WebSocket للسجلات المباشرة ===================
+  
+  const io = new SocketIOServer(httpServer, {
+    cors: {
+      origin: function (origin, callback) {
+        // نفس إعدادات CORS الموجودة في app
+        if (!origin) return callback(null, true);
+        
+        const allowedOrigins = [
+          'http://localhost:3000',
+          'http://localhost:5000',
+          'http://127.0.0.1:3000',
+          'http://127.0.0.1:5000',
+          'http://0.0.0.0:5000',
+          /https:\/\/.*\.replit\.dev$/,
+          /https:\/\/.*\.repl\.co$/,
+          /https:\/\/.*\.replit\.app$/,
+        ];
+        
+        const isAllowed = allowedOrigins.some(allowed => {
+          if (typeof allowed === 'string') {
+            return origin === allowed;
+          } else if (allowed instanceof RegExp) {
+            return allowed.test(origin);
+          }
+          return false;
+        });
+        
+        if (isAllowed || process.env.NODE_ENV === 'development') {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'), false);
+        }
+      },
+      credentials: true
+    }
+  });
+
+  // إعداد middleware للتحقق من الجلسة في Socket.IO
+  const sessionMiddleware = app.get('sessionMiddleware');
+  if (sessionMiddleware) {
+    // استخدام نفس session middleware المستخدم في Express
+    io.engine.use((req: any, res: any, next: any) => {
+      sessionMiddleware(req, res, next);
+    });
+  }
+
+  // إدارة اتصالات WebSocket للسجلات
+  io.on('connection', (socket) => {
+    console.log('[WebSocket] Client connected for logs:', socket.id);
+
+    // التحقق من الجلسة والصلاحيات عند الاتصال
+    const req = socket.request as any;
+    let isAdmin = false;
+    
+    if (req.session && req.session.passport && req.session.passport.user) {
+      // جلب بيانات المستخدم من قاعدة البيانات للتحقق من صلاحية المشرف
+      storage.getUser(req.session.passport.user).then(user => {
+        if (user && user.isAdmin) {
+          isAdmin = true;
+          console.log('[WebSocket] Admin user connected:', user.username);
+        } else {
+          console.log('[WebSocket] Non-admin user connected, will deny log access');
+        }
+      }).catch(error => {
+        console.error('[WebSocket] Error checking user permissions:', error);
+      });
+    } else {
+      console.log('[WebSocket] Unauthenticated connection, will deny log access');
+    }
+
+    // انضمام إلى قناة السجلات (للمشرفين المعتمدين فقط)
+    socket.on('subscribe-logs', async (data) => {
+      try {
+        // التحقق من صلاحية المشرف
+        if (!req.session || !req.session.passport || !req.session.passport.user) {
+          socket.emit('subscription-error', { error: 'غير مسجل الدخول' });
+          return;
+        }
+
+        const user = await storage.getUser(req.session.passport.user);
+        if (!user || !user.isAdmin) {
+          socket.emit('subscription-error', { error: 'غير مصرح بالوصول - مخصص للمشرفين فقط' });
+          console.log('[WebSocket] Non-admin user attempted to subscribe to logs:', user?.username || 'unknown');
+          return;
+        }
+
+        // الانضمام لقناة السجلات
+        socket.join('log-updates');
+        socket.emit('subscribed', { channel: 'log-updates' });
+        
+        // إرسال السجلات الحديثة للسياق
+        const recentLogs = logsService.getRecentLogs(50);
+        socket.emit('recent-logs', recentLogs);
+        
+        console.log('[WebSocket] Admin user subscribed to logs:', user.username);
+      } catch (error) {
+        console.error('[WebSocket] Subscription failed:', error);
+        socket.emit('subscription-error', { error: 'فشل في الاشتراك' });
+      }
+    });
+
+    socket.on('disconnect', () => {
+      console.log('[WebSocket] Client disconnected:', socket.id);
+    });
+  });
+
+  // إضافة إشعار WebSocket للسجلات الجديدة
+  logsService.onNewLog((log) => {
+    io.to('log-updates').emit('new-log', log);
+  });
 
   return httpServer;
 }

@@ -7,6 +7,7 @@ class LogsService {
   private logBuffer: SystemLog[] = [];
   private bufferSize = 1000;
   private notificationConfigs: Map<string, NotificationConfig> = new Map();
+  private newLogCallbacks: Array<(log: SystemLog) => void> = [];
 
   // تسجيل سجل جديد
   async log(logData: Omit<InsertSystemLog, 'timestamp'>): Promise<SystemLog> {
@@ -23,6 +24,9 @@ class LogsService {
       
       // فحص الإشعارات
       await this.checkNotifications(savedLog);
+      
+      // إشعار المستمعين بالسجل الجديد
+      this.notifyNewLog(savedLog);
       
       console.log(`[LogsService] Logged: ${logData.level} - ${logData.source} - ${logData.message.slice(0, 100)}`);
       return savedLog;
@@ -204,6 +208,30 @@ class LogsService {
 
   async logDebug(source: string, message: string, meta?: any, userId?: number): Promise<SystemLog> {
     return this.log({ level: 'debug', source, message, meta: meta ? JSON.stringify(meta) : undefined, userId });
+  }
+
+  // إضافة مستمع للسجلات الجديدة (للـ WebSocket)
+  onNewLog(callback: (log: SystemLog) => void): void {
+    this.newLogCallbacks.push(callback);
+  }
+
+  // إزالة مستمع للسجلات الجديدة
+  offNewLog(callback: (log: SystemLog) => void): void {
+    const index = this.newLogCallbacks.indexOf(callback);
+    if (index > -1) {
+      this.newLogCallbacks.splice(index, 1);
+    }
+  }
+
+  // إشعار جميع المستمعين بسجل جديد
+  private notifyNewLog(log: SystemLog): void {
+    this.newLogCallbacks.forEach(callback => {
+      try {
+        callback(log);
+      } catch (error) {
+        console.error('[LogsService] Error in new log callback:', error);
+      }
+    });
   }
 }
 

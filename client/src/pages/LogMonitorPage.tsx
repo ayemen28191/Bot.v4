@@ -25,54 +25,83 @@ export default function LogMonitorPage() {
   const [filterSource, setFilterSource] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [lastFetch, setLastFetch] = useState<string | null>(null);
-  const wsRef = useRef<WebSocket | null>(null);
+  const wsRef = useRef<any>(null);
   const tailRef = useRef<HTMLDivElement | null>(null);
   const { toast } = useToast();
 
-  // connect WebSocket with reconnection
+  // connect Socket.IO with reconnection  
   useEffect(() => {
-    let closedByUser = false;
-    let retry = 0;
+    let socket: any = null;
+    let isDestroyed = false;
 
-    function connect() {
-      const wsUrl = import.meta.env.VITE_WS_LOGS_URL || `ws://${window.location.host}/ws/logs`;
-      const ws = new WebSocket(wsUrl);
-      wsRef.current = ws;
+    async function connect() {
+      if (isDestroyed) return;
+      
+      try {
+        const { io } = await import('socket.io-client');
+        
+        socket = io({
+          transports: ['websocket', 'polling'], // دعم للـ polling كـ fallback
+          reconnection: true,
+          reconnectionAttempts: 5,
+          reconnectionDelay: 1000,
+        });
+        
+        wsRef.current = socket;
 
-      ws.onopen = () => {
-        console.log('[LogMonitor] WS connected');
-        retry = 0;
-      };
+        socket.on('connect', () => {
+          console.log('[LogMonitor] Socket.IO connected');
+          // الاشتراك في قناة السجلات
+          socket.emit('subscribe-logs');
+        });
 
-      ws.onmessage = (ev) => {
-        if (paused) return; // ignore while paused
-        try {
-          const data = JSON.parse(ev.data);
-          handleIncomingLog(data);
-        } catch (err) {
-          // if not JSON, wrap as message
-          handleIncomingLog({ ts: new Date().toISOString(), level: "info", message: String(ev.data) });
-        }
-      };
+        socket.on('subscribed', (data: any) => {
+          console.log('[LogMonitor] Subscribed to logs channel:', data.channel);
+        });
 
-      ws.onclose = () => {
-        if (closedByUser) return;
-        const timeout = Math.min(30000, 1000 * Math.pow(2, retry));
-        retry++;
-        console.warn(`[LogMonitor] WS closed, reconnect in ${timeout}ms`);
-        setTimeout(connect, timeout);
-      };
+        socket.on('recent-logs', (logsArray: any[]) => {
+          console.log('[LogMonitor] Received recent logs:', logsArray.length);
+          if (Array.isArray(logsArray)) {
+            logsArray.forEach(logData => handleIncomingLog(logData));
+          }
+        });
 
-      ws.onerror = (e) => {
-        console.error('[LogMonitor] WS error', e);
-        ws.close();
-      };
+        socket.on('new-log', (logData: any) => {
+          if (paused) return; // ignore while paused
+          console.log('[LogMonitor] Received new log:', logData);
+          handleIncomingLog(logData);
+        });
+
+        socket.on('disconnect', (reason: string) => {
+          console.warn('[LogMonitor] Socket.IO disconnected:', reason);
+        });
+
+        socket.on('connect_error', (error: any) => {
+          console.error('[LogMonitor] Socket.IO connection error:', error);
+        });
+
+        socket.on('subscription-error', (data: any) => {
+          console.error('[LogMonitor] Subscription error:', data.error);
+          toast({
+            title: "خطأ في الاشتراك",
+            description: data.error || "فشل في الاشتراك في السجلات المباشرة",
+            variant: "destructive"
+          });
+        });
+
+      } catch (error) {
+        console.error('[LogMonitor] Failed to load Socket.IO:', error);
+        // سقوط للـ polling فقط إذا فشل Socket.IO
+      }
     }
 
     connect();
     return () => {
-      closedByUser = true;
-      wsRef.current?.close();
+      isDestroyed = true;
+      if (socket) {
+        socket.disconnect();
+        socket = null;
+      }
     };
   }, [paused]);
 
