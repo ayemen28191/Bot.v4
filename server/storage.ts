@@ -2525,11 +2525,12 @@ export class DatabaseStorage implements IStorage {
     offset?: number;
   }): Promise<UserCounter[]> {
     return new Promise<UserCounter[]>((resolve, reject) => {
+      // Optimized query using normalized_user_id for consistent NULL handling and index utilization
       let query = 'SELECT * FROM user_counters WHERE period = ?';
       const params: any[] = [filters.period];
 
       if (filters.userId !== undefined) {
-        query += ' AND user_id = ?';
+        query += ' AND normalized_user_id = COALESCE(?, -1)';
         params.push(filters.userId);
       }
 
@@ -2548,7 +2549,17 @@ export class DatabaseStorage implements IStorage {
         params.push(filters.dateTo);
       }
 
-      query += ' ORDER BY date DESC, action ASC';
+      // Optimize ordering to enable index-only ordering based on filters
+      if (filters.userId !== undefined) {
+        // When userId is specified, ORDER BY date DESC only to use idx_user_counters_user_period
+        query += ' ORDER BY date DESC';
+      } else if (filters.action) {
+        // When filtering by action, ORDER BY date DESC to use idx_user_counters_action_period
+        query += ' ORDER BY date DESC';
+      } else {
+        // General case: order by date DESC for consistent results
+        query += ' ORDER BY date DESC';
+      }
 
       if (filters.limit) {
         query += ' LIMIT ?';
@@ -2600,7 +2611,8 @@ export class DatabaseStorage implements IStorage {
       mostActiveDay: string | null;
       mostActiveAction: string | null;
     }>((resolve, reject) => {
-      let baseQuery = 'FROM user_counters WHERE user_id = ?';
+      // Using normalized_user_id for efficient index utilization with NULL values
+      let baseQuery = 'FROM user_counters WHERE normalized_user_id = COALESCE(?, -1)';
       const baseParams: any[] = [userId];
 
       if (actions && actions.length > 0) {
@@ -2611,7 +2623,7 @@ export class DatabaseStorage implements IStorage {
 
       // Get daily totals
       sqliteDb.all(
-        `SELECT action, SUM(count) as total ${baseQuery} AND period = 'daily' GROUP BY action`,
+        `SELECT action, SUM(count) as total ${baseQuery} AND period = 'daily' GROUP BY action ORDER BY action`,
         baseParams,
         (err, dailyRows: any[]) => {
           if (err) {
@@ -2627,7 +2639,7 @@ export class DatabaseStorage implements IStorage {
 
           // Get monthly totals
           sqliteDb.all(
-            `SELECT action, SUM(count) as total ${baseQuery} AND period = 'monthly' GROUP BY action`,
+            `SELECT action, SUM(count) as total ${baseQuery} AND period = 'monthly' GROUP BY action ORDER BY action`,
             baseParams,
             (err, monthlyRows: any[]) => {
               if (err) {
