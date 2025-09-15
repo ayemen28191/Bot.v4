@@ -1,334 +1,253 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'wouter';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'wouter';
 import { t } from '@/lib/i18n';
 import { getCurrentLanguage } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 
-// أيقونات
-import {
-  LayoutDashboard,
-  Users,
-  KeyRound,
-  Server,
-  Settings,
-  LogOut,
-  ChevronLeft,
-  ChevronRight,
-  Menu,
-  X
-} from 'lucide-react';
-
-// مكونات واجهة المستخدم
+// Components
+import { AdminSidebar, AdminBottomNav } from '@/features/admin';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { AdminBottomNav } from '@/features/admin';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
-interface NavItemProps {
-  href: string;
-  icon: React.ReactNode;
-  label: string;
-  isActive: boolean;
-  onClick?: () => void;
-  isSidebarCollapsed?: boolean;
-  isRTL?: boolean;
-}
-
-const NavItem = ({ 
-  href, 
-  icon, 
-  label, 
-  isActive, 
-  onClick, 
-  isSidebarCollapsed = false,
-  isRTL = false
-}: NavItemProps) => {
-  return (
-    <Link href={href}>
-      <Button
-        variant="ghost"
-        size={isSidebarCollapsed ? "icon" : "default"}
-        onClick={onClick}
-        className={cn(
-          "w-full justify-start",
-          isActive 
-            ? "bg-primary/20 text-primary" 
-            : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-          isSidebarCollapsed && "h-10 w-10"
-        )}
-      >
-        {isRTL ? (
-          <>
-            {!isSidebarCollapsed && <span className="mr-auto">{label}</span>}
-            <span className={isSidebarCollapsed ? "" : "ml-2"}>{icon}</span>
-          </>
-        ) : (
-          <>
-            <span className={isSidebarCollapsed ? "" : "mr-2"}>{icon}</span>
-            {!isSidebarCollapsed && <span>{label}</span>}
-          </>
-        )}
-      </Button>
-    </Link>
-  );
-};
+// Icons
+import { Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
   title?: string;
+  pageTitle?: string;
+  maxWidth?: boolean;
+  noPadding?: boolean;
 }
 
-export function AdminLayout({ children, title }: AdminLayoutProps) {
+export function AdminLayout({ 
+  children, 
+  title, 
+  pageTitle,
+  maxWidth = true,
+  noPadding = false 
+}: AdminLayoutProps) {
   const [location] = useLocation();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const isRTL = getCurrentLanguage() === 'ar';
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  
+  // Sidebar state management
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('admin-sidebar-collapsed');
+      return saved ? JSON.parse(saved) : false;
+    }
+    return false;
+  });
+
+  // Mobile menu state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // قائمة التنقل
-  const menuItems = [
-    {
-      href: "/admin",
-      icon: <LayoutDashboard size={18} />,
-      label: t('dashboard'),
-      isActive: location === "/admin"
-    },
-    {
-      href: "/admin/users",
-      icon: <Users size={18} />,
-      label: t('users'),
-      isActive: location.includes('/admin/users')
-    },
-    {
-      href: "/admin/api-keys",
-      icon: <KeyRound size={18} />,
-      label: t('api_keys_label'),
-      isActive: location.includes('/admin/api-keys')
-    },
-    {
-      href: "/admin/deployment",
-      icon: <Server size={18} />,
-      label: t('deployment_servers_label'),
-      isActive: location.includes('/admin/deployment')
-    },
-    {
-      href: "/settings",
-      icon: <Settings size={18} />,
-      label: t('settings'),
-      isActive: location.includes('/settings')
+  // Save sidebar state to localStorage
+  useEffect(() => {
+    localStorage.setItem('admin-sidebar-collapsed', JSON.stringify(sidebarCollapsed));
+  }, [sidebarCollapsed]);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location]);
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 768) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
     }
-  ];
+
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
 
   if (!user?.isAdmin) {
-    return <div className="text-center p-8">{t('admin_login_required')}</div>;
-  }
-
-  const handleLogout = async () => {
-    if (confirm(t('confirm_logout'))) {
-      await logout();
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-background text-foreground flex">
-      {/* الشريط الجانبي للشاشات الكبيرة */}
-      <aside
-        className={cn(
-          "hidden md:flex h-screen fixed z-10 flex-col transition-all duration-200 ease-in-out",
-          sidebarCollapsed ? "w-16" : "w-64",
-          isRTL ? "right-0 border-l border-border" : "left-0 border-r border-border",
-          "bg-background/95 backdrop-blur-sm"
-        )}
-      >
-        <div className="flex items-center justify-between p-4 h-14">
-          {!sidebarCollapsed && (
-            <div className="font-bold text-lg text-primary">{t('admin_panel')}</div>
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-foreground"
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            title={sidebarCollapsed ? t('expand') : t('collapse')}
-          >
-            {isRTL ? (
-              sidebarCollapsed ? <ChevronLeft size={18} /> : <ChevronRight size={18} />
-            ) : (
-              sidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />
-            )}
-          </Button>
-        </div>
-
-        <Separator className="bg-border" />
-
-        <div className="flex-1 overflow-auto py-4">
-          <nav className="space-y-1 px-2">
-            {menuItems.map((item) => (
-              <TooltipProvider key={item.href} delayDuration={400}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div>
-                      <NavItem
-                        href={item.href}
-                        icon={item.icon}
-                        label={item.label}
-                        isActive={item.isActive}
-                        isSidebarCollapsed={sidebarCollapsed}
-                        isRTL={isRTL}
-                      />
-                    </div>
-                  </TooltipTrigger>
-                  {sidebarCollapsed && (
-                    <TooltipContent side={isRTL ? "left" : "right"}>
-                      <p>{item.label}</p>
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              </TooltipProvider>
-            ))}
-          </nav>
-        </div>
-
-        <Separator className="bg-border" />
-
-        <div className="p-4">
-          <TooltipProvider delayDuration={400}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div>
-                  <Button
-                    variant="ghost"
-                    size={sidebarCollapsed ? "icon" : "default"}
-                    onClick={handleLogout}
-                    className={cn(
-                      sidebarCollapsed ? "h-10 w-10" : "w-full justify-start",
-                      "text-muted-foreground hover:bg-accent hover:text-destructive"
-                    )}
-                  >
-                    {isRTL ? (
-                      <>
-                        {!sidebarCollapsed && <span className="mr-auto">{t('logout')}</span>}
-                        <span className={sidebarCollapsed ? "" : "ml-2"}><LogOut size={18} /></span>
-                      </>
-                    ) : (
-                      <>
-                        <span className={sidebarCollapsed ? "" : "mr-2"}><LogOut size={18} /></span>
-                        {!sidebarCollapsed && <span>{t('logout')}</span>}
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </TooltipTrigger>
-              {sidebarCollapsed && (
-                <TooltipContent side={isRTL ? "left" : "right"}>
-                  <p>{t('logout')}</p>
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      </aside>
-
-      {/* القائمة المتنقلة للجوال */}
-      <div className={cn(
-        "fixed inset-0 z-50 bg-background/80 md:hidden transition-opacity",
-        mobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-      )}>
-        <div className={cn(
-          "fixed inset-y-0 w-3/4 max-w-sm bg-background z-50 transition-transform duration-300 ease-in-out border-border",
-          isRTL ? "right-0 border-l" : "left-0 border-r",
-          mobileMenuOpen ? "translate-x-0" : isRTL ? "translate-x-full" : "-translate-x-full"
-        )}>
-          <div className="flex items-center justify-between p-4 h-14">
-            <div className="font-bold text-lg text-primary">{t('admin_panel')}</div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground hover:text-foreground"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <X size={18} />
-            </Button>
-          </div>
-
-          <Separator className="bg-border" />
-
-          <div className="flex-1 overflow-auto py-4">
-            <nav className="space-y-1 px-2">
-              {menuItems.map((item) => (
-                <NavItem
-                  key={item.href}
-                  href={item.href}
-                  icon={item.icon}
-                  label={item.label}
-                  isActive={item.isActive}
-                  onClick={() => setMobileMenuOpen(false)}
-                  isRTL={isRTL}
-                />
-              ))}
-            </nav>
-          </div>
-
-          <Separator className="bg-border" />
-
-          <div className="p-4">
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-muted-foreground hover:bg-accent hover:text-destructive"
-              onClick={handleLogout}
-            >
-              {isRTL ? (
-                <>
-                  <span className="mr-auto">{t('logout')}</span>
-                  <span className="ml-2"><LogOut size={18} /></span>
-                </>
-              ) : (
-                <>
-                  <span className="mr-2"><LogOut size={18} /></span>
-                  <span>{t('logout')}</span>
-                </>
-              )}
-            </Button>
-          </div>
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4 p-8">
+          <h1 className="text-2xl font-bold text-foreground">{t('access_denied')}</h1>
+          <p className="text-muted-foreground">{t('admin_login_required')}</p>
         </div>
       </div>
+    );
+  }
 
-      {/* المحتوى الرئيسي */}
+  const displayTitle = pageTitle || title || t('admin_panel');
+
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Desktop Sidebar */}
+      <AdminSidebar
+        collapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        className="hidden md:flex"
+      />
+
+      {/* Mobile Overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-300"
+          onClick={() => setMobileMenuOpen(false)}
+          data-testid="mobile-overlay"
+        />
+      )}
+
+      {/* Main Content Area */}
       <main className={cn(
-        "flex-1 min-h-screen w-full transition-all duration-200 ease-in-out",
-        "md:delay-150",
-        isRTL 
-          ? sidebarCollapsed ? "md:pr-16" : "md:pr-64" 
-          : sidebarCollapsed ? "md:pl-16" : "md:pl-64"
+        "min-h-screen transition-all duration-300 ease-in-out",
+        // Desktop sidebar spacing
+        "md:transition-[margin] md:duration-300",
+        isRTL ? (
+          sidebarCollapsed ? "md:mr-16" : "md:mr-64"
+        ) : (
+          sidebarCollapsed ? "md:ml-16" : "md:ml-64"
+        ),
+        // Mobile spacing for bottom navigation
+        "pb-16 md:pb-0"
       )}>
-        {/* شريط العنوان */}
-        <header className="sticky top-0 z-20 flex items-center justify-between h-14 px-4 border-b border-border bg-background/75 backdrop-blur-sm">
-          <div className="flex items-center gap-2">
+        {/* Header */}
+        <header className={cn(
+          "sticky top-0 z-30 border-b border-border/50 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60",
+          "h-14 flex items-center justify-between px-4 sm:px-6",
+          "bg-background/80"
+        )}>
+          {/* Left side / Right side for RTL */}
+          <div className={cn(
+            "flex items-center gap-3",
+            isRTL && "flex-row-reverse"
+          )}>
+            {/* Mobile menu button */}
             <Button
               variant="ghost"
               size="icon"
+              data-testid="button-mobile-menu"
               className="md:hidden text-muted-foreground hover:text-foreground"
               onClick={() => setMobileMenuOpen(true)}
             >
-              <Menu size={18} />
+              <Menu className="h-4 w-4" />
             </Button>
-            <h1 className="text-lg font-semibold text-foreground">{t('admin_panel')}</h1>
+
+            {/* Sidebar toggle for desktop */}
+            <Button
+              variant="ghost"
+              size="icon"
+              data-testid="button-toggle-sidebar"
+              className="hidden md:flex text-muted-foreground hover:text-foreground"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              title={sidebarCollapsed ? t('expand_sidebar') : t('collapse_sidebar')}
+            >
+              {isRTL ? (
+                sidebarCollapsed ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />
+              ) : (
+                sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />
+              )}
+            </Button>
+
+            {/* Page title */}
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg font-semibold text-foreground truncate">
+                {displayTitle}
+              </h1>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-foreground hidden sm:inline-block">
-              {user.displayName} 
-              <span className="text-xs text-muted-foreground ml-1">({user.username})</span>
-            </span>
+          {/* Right side / Left side for RTL */}
+          <div className={cn(
+            "flex items-center gap-2",
+            isRTL && "flex-row-reverse"
+          )}>
+            {/* User info - hidden on mobile */}
+            <div className="hidden sm:flex items-center gap-2 text-sm">
+              <span className="text-foreground font-medium">
+                {user.displayName}
+              </span>
+              <span className="text-muted-foreground">
+                ({user.username})
+              </span>
+            </div>
+
+            {/* Theme toggle */}
+            <ThemeToggle />
           </div>
         </header>
 
-        {/* محتوى الصفحة */}
-        <div className="p-4 sm:p-6">
-          {children}
+        {/* Content Area */}
+        <div className={cn(
+          "min-h-[calc(100vh-3.5rem)]",
+          maxWidth && "max-w-7xl mx-auto",
+          !noPadding && "p-4 sm:p-6 lg:p-8"
+        )}>
+          {/* Safe area for mobile devices */}
+          <div className={cn(
+            "min-h-full",
+            // Additional bottom padding for mobile safe area and AdminBottomNav
+            "pb-[max(env(safe-area-inset-bottom),1rem)] md:pb-0"
+          )}>
+            {children}
+          </div>
         </div>
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <AdminBottomNav />
+
+      {/* Mobile Menu Drawer */}
+      <div className={cn(
+        "fixed inset-y-0 w-80 max-w-[85vw] bg-background z-50 transition-transform duration-300 ease-in-out md:hidden",
+        "border-border shadow-2xl",
+        isRTL ? "right-0 border-l" : "left-0 border-r",
+        mobileMenuOpen ? "translate-x-0" : isRTL ? "translate-x-full" : "-translate-x-full"
+      )}>
+        {/* Mobile menu header */}
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <h2 className="text-lg font-bold text-primary">
+            {t('admin_panel')}
+          </h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            data-testid="button-close-mobile-menu"
+            onClick={() => setMobileMenuOpen(false)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Mobile menu content */}
+        <div className="flex-1 overflow-y-auto">
+          <AdminSidebar
+            collapsed={false}
+            className="relative w-full border-0"
+          />
+        </div>
+
+        {/* Mobile menu footer */}
+        <div className="p-4 border-t border-border">
+          <div className="text-center text-sm text-muted-foreground">
+            <div className="font-medium">{user.displayName}</div>
+            <div className="text-xs">({user.username})</div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
