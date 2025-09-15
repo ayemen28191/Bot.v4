@@ -242,10 +242,10 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
   }
 
   return (
-    <div className="mb-4 space-y-4" data-testid="stats-dashboard-expanded">
+    <div className="mb-4 space-y-4 xl:space-y-6" data-testid="stats-dashboard-expanded">
       {/* الرأس المضغوط */}
       <Card className="border-primary/20">
-        <CardHeader className="pb-2 pt-3">
+        <CardHeader className="pb-2 pt-3 xl:pb-3 xl:pt-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 space-x-reverse">
               <div className="p-1.5 bg-primary/10 rounded-md">
@@ -271,11 +271,11 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
         </CardHeader>
       </Card>
 
-      {/* المقاييس السريعة المحسّنة للهاتف */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3" data-testid="quick-metrics-grid">
+      {/* المقاييس السريعة المحسّنة */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-3 xl:gap-4" data-testid="quick-metrics-grid">
         {/* إجمالي السجلات */}
         <Card className="hover:shadow-md transition-shadow" data-testid="metric-total-logs">
-          <CardContent className="p-3">
+          <CardContent className="p-3 xl:p-4">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-xs text-muted-foreground mb-1">{t('total_logs')}</div>
@@ -292,7 +292,7 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
         <Card className="hover:shadow-md transition-shadow cursor-pointer" 
               onClick={() => handleChartClick({ level: 'error' }, 'level')}
               data-testid="metric-errors">
-          <CardContent className="p-3">
+          <CardContent className="p-3 xl:p-4">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-xs text-muted-foreground mb-1">{t('total_errors')}</div>
@@ -312,7 +312,7 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
         <Card className="hover:shadow-md transition-shadow cursor-pointer" 
               onClick={() => handleChartClick({ level: 'warn' }, 'level')}
               data-testid="metric-warnings">
-          <CardContent className="p-3">
+          <CardContent className="p-3 xl:p-4">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-xs text-muted-foreground mb-1">{t('total_warnings')}</div>
@@ -332,7 +332,7 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
         <Card className="hover:shadow-md transition-shadow cursor-pointer" 
               onClick={() => handleChartClick({ level: 'info' }, 'level')}
               data-testid="metric-info">
-          <CardContent className="p-3">
+          <CardContent className="p-3 xl:p-4">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-xs text-muted-foreground mb-1">{t('total_info')}</div>
@@ -346,11 +346,11 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
         </Card>
       </div>
 
-      {/* مقاييس إضافية محسّنة للهاتف */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3" data-testid="additional-metrics-grid">
+      {/* مقاييس إضافية محسّنة */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-3 xl:gap-4" data-testid="additional-metrics-grid">
         {/* المستخدمين النشطين */}
         <Card className="hover:shadow-md transition-shadow" data-testid="metric-active-users">
-          <CardContent className="p-3">
+          <CardContent className="p-3 xl:p-4">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-xs text-muted-foreground mb-1">{t('active_users')}</div>
@@ -365,7 +365,7 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
 
         {/* المصادر النشطة */}
         <Card className="hover:shadow-md transition-shadow" data-testid="metric-active-sources">
-          <CardContent className="p-3">
+          <CardContent className="p-3 xl:p-4">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-xs text-muted-foreground mb-1">{t('active_sources')}</div>
@@ -380,7 +380,7 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
 
         {/* معدل الأخطاء */}
         <Card className="hover:shadow-md transition-shadow" data-testid="metric-error-rate">
-          <CardContent className="p-3">
+          <CardContent className="p-3 xl:p-4">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-xs text-muted-foreground mb-1">{t('error_rate')}</div>
@@ -395,7 +395,7 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
 
         {/* معدل التحذيرات */}
         <Card className="hover:shadow-md transition-shadow" data-testid="metric-warning-rate">
-          <CardContent className="p-3">
+          <CardContent className="p-3 xl:p-4">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-xs text-muted-foreground mb-1">{t('warning_rate')}</div>
@@ -409,18 +409,18 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
         </Card>
       </div>
 
-      {/* الرسوم البيانية المتجاوبة */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" data-testid="charts-grid">
+      {/* الرسوم البيانية المتجاوبة محسّنة للسطح المكتبي */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 xl:gap-6" data-testid="charts-grid">
         {/* السجلات عبر الزمن */}
-        <Card className="col-span-1 md:col-span-2 xl:col-span-3" data-testid="chart-logs-over-time">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center space-x-1.5 space-x-reverse">
-              <TrendingUp className="h-3 w-3" />
+        <Card className="col-span-1 md:col-span-2 xl:col-span-3 2xl:col-span-4" data-testid="chart-logs-over-time">
+          <CardHeader className="pb-2 xl:pb-3">
+            <CardTitle className="text-sm xl:text-base flex items-center space-x-1.5 space-x-reverse">
+              <TrendingUp className="h-3 w-3 xl:h-4 xl:w-4" />
               <span>{t('logs_over_time')} - {t('last_24_hours')}</span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="h-48 sm:h-40">
+          <CardContent className="pt-0 xl:pt-1">
+            <div className="h-48 sm:h-40 xl:h-56 2xl:h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={stats.timeDistribution}>
                   <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} />
@@ -469,12 +469,12 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
 
         {/* توزيع السجلات حسب النوع */}
         <Card data-testid="chart-logs-distribution">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">{t('logs_distribution')}</CardTitle>
-            <CardDescription className="text-xs">{t('click_to_filter')}</CardDescription>
+          <CardHeader className="pb-2 xl:pb-3">
+            <CardTitle className="text-sm xl:text-base">{t('logs_distribution')}</CardTitle>
+            <CardDescription className="text-xs xl:text-sm">{t('click_to_filter')}</CardDescription>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="h-48 sm:h-40">
+          <CardContent className="pt-0 xl:pt-1">
+            <div className="h-48 sm:h-40 xl:h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -500,12 +500,12 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
 
         {/* أكثر المصادر نشاطاً */}
         <Card data-testid="chart-top-sources">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">{t('top_sources')}</CardTitle>
-            <CardDescription className="text-xs">{t('click_to_filter')}</CardDescription>
+          <CardHeader className="pb-2 xl:pb-3">
+            <CardTitle className="text-sm xl:text-base">{t('top_sources')}</CardTitle>
+            <CardDescription className="text-xs xl:text-sm">{t('click_to_filter')}</CardDescription>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="h-48 sm:h-40">
+          <CardContent className="pt-0 xl:pt-1">
+            <div className="h-48 sm:h-40 xl:h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stats.sourceActivity.slice(0, 5)} layout="horizontal">
                   <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} />
@@ -540,12 +540,12 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
         {/* المستخدمين النشطين */}
         {stats.userActivity.length > 0 && (
           <Card data-testid="chart-active-users">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">{t('active_users_chart')}</CardTitle>
-              <CardDescription className="text-xs">{t('click_to_filter')}</CardDescription>
+            <CardHeader className="pb-2 xl:pb-3">
+              <CardTitle className="text-sm xl:text-base">{t('active_users_chart')}</CardTitle>
+              <CardDescription className="text-xs xl:text-sm">{t('click_to_filter')}</CardDescription>
             </CardHeader>
-            <CardContent className="pt-0">
-              <div className="h-48 sm:h-40">
+            <CardContent className="pt-0 xl:pt-1">
+              <div className="h-48 sm:h-40 xl:h-56">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={stats.userActivity.slice(0, 5)}>
                     <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} />
