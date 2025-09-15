@@ -196,8 +196,13 @@ window.fetch = function(...args) {
                                error?.message?.includes('ECONNRESET') ||
                                error?.message?.includes('ENOTFOUND');
 
-        // فقط اطبع الأخطاء المهمة وليس الأخطاء المؤقتة أو أخطاء الشبكة العادية
-        if (!isNetworkError && !isTemporaryError && 
+        const isAbortError = error?.name === 'AbortError' || 
+                           error?.message?.includes('aborted') ||
+                           error?.message?.includes('user aborted') ||
+                           error?.message?.includes('signal is aborted');
+
+        // فقط اطبع الأخطاء المهمة وليس الأخطاء المؤقتة أو أخطاء الشبكة العادية أو أخطاء الإلغاء
+        if (!isNetworkError && !isTemporaryError && !isAbortError && 
             !blockedPatterns.some(pattern => url?.includes(pattern))) {
           console.error('🌐 Fetch error:', {
             url: args[0],
@@ -206,8 +211,8 @@ window.fetch = function(...args) {
           });
         }
 
-        // فقط أرسل تقارير للأخطاء الحقيقية وليس أخطاء الشبكة المؤقتة
-        if (!isNetworkError && !isTemporaryError && shouldReportError()) {
+        // فقط أرسل تقارير للأخطاء الحقيقية وليس أخطاء الشبكة المؤقتة أو أخطاء الإلغاء
+        if (!isNetworkError && !isTemporaryError && !isAbortError && shouldReportError()) {
           reportError({
             type: 'fetch_error',
             message: error?.message || 'Unknown fetch error',
