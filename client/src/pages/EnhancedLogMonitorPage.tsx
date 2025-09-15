@@ -297,22 +297,29 @@ export default function EnhancedLogMonitorPage() {
   const getTabTitle = () => {
     switch (selectedTab) {
       case 'user':
-        return t('user_activity_logs');
+        return 'سجلات المستخدمين النشطة';
       case 'system':
-        return t('system_activity_logs');
+        return 'سجلات النظام النشطة';
       default:
-        return t('all_logs_activity');
+        return 'جميع السجلات النشطة';
     }
   };
 
   const getTabDescription = () => {
+    const activeFilters = [];
+    if (selectedLevel) activeFilters.push(`المستوى: ${selectedLevel}`);
+    if (selectedSource) activeFilters.push(`المصدر: ${selectedSource}`);
+    if (searchTerm) activeFilters.push(`البحث: "${searchTerm}"`);
+    
+    const filterText = activeFilters.length > 0 ? ` (${activeFilters.join(' • ')})` : '';
+    
     switch (selectedTab) {
       case 'user':
-        return t('showing_user_logs_desc');
+        return `عرض سجلات المستخدمين${filterText}`;
       case 'system':
-        return t('showing_system_logs_desc');
+        return `عرض سجلات النظام${filterText}`;
       default:
-        return t('showing_all_logs_desc');
+        return `عرض جميع السجلات${filterText}`;
     }
   };
 
