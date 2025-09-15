@@ -4,6 +4,7 @@ import path from "path";
 import fs from "fs";
 import sqlite3 from "sqlite3";
 import { UAParser } from "ua-parser-js";
+// @ts-ignore - geoip-lite doesn't have TypeScript declarations
 import geoip from "geoip-lite";
 import {
   users, type User, type InsertUser,
