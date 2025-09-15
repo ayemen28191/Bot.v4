@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { LogCard } from "@/components/LogCard";
 import { LogsHeader } from "@/components/LogsHeader";
-import { LogsStatsDashboard } from "@/components/LogsStatsDashboard";
+import { SignalStatsDashboard } from "@/components/SignalStatsDashboard";
+import { StickyFilterTabs } from "@/components/StickyFilterTabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -10,18 +11,29 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/hooks/use-toast";
 import { ChevronUp, Wifi, WifiOff, Activity, Zap, Users, Monitor } from "lucide-react";
 import { t } from "@/lib/i18n";
+import type { SystemLog } from "@shared/schema";
 
+// Enhanced LogEntry type that handles nullable database fields
 interface LogEntry {
   id: string;
   timestamp: string;
   level: string;
   source: string;
   message: string;
-  meta?: any;
-  userId?: number;
-  username?: string;
-  userDisplayName?: string;
-  userAvatar?: string;
+  meta?: string | null;
+  // Enhanced fields (nullable from DB)
+  actorType?: string | null;
+  actorId?: string | null;
+  actorDisplayName?: string | null;
+  action?: string | null;
+  result?: string | null;
+  details?: string | null;
+  // Legacy fields for backward compatibility
+  userId?: number | null;
+  username?: string | null;
+  userDisplayName?: string | null;
+  userAvatar?: string | null;
+  createdAt: string;
 }
 
 export default function EnhancedLogMonitorPage() {
@@ -68,15 +80,21 @@ export default function EnhancedLogMonitorPage() {
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
         const messageMatch = log.message.toLowerCase().includes(searchLower);
-        const metaMatch = log.meta && safeStringify(log.meta).toLowerCase().includes(searchLower);
+        const metaMatch = log.meta && log.meta.toLowerCase().includes(searchLower);
         const userMatch = log.userDisplayName?.toLowerCase().includes(searchLower) || 
                           log.username?.toLowerCase().includes(searchLower);
         if (!messageMatch && !metaMatch && !userMatch) return false;
       }
 
-      // فلتر التبويب
-      if (selectedTab === 'user' && (!log.userId || !log.username)) return false;
-      if (selectedTab === 'system' && (log.userId && log.username)) return false;
+      // فلتر التبويب - Enhanced logic
+      if (selectedTab === 'user') {
+        const isUser = log.actorType === 'user' || (log.userId && log.username);
+        if (!isUser) return false;
+      }
+      if (selectedTab === 'system') {
+        const isSystem = log.actorType === 'system' || (!log.userId && !log.username);
+        if (!isSystem) return false;
+      }
 
       // فلتر المستوى
       if (selectedLevel && log.level !== selectedLevel) return false;
@@ -102,18 +120,9 @@ export default function EnhancedLogMonitorPage() {
 
   // تحويل السجلات الأولية إلى تنسيق LogEntry
   const normalizeLog = (rawLog: any): LogEntry => {
-    // Safe JSON parsing for meta field
-    let meta = {};
-    if (typeof rawLog.meta === 'string') {
-      try {
-        meta = JSON.parse(rawLog.meta || '{}');
-      } catch (error) {
-        console.warn('Failed to parse log meta JSON:', rawLog.meta, error);
-        meta = { _rawMeta: rawLog.meta }; // Store raw meta as fallback
-      }
-    } else {
-      meta = rawLog.meta || {};
-    }
+    // Handle meta field - keep as string to match LogEntry interface
+    const metaString = typeof rawLog.meta === 'string' ? rawLog.meta : 
+                      rawLog.meta ? JSON.stringify(rawLog.meta) : null;
 
     return {
       id: rawLog.id?.toString() || `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
@@ -121,11 +130,20 @@ export default function EnhancedLogMonitorPage() {
       level: (rawLog.level || 'info').toLowerCase(),
       source: rawLog.source || 'system',
       message: rawLog.message || JSON.stringify(rawLog),
-      meta,
-      userId: rawLog.userId,
-      username: rawLog.username,
-      userDisplayName: rawLog.userDisplayName,
-      userAvatar: rawLog.userAvatar,
+      meta: metaString,
+      // Enhanced fields (handle nulls from database)
+      actorType: rawLog.actorType || null,
+      actorId: rawLog.actorId || null,
+      actorDisplayName: rawLog.actorDisplayName || null,
+      action: rawLog.action || null,
+      result: rawLog.result || null,
+      details: rawLog.details || null,
+      // Legacy fields for backward compatibility
+      userId: rawLog.userId || null,
+      username: rawLog.username || null,
+      userDisplayName: rawLog.userDisplayName || null,
+      userAvatar: rawLog.userAvatar || null,
+      createdAt: rawLog.createdAt || new Date().toISOString(),
     };
   };
 
@@ -359,6 +377,21 @@ export default function EnhancedLogMonitorPage() {
       <LogsHeader
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
+        totalLogs={logs.length}
+        filteredLogs={filteredLogs.length}
+        onRefresh={handleRefresh}
+        onDownload={handleDownload}
+        onClearLogs={handleClearLogs}
+        isConnected={isConnected}
+      />
+
+      {/* لوحة الإحصائيات التفاعلية للإشارات - قابلة للتحرك */}
+      <div className="px-3 sm:px-4 py-4">
+        <SignalStatsDashboard />
+      </div>
+
+      {/* تبويبات الفلترة اللاصقة */}
+      <StickyFilterTabs
         selectedTab={selectedTab}
         onTabChange={setSelectedTab}
         selectedLevel={selectedLevel}
@@ -366,70 +399,9 @@ export default function EnhancedLogMonitorPage() {
         selectedSource={selectedSource}
         onSourceChange={setSelectedSource}
         totalLogs={logs.length}
-        filteredLogs={filteredLogs.length}
-        onRefresh={handleRefresh}
-        onDownload={handleDownload}
-        onClearLogs={handleClearLogs}
+        userLogsCount={logs.filter(l => (l.actorType === 'user') || (l.userId && l.username)).length}
+        systemLogsCount={logs.filter(l => (l.actorType === 'system') || (!l.userId && !l.username)).length}
       />
-
-      {/* حالة الاتصال المحسّنة */}
-      <div className="px-3 sm:px-4 mb-4">
-        <Card className={`transition-all duration-500 border-l-4 backdrop-blur-sm ${
-          isConnected 
-            ? 'border-l-emerald-500 bg-emerald-50/80 dark:bg-emerald-950/30 shadow-emerald-100/50 dark:shadow-emerald-900/20' 
-            : 'border-l-amber-500 bg-amber-50/80 dark:bg-amber-950/30 shadow-amber-100/50 dark:shadow-amber-900/20'
-        } shadow-lg hover:shadow-xl`} data-testid="connection-status-card">
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3 space-x-reverse">
-                <div className="relative">
-                  {isConnected ? (
-                    <>
-                      <Wifi className="h-5 w-5 text-emerald-600 dark:text-emerald-400" data-testid="icon-connected" />
-                      <div className="absolute -top-1 -right-1 h-2 w-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                    </>
-                  ) : (
-                    <>
-                      <WifiOff className="h-5 w-5 text-amber-600 dark:text-amber-400" data-testid="icon-disconnected" />
-                      <div className="absolute -top-1 -right-1 h-2 w-2 bg-amber-500 rounded-full animate-pulse"></div>
-                    </>
-                  )}
-                </div>
-                <div>
-                  <span className={`text-sm font-semibold block ${
-                    isConnected 
-                      ? 'text-emerald-800 dark:text-emerald-200' 
-                      : 'text-amber-800 dark:text-amber-200'
-                  }`} data-testid="connection-status-text">
-                    {isConnected ? t('connected_live_logs') : t('disconnected_cached_logs')}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {t('connection_status')}
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Zap className={`h-4 w-4 ${isConnected ? 'text-emerald-500 animate-pulse' : 'text-muted-foreground/50'}`} />
-                <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                  isConnected 
-                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' 
-                    : 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'
-                }`}>
-                  {isConnected ? t('online') : t('offline')}
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* لوحة الإحصائيات التفاعلية */}
-      <div className="px-3 sm:px-4">
-        <LogsStatsDashboard 
-          logs={logs} 
-          onFilterChange={handleDashboardFilter}
-        />
-      </div>
 
       {/* قائمة السجلات مع نظام التبويبات المحسّن */}
       <div className="relative flex-1 px-3 sm:px-4">
@@ -445,7 +417,7 @@ export default function EnhancedLogMonitorPage() {
           </div>
         </div>
         
-        <ScrollArea ref={scrollRef} className="h-[calc(100vh-460px)] sm:h-[calc(100vh-440px)] xl:h-[calc(100vh-420px)]">
+        <ScrollArea ref={scrollRef} className="h-[calc(100vh-520px)] sm:h-[calc(100vh-500px)] xl:h-[calc(100vh-480px)]">
           <div className="pb-20 space-y-2 sm:space-y-3 xl:space-y-2">
             {filteredLogs.length === 0 ? (
               <Card className="border-dashed border-2 bg-muted/30 backdrop-blur-sm" data-testid="no-logs-card">
@@ -540,33 +512,68 @@ export default function EnhancedLogMonitorPage() {
                   </div>
                 )}
 
-                {/* معلومات السجل */}
+                {/* معلومات السجل المحسنة */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="p-3 bg-muted/30 rounded-lg border border-border/30">
-                    <div className="text-sm font-medium text-muted-foreground mb-1">{t('log_level_label')}</div>
+                    <div className="text-sm font-medium text-muted-foreground mb-1">المستوى</div>
                     <div className="font-semibold text-foreground" data-testid="log-details-level">
                       {selectedLog.level.toUpperCase()}
                     </div>
                   </div>
                   
                   <div className="p-3 bg-muted/30 rounded-lg border border-border/30">
-                    <div className="text-sm font-medium text-muted-foreground mb-1">{t('log_source_label')}</div>
+                    <div className="text-sm font-medium text-muted-foreground mb-1">المصدر</div>
                     <div className="font-semibold text-foreground" data-testid="log-details-source">
                       {selectedLog.source}
                     </div>
                   </div>
                   
-                  {selectedLog.username && (
-                    <div className="p-3 bg-muted/30 rounded-lg border border-border/30">
-                      <div className="text-sm font-medium text-muted-foreground mb-1">{t('log_user_label')}</div>
-                      <div className="font-semibold text-foreground" data-testid="log-details-user">
-                        {selectedLog.userDisplayName || selectedLog.username}
+                  {/* نوع الحدث */}
+                  {selectedLog.action && (
+                    <div className="p-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-lg border border-blue-200/50 dark:border-blue-800/50">
+                      <div className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">نوع الحدث</div>
+                      <div className="font-semibold text-blue-800 dark:text-blue-200" data-testid="log-details-action">
+                        {selectedLog.action}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* النتيجة */}
+                  {selectedLog.result && (
+                    <div className={`p-3 rounded-lg border ${
+                      selectedLog.result === 'success' 
+                        ? 'bg-green-50/50 dark:bg-green-950/20 border-green-200/50 dark:border-green-800/50' 
+                        : 'bg-red-50/50 dark:bg-red-950/20 border-red-200/50 dark:border-red-800/50'
+                    }`}>
+                      <div className={`text-sm font-medium mb-1 ${
+                        selectedLog.result === 'success' 
+                          ? 'text-green-700 dark:text-green-300' 
+                          : 'text-red-700 dark:text-red-300'
+                      }`}>النتيجة</div>
+                      <div className={`font-semibold ${
+                        selectedLog.result === 'success' 
+                          ? 'text-green-800 dark:text-green-200' 
+                          : 'text-red-800 dark:text-red-200'
+                      }`} data-testid="log-details-result">
+                        {selectedLog.result === 'success' ? 'نجح' : selectedLog.result === 'failure' ? 'فشل' : selectedLog.result}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* المستخدم أو النظام */}
+                  {(selectedLog.actorDisplayName || selectedLog.userDisplayName || selectedLog.username) && (
+                    <div className="p-3 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-lg border border-emerald-200/50 dark:border-emerald-800/50">
+                      <div className="text-sm font-medium text-emerald-700 dark:text-emerald-300 mb-1">
+                        {selectedLog.actorType === 'user' || selectedLog.userId ? 'المستخدم' : 'النظام'}
+                      </div>
+                      <div className="font-semibold text-emerald-800 dark:text-emerald-200" data-testid="log-details-actor">
+                        {selectedLog.actorDisplayName || selectedLog.userDisplayName || selectedLog.username}
                       </div>
                     </div>
                   )}
                   
                   <div className="p-3 bg-muted/30 rounded-lg border border-border/30">
-                    <div className="text-sm font-medium text-muted-foreground mb-1">{t('log_time_label')}</div>
+                    <div className="text-sm font-medium text-muted-foreground mb-1">الوقت</div>
                     <div className="font-semibold text-foreground text-sm" data-testid="log-details-time">
                       {new Date(selectedLog.timestamp).toLocaleString('ar-SA', {
                         dateStyle: 'short',
@@ -575,6 +582,18 @@ export default function EnhancedLogMonitorPage() {
                     </div>
                   </div>
                 </div>
+                
+                {/* تفاصيل إضافية من الحقل الجديد */}
+                {selectedLog.details && (
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-foreground">تفاصيل إضافية</h4>
+                    <div className="p-4 bg-blue-50/50 dark:bg-blue-950/20 rounded-lg border border-blue-200/50 dark:border-blue-800/50">
+                      <pre className="whitespace-pre-wrap text-sm font-mono text-blue-600 dark:text-blue-400" data-testid="log-details-additional">
+                        {typeof selectedLog.details === 'string' ? selectedLog.details : JSON.stringify(selectedLog.details, null, 2)}
+                      </pre>
+                    </div>
+                  </div>
+                )}
               </div>
             </ScrollArea>
           )}

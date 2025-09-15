@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import { MoreHorizontal, Clock, User, Monitor, AlertTriangle, Info } from "lucide-react";
+import { MoreHorizontal, Clock, User, Monitor, AlertTriangle, Info, CheckCircle, XCircle, Activity, Settings, LogIn, LogOut, Signal, Edit, MessageCircle, Power, PowerOff } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -14,11 +14,19 @@ interface LogEntry {
   level: string;
   source: string;
   message: string;
-  meta?: any;
-  userId?: number;
-  username?: string;
-  userDisplayName?: string;
-  userAvatar?: string;
+  meta?: string | null;
+  // Enhanced fields (nullable from DB)
+  actorType?: string | null;
+  actorId?: string | null;
+  actorDisplayName?: string | null;
+  action?: string | null;
+  result?: string | null;
+  details?: string | null;
+  // Legacy fields for backward compatibility
+  userId?: number | null;
+  username?: string | null;
+  userDisplayName?: string | null;
+  userAvatar?: string | null;
 }
 
 interface LogCardProps {
@@ -59,6 +67,93 @@ const getLevelIcon = (level: string) => {
       return <Monitor className="h-3 w-3 sm:h-4 sm:w-4 xl:h-3 xl:w-3 text-gray-500" />;
     default:
       return <Info className="h-3 w-3 sm:h-4 sm:w-4 xl:h-3 xl:w-3 text-gray-400" />;
+  }
+};
+
+// دالة للحصول على أيقونة الإجراء
+const getActionIcon = (action?: string) => {
+  if (!action) return <Activity className="h-3 w-3 text-muted-foreground" />;
+  
+  switch (action.toLowerCase()) {
+    case 'login':
+      return <LogIn className="h-3 w-3 text-green-500" />;
+    case 'logout':
+      return <LogOut className="h-3 w-3 text-orange-500" />;
+    case 'signal_request':
+      return <Signal className="h-3 w-3 text-blue-500" />;
+    case 'password_change':
+      return <Edit className="h-3 w-3 text-purple-500" />;
+    case 'change_avatar':
+      return <User className="h-3 w-3 text-cyan-500" />;
+    case 'chat_message':
+      return <MessageCircle className="h-3 w-3 text-pink-500" />;
+    case 'server_on':
+      return <Power className="h-3 w-3 text-green-500" />;
+    case 'server_off':
+      return <PowerOff className="h-3 w-3 text-red-500" />;
+    case 'error':
+      return <XCircle className="h-3 w-3 text-red-500" />;
+    default:
+      return <Activity className="h-3 w-3 text-blue-500" />;
+  }
+};
+
+// دالة للحصول على النص الوصفي للإجراء
+const getActionDisplayName = (action?: string): string => {
+  if (!action) return 'نشاط عام';
+  
+  switch (action.toLowerCase()) {
+    case 'login':
+      return 'تسجيل دخول';
+    case 'logout':
+      return 'تسجيل خروج';
+    case 'signal_request':
+      return 'طلب إشارة';
+    case 'password_change':
+      return 'تغيير كلمة المرور';
+    case 'change_avatar':
+      return 'تغيير الصورة';
+    case 'chat_message':
+      return 'رسالة دردشة';
+    case 'server_on':
+      return 'تشغيل الخادم';
+    case 'server_off':
+      return 'إيقاف الخادم';
+    case 'error':
+      return 'خطأ في النظام';
+    default:
+      return action.replace(/_/g, ' ');
+  }
+};
+
+// دالة للحصول على أيقونة النتيجة
+const getResultIcon = (result?: string) => {
+  if (!result) return null;
+  
+  switch (result.toLowerCase()) {
+    case 'success':
+      return <CheckCircle className="h-3 w-3 text-green-500" />;
+    case 'failure':
+    case 'error':
+      return <XCircle className="h-3 w-3 text-red-500" />;
+    default:
+      return null;
+  }
+};
+
+// دالة للحصول على النص الوصفي للنتيجة
+const getResultDisplayName = (result?: string): string => {
+  if (!result) return '';
+  
+  switch (result.toLowerCase()) {
+    case 'success':
+      return 'نجح';
+    case 'failure':
+      return 'فشل';
+    case 'error':
+      return 'خطأ';
+    default:
+      return result;
   }
 };
 
@@ -125,9 +220,14 @@ export function LogCard({ log, onClick, isSelected }: LogCardProps) {
       .slice(0, 2);
   };
 
-  const userColor = log.username ? generateColor(log.username) : generateColor(log.source);
-  const displayName = log.userDisplayName || log.username || log.source;
-  const isUserAction = log.userId && log.username;
+  // Enhanced logic to determine actor information
+  const actorType = log.actorType || (log.userId && log.username ? 'user' : 'system');
+  const actorDisplayName = log.actorDisplayName || log.userDisplayName || log.username || log.source;
+  const actorId = log.actorId || (log.userId ? log.userId.toString() : log.source);
+  
+  const userColor = generateColor(actorId);
+  const displayName = actorDisplayName;
+  const isUserAction = actorType === 'user';
 
   return (
     <Card 
@@ -213,18 +313,52 @@ export function LogCard({ log, onClick, isSelected }: LogCardProps) {
               </div>
             </div>
 
-            {/* مستوى السجل والمصدر */}
+            {/* نوع الحدث والنتيجة */}
             <div className="flex items-center space-x-1.5 sm:space-x-2 xl:space-x-1.5 space-x-reverse mb-1.5 sm:mb-2 xl:mb-1.5">
+              {/* نوع الحدث */}
+              <Badge 
+                variant="outline"
+                className="text-xs flex items-center space-x-0.5 sm:space-x-1 xl:space-x-0.5 space-x-reverse px-1.5 sm:px-2 xl:px-1.5 py-0.5"
+              >
+                {getActionIcon(log.action)}
+                <span className="hidden sm:inline xl:hidden">{getActionDisplayName(log.action)}</span>
+                <span className="sm:hidden xl:inline">{getActionDisplayName(log.action).slice(0, 8)}</span>
+              </Badge>
+              
+              {/* النتيجة إذا كانت متوفرة */}
+              {log.result && (
+                <>
+                  <span className="text-xs text-muted-foreground">•</span>
+                  <Badge 
+                    variant={log.result === 'success' ? 'default' : 'destructive'}
+                    className="text-xs flex items-center space-x-0.5 space-x-reverse px-1.5 py-0.5"
+                  >
+                    {getResultIcon(log.result)}
+                    <span className="hidden sm:inline">{getResultDisplayName(log.result)}</span>
+                  </Badge>
+                </>
+              )}
+              
+              {/* مستوى السجل */}
+              <span className="text-xs text-muted-foreground">•</span>
               <Badge 
                 variant={log.level === 'error' ? 'destructive' : 'secondary'}
-                className="text-xs flex items-center space-x-0.5 sm:space-x-1 xl:space-x-0.5 space-x-reverse px-1.5 sm:px-2 xl:px-1.5 py-0.5"
+                className="text-xs flex items-center space-x-0.5 space-x-reverse px-1.5 py-0.5"
               >
                 {getLevelIcon(log.level)}
                 <span className="hidden sm:inline xl:hidden">{log.level.toUpperCase()}</span>
-                <span className="sm:hidden xl:inline">{log.level.slice(0, 3).toUpperCase()}</span>
+                <span className="sm:hidden xl:inline">{log.level.slice(0, 3)}</span>
               </Badge>
-              <span className="text-xs text-muted-foreground">•</span>
-              <span className="text-xs text-muted-foreground truncate flex-1">{log.source}</span>
+            </div>
+            
+            {/* المصدر ومعلومات إضافية */}
+            <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
+              <span className="truncate flex-1">{log.source}</span>
+              {actorType && (
+                <Badge variant="outline" className="text-xs px-1.5 py-0.5 ml-2">
+                  {actorType === 'user' ? 'مستخدم' : 'نظام'}
+                </Badge>
+              )}
             </div>
 
             {/* الرسالة */}
@@ -235,12 +369,39 @@ export function LogCard({ log, onClick, isSelected }: LogCardProps) {
             </div>
 
             {/* البيانات الإضافية عند التوسع */}
-            {isExpanded && log.meta && (
-              <div className="mt-2 sm:mt-3 xl:mt-2 p-2 sm:p-3 xl:p-2 bg-muted/30 rounded-lg">
-                <h4 className="text-xs font-semibold mb-1.5 sm:mb-2 xl:mb-1.5 text-muted-foreground">{t('additional_data')}</h4>
-                <pre className="text-xs text-muted-foreground whitespace-pre-wrap overflow-x-auto">
-                  {typeof log.meta === 'string' ? log.meta : JSON.stringify(log.meta, null, 2)}
-                </pre>
+            {isExpanded && (
+              <div className="mt-2 sm:mt-3 xl:mt-2 space-y-2">
+                {/* تفاصيل محسنة */}
+                {log.details && (
+                  <div className="p-2 sm:p-3 xl:p-2 bg-blue-50/50 dark:bg-blue-950/20 rounded-lg border border-blue-200/50 dark:border-blue-800/50">
+                    <h4 className="text-xs font-semibold mb-1.5 text-blue-700 dark:text-blue-300">تفاصيل الحدث</h4>
+                    <pre className="text-xs text-blue-600 dark:text-blue-400 whitespace-pre-wrap overflow-x-auto">
+                      {typeof log.details === 'string' ? log.details : JSON.stringify(log.details, null, 2)}
+                    </pre>
+                  </div>
+                )}
+                
+                {/* معلومات إضافية */}
+                {log.meta && (
+                  <div className="p-2 sm:p-3 xl:p-2 bg-muted/30 rounded-lg">
+                    <h4 className="text-xs font-semibold mb-1.5 text-muted-foreground">معلومات إضافية</h4>
+                    <pre className="text-xs text-muted-foreground whitespace-pre-wrap overflow-x-auto">
+                      {log.meta}
+                    </pre>
+                  </div>
+                )}
+                
+                {/* معلومات المستخدم المحسنة */}
+                {(log.actorId || log.userId) && (
+                  <div className="p-2 sm:p-3 xl:p-2 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-lg border border-emerald-200/50 dark:border-emerald-800/50">
+                    <h4 className="text-xs font-semibold mb-1.5 text-emerald-700 dark:text-emerald-300">معلومات المستخدم</h4>
+                    <div className="text-xs text-emerald-600 dark:text-emerald-400 space-y-1">
+                      <div>النوع: {actorType === 'user' ? 'مستخدم' : 'نظام'}</div>
+                      {log.actorId && <div>المعرف: {log.actorId}</div>}
+                      {log.actorDisplayName && <div>الاسم: {log.actorDisplayName}</div>}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

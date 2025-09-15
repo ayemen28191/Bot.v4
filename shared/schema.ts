@@ -71,6 +71,14 @@ export const systemLogs = sqliteTable("system_logs", {
   source: text("source").notNull(), // مصدر السجل (api, auth, deployment, etc.)
   message: text("message").notNull(),
   meta: text("meta"), // JSON string for additional data
+  // New enhanced fields
+  actorType: text("actor_type"), // "user" | "system"
+  actorId: text("actor_id"), // user ID or system component ID
+  actorDisplayName: text("actor_display_name"), // display name for actor
+  action: text("action"), // login|logout|signal_request|error|server_off|server_on|password_change|change_avatar|chat_message|etc
+  result: text("result"), // success|failure|error
+  details: text("details"), // JSON string for additional structured details
+  // Legacy fields for backward compatibility
   userId: integer("user_id"), // المستخدم المتعلق بالسجل (اختياري)
   username: text("username"), // اسم المستخدم للعرض السريع
   userDisplayName: text("user_display_name"), // الاسم المعروض للمستخدم
@@ -187,10 +195,25 @@ export const insertSystemLogSchema = createInsertSchema(systemLogs).pick({
   source: true,
   message: true,
   meta: true,
+  // New enhanced fields
+  actorType: true,
+  actorId: true,
+  actorDisplayName: true,
+  action: true,
+  result: true,
+  details: true,
+  // Legacy fields for backward compatibility
   userId: true,
   username: true,
   userDisplayName: true,
   userAvatar: true,
+});
+
+// Enhanced system log schema with validation
+export const enhancedSystemLogSchema = insertSystemLogSchema.extend({
+  actorType: z.enum(['user', 'system']).optional(),
+  action: z.enum(['login', 'logout', 'signal_request', 'error', 'server_off', 'server_on', 'password_change', 'change_avatar', 'chat_message']).optional(),
+  result: z.enum(['success', 'failure', 'error']).optional(),
 });
 
 // سكيما لإعدادات الإشعارات
@@ -206,6 +229,7 @@ export const insertNotificationSettingSchema = createInsertSchema(notificationSe
 });
 
 export type InsertSystemLog = z.infer<typeof insertSystemLogSchema>;
+export type EnhancedInsertSystemLog = z.infer<typeof enhancedSystemLogSchema>;
 export type SystemLog = typeof systemLogs.$inferSelect;
 
 export type InsertNotificationSetting = z.infer<typeof insertNotificationSettingSchema>;

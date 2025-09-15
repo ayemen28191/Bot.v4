@@ -16,7 +16,10 @@ import {
   Activity,
   Zap,
   BarChart3,
-  X
+  X,
+  Wifi,
+  WifiOff,
+  AlertTriangle
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -32,33 +35,23 @@ import { t } from "@/lib/i18n";
 interface LogsHeaderProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
-  selectedTab: string;
-  onTabChange: (value: string) => void;
-  selectedLevel: string | null;
-  onLevelChange: (value: string | null) => void;
-  selectedSource: string | null;
-  onSourceChange: (value: string | null) => void;
   totalLogs: number;
   filteredLogs: number;
   onRefresh: () => void;
   onDownload: () => void;
   onClearLogs: () => void;
+  isConnected: boolean;
 }
 
 export function LogsHeader({
   searchTerm,
   onSearchChange,
-  selectedTab,
-  onTabChange,
-  selectedLevel,
-  onLevelChange,
-  selectedSource,
-  onSourceChange,
   totalLogs,
   filteredLogs,
   onRefresh,
   onDownload,
-  onClearLogs
+  onClearLogs,
+  isConnected
 }: LogsHeaderProps) {
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
 
@@ -82,7 +75,28 @@ export function LogsHeader({
             </div>
           </div>
           
-          <div className="flex items-center space-x-2 space-x-reverse">
+          <div className="flex items-center space-x-3 space-x-reverse">
+            {/* حالة الاتصال */}
+            <div className="flex flex-col items-center space-y-1">
+              <div className="relative">
+                {isConnected ? (
+                  <Wifi className="h-4 w-4 text-emerald-600 dark:text-emerald-400" data-testid="wifi-connected" />
+                ) : (
+                  <WifiOff className="h-4 w-4 text-amber-600 dark:text-amber-400" data-testid="wifi-disconnected" />
+                )}
+                <div className={`absolute -top-1 -right-1 h-2 w-2 rounded-full animate-pulse ${
+                  isConnected ? 'bg-emerald-500' : 'bg-amber-500'
+                }`}></div>
+              </div>
+              <span className={`text-xs font-medium ${
+                isConnected 
+                  ? 'text-emerald-700 dark:text-emerald-300' 
+                  : 'text-amber-700 dark:text-amber-300'
+              }`} data-testid="connection-status-text">
+                {isConnected ? 'متصل' : 'غير متصل'}
+              </span>
+            </div>
+            
             <Button
               variant="ghost"
               size="sm"
@@ -162,70 +176,6 @@ export function LogsHeader({
       )}
 
 
-      {/* تبويبات الفلترة المحسّنة */}
-      <div className="px-3 sm:px-4 pb-3">
-        <Tabs value={selectedTab} onValueChange={onTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-muted/50 backdrop-blur-sm">
-            <TabsTrigger value="all" className="text-xs sm:text-sm font-medium transition-all duration-200" data-testid="tab-all">
-              <span className="flex items-center space-x-1.5 space-x-reverse">
-                <Monitor className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span>{t('filter_all')}</span>
-              </span>
-              <Badge variant="secondary" className="ml-1.5 text-xs bg-primary/10 text-primary">
-                {totalLogs}
-              </Badge>
-            </TabsTrigger>
-            <TabsTrigger value="user" className="text-xs sm:text-sm font-medium transition-all duration-200" data-testid="tab-user">
-              <span className="flex items-center space-x-1.5 space-x-reverse">
-                <Users className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span>{t('filter_users')}</span>
-              </span>
-            </TabsTrigger>
-            <TabsTrigger value="system" className="text-xs sm:text-sm font-medium transition-all duration-200" data-testid="tab-system">
-              <span className="flex items-center space-x-1.5 space-x-reverse">
-                <Activity className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span>{t('filter_system')}</span>
-              </span>
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
-
-      {/* مرشحات المستوى المحسّنة */}
-      <div className="px-3 sm:px-4 pb-3 sm:pb-4">
-        <div className="flex space-x-2 space-x-reverse overflow-x-auto scrollbar-hide pb-2">
-          <Button
-            variant={selectedLevel === null ? "default" : "outline"}
-            size="sm"
-            onClick={() => onLevelChange(null)}
-            className="flex-shrink-0 transition-all duration-200 hover:scale-105"
-            data-testid="filter-level-all"
-          >
-            <Filter className="h-3 w-3 mr-1.5" />
-            {t('log_level_all')}
-          </Button>
-          
-          {[
-            { level: 'error', icon: AlertCircle, color: 'text-red-600 dark:text-red-400', bg: 'hover:bg-red-50 dark:hover:bg-red-950/30' },
-            { level: 'warn', icon: AlertCircle, color: 'text-amber-600 dark:text-amber-400', bg: 'hover:bg-amber-50 dark:hover:bg-amber-950/30' },
-            { level: 'info', icon: TrendingUp, color: 'text-blue-600 dark:text-blue-400', bg: 'hover:bg-blue-50 dark:hover:bg-blue-950/30' },
-            { level: 'debug', icon: Monitor, color: 'text-gray-600 dark:text-gray-400', bg: 'hover:bg-gray-50 dark:hover:bg-gray-950/30' }
-          ].map(({ level, icon: Icon, color, bg }) => (
-            <Button
-              key={level}
-              variant={selectedLevel === level ? "default" : "outline"}
-              size="sm"
-              onClick={() => onLevelChange(level)}
-              className={`flex-shrink-0 transition-all duration-200 hover:scale-105 ${bg}`}
-              data-testid={`filter-level-${level}`}
-            >
-              <Icon className={`h-3 w-3 mr-1.5 ${selectedLevel === level ? '' : color}`} />
-              <span className="hidden sm:inline">{t(`log_level_${level}`)}</span>
-              <span className="sm:hidden">{level.toUpperCase()}</span>
-            </Button>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }
