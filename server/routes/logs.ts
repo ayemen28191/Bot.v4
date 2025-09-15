@@ -277,9 +277,9 @@ router.post('/notifications/:id/test', isAdmin, async (req, res) => {
       webhookUrl: setting.webhookUrl || '',
       chatId: setting.chatId || undefined,
       alertLevels: setting.alertLevels.split(','),
-      threshold: setting.threshold,
-      cooldownMinutes: setting.cooldownMinutes,
-      isEnabled: setting.isEnabled
+      threshold: setting.threshold || 5,
+      cooldownMinutes: setting.cooldownMinutes || 10,
+      isEnabled: setting.isEnabled || false
     };
 
     // استيراد الخدمة واختبار الإشعار

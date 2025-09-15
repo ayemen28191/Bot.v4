@@ -2,6 +2,7 @@ import express from 'express';
 import axios from 'axios';
 import { storage } from '../storage';
 import { ConfigKey } from '../../shared/schema';
+import { logsService } from '../services/logs-service';
 
 // إنشاء جهاز التوجيه لإدارة مفاتيح API
 export const apiKeysRouter = express.Router();
@@ -30,14 +31,25 @@ function isAdmin(req: express.Request, res: express.Response, next: express.Next
 
 // اختبار سريع للتأكد من أن الخدمة تعمل
 apiKeysRouter.get('/check', async (req, res) => {
-  console.log('تم استدعاء نقطة نهاية التحقق من الخدمة');
+  await logsService.logInfo('api-keys', 'API keys service health check endpoint called', {
+    action: 'health_check',
+    clientIP: req.ip || 'unknown',
+    userAgent: req.get('User-Agent') || 'unknown'
+  });
   res.json({ status: 'ok', message: 'خدمة مفاتيح API تعمل بشكل صحيح' });
 });
 
 // اختبار مباشر للمفاتيح (أبسط من نقطة النهاية الرئيسية)
 apiKeysRouter.get('/quicktest/:keyname', async (req, res) => {
   const keyName = req.params.keyname;
-  console.log(`اختبار سريع للمفتاح: ${keyName}`);
+  let keyData: ConfigKey | undefined = undefined;
+  
+  await logsService.logInfo('api-keys', `Quick test initiated for API key: ${keyName}`, {
+    action: 'api_key_test',
+    keyName,
+    clientIP: req.ip || 'unknown',
+    userAgent: req.get('User-Agent') || 'unknown'
+  });
   
   try {
     // تحديد URL الاختبار بناءً على نوع المفتاح
@@ -46,9 +58,14 @@ apiKeysRouter.get('/quicktest/:keyname', async (req, res) => {
     let headers = {};
     
     // الحصول على قيمة المفتاح
-    const keyData = await storage.getConfigKey(keyName);
+    keyData = await storage.getConfigKey(keyName);
     if (!keyData) {
-      console.log(`المفتاح ${keyName} غير موجود`);
+      await logsService.logWarn('api-keys', `API key not found during test: ${keyName}`, {
+        action: 'api_key_test_failed',
+        keyName,
+        reason: 'key_not_found',
+        clientIP: req.ip || 'unknown'
+      });
       return res.json({ 
         success: false, 
         message: `المفتاح ${keyName} غير موجود في النظام`,
@@ -56,7 +73,11 @@ apiKeysRouter.get('/quicktest/:keyname', async (req, res) => {
       });
     }
     
-    console.log(`تم العثور على المفتاح: ${keyName}`);
+    await logsService.logInfo('api-keys', `API key found for testing: ${keyName}`, {
+      action: 'api_key_found',
+      keyName,
+      provider: keyData.provider || 'unknown'
+    });
     
     switch(keyName) {
       case 'TWELVEDATA_API_KEY':
@@ -84,9 +105,19 @@ apiKeysRouter.get('/quicktest/:keyname', async (req, res) => {
     }
     
     // تنفيذ طلب الاختبار
-    console.log(`جاري إرسال طلب اختبار إلى: ${testUrl}`);
+    await logsService.logInfo('api-keys', `Sending test request for key: ${keyName}`, {
+      action: 'api_key_test_request',
+      keyName,
+      testUrl: testUrl.split('?')[0], // Log URL without params for security
+      provider: keyData.provider || 'unknown'
+    });
     const response = await axios.get(testUrl, { params, headers, timeout: 5000 });
-    console.log(`Response received from ${testUrl}`);
+    await logsService.logInfo('api-keys', `API key test successful: ${keyName}`, {
+      action: 'api_key_test_success',
+      keyName,
+      responseStatus: response.status,
+      provider: keyData.provider || 'unknown'
+    });
     
     return res.json({
       success: true,
@@ -96,7 +127,13 @@ apiKeysRouter.get('/quicktest/:keyname', async (req, res) => {
       response: response.status
     });
   } catch (error: any) {
-    console.error(`Error testing key ${keyName}:`, error);
+    await logsService.logError('api-keys', `API key test failed: ${keyName}`, {
+      action: 'api_key_test_error',
+      keyName,
+      error: error.message,
+      provider: keyData?.provider || 'unknown',
+      clientIP: req.ip || 'unknown'
+    });
     return res.json({
       success: false,
       message: `Failed to test key ${keyName}: ${error.message}`,

@@ -628,8 +628,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
 
-    socket.on('disconnect', () => {
-      console.log('[WebSocket] Client disconnected:', socket.id);
+    socket.on('disconnect', (reason) => {
+      console.log('[WebSocket] Client disconnected:', socket.id, 'Reason:', reason);
+      if (reason === 'client namespace disconnect' || reason === 'transport close') {
+        console.log('[WebSocket] Note: Fast disconnection in HTTPS environment is normal - client likely enabled offline mode for protection');
+      }
     });
   });
 

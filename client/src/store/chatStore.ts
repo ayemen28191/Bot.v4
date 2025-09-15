@@ -88,6 +88,7 @@ export const useStore = create<ChatState>((set, get) => {
       
       if (!currentOfflineState) {
         console.log('🛡️ تفعيل الحماية المبكرة من حلقة إعادة التحميل');
+        console.log('ℹ️ This protection prevents WebSocket issues in HTTPS environment - normal behavior');
         localStorage.setItem('offline_mode', 'enabled');
         localStorage.setItem('replit_https_protection', 'enabled');
       }

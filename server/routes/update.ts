@@ -4,6 +4,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
 import fs from 'fs';
+import { logsService } from '../services/logs-service';
 
 export const updateRouter = express.Router();
 
@@ -12,12 +13,31 @@ const execAsync = promisify(exec);
 
 // ميدلوير للتحقق من صلاحيات المشرف
 function isAdmin(req: express.Request, res: express.Response, next: express.NextFunction) {
-  console.log('Checking admin permissions:', req.isAuthenticated(), req.user);
+  const clientIP = req.ip || 'unknown';
+  const userAgent = req.get('User-Agent') || 'unknown';
+  
   if (req.isAuthenticated() && req.user && req.user.isAdmin) {
-    console.log('Admin access granted for user:', req.user.username);
+    logsService.logInfo('update', `Admin access granted for system operations: ${req.user.username}`, {
+      action: 'admin_access_granted',
+      username: req.user.username,
+      userId: req.user.id,
+      endpoint: req.originalUrl,
+      clientIP,
+      userAgent
+    });
     return next();
   }
-  console.log('Admin access denied');
+  
+  logsService.logWarn('update', 'Unauthorized attempt to access admin update endpoints', {
+    action: 'admin_access_denied',
+    isAuthenticated: req.isAuthenticated(),
+    userId: req.user?.id,
+    username: req.user?.username,
+    endpoint: req.originalUrl,
+    clientIP,
+    userAgent
+  });
+  
   res.status(403).json({ 
     message: 'غير مسموح. هذه العملية تتطلب صلاحيات المشرف.' 
   });
@@ -51,7 +71,11 @@ updateRouter.get('/system-info', async (req, res) => {
         }
       }
     } catch (error) {
-      console.error('خطأ في قراءة ملف سجل التحديثات:', error);
+      await logsService.logError('update', 'Error reading update log file', {
+        action: 'update_log_read_error',
+        error: error instanceof Error ? error.message : String(error),
+        logPath: path.join(process.cwd(), 'data', 'update.log')
+      });
     }
     
     res.json({
@@ -66,7 +90,11 @@ updateRouter.get('/system-info', async (req, res) => {
       lastUpdate: lastUpdateInfo
     });
   } catch (error) {
-    console.error('خطأ في الحصول على معلومات النظام:', error);
+    await logsService.logError('update', 'Error getting system information', {
+      action: 'system_info_error',
+      error: error instanceof Error ? error.message : String(error),
+      clientIP: req.ip || 'unknown'
+    });
     res.status(500).json({ message: 'حدث خطأ في الحصول على معلومات النظام' });
   }
 });
@@ -74,7 +102,13 @@ updateRouter.get('/system-info', async (req, res) => {
 // طلب تحديث النظام
 updateRouter.post('/run-update', isAdmin, async (req, res) => {
   try {
-    console.log('بدأ عملية تحديث النظام...');
+    await logsService.logInfo('update', `System update initiated by admin: ${req.user!.username}`, {
+      action: 'system_update_started',
+      username: req.user!.username,
+      userId: req.user!.id,
+      clientIP: req.ip || 'unknown',
+      userAgent: req.get('User-Agent') || 'unknown'
+    });
     
     // سجل وقت بدء التحديث
     const updateStartTime = new Date().toISOString();
@@ -159,9 +193,20 @@ exit 0
     // معالجة نتيجة عملية التحديث
     try {
       const { stdout, stderr } = await updateProcess;
-      console.log('نتيجة التحديث (stdout):', stdout);
+      await logsService.logInfo('update', `System update completed successfully by: ${req.user!.username}`, {
+        action: 'system_update_success',
+        username: req.user!.username,
+        userId: req.user!.id,
+        stdoutLength: stdout.length,
+        hasStderr: !!stderr
+      });
+      
       if (stderr) {
-        console.error('أخطاء التحديث (stderr):', stderr);
+        await logsService.logWarn('update', 'System update completed with warnings', {
+          action: 'system_update_warnings',
+          username: req.user!.username,
+          stderrLength: stderr.length
+        });
       }
       
       // سجل اكتمال عملية التحديث
@@ -171,14 +216,25 @@ exit 0
       // في حالة النجاح، يمكن هنا إعادة تشغيل الخادم (اختياري)
       // process.exit(0); // سيؤدي إلى إعادة تشغيل الخادم إذا كان يُدار بواسطة مدير عمليات مثل PM2
     } catch (error: any) {
-      console.error('فشل في عملية التحديث:', error);
+      await logsService.logError('update', `System update failed for user: ${req.user!.username}`, {
+        action: 'system_update_failed',
+        username: req.user!.username,
+        userId: req.user!.id,
+        error: error.message || 'Unknown error'
+      });
       
       // سجل فشل عملية التحديث
       const updateFailedEntry = `${new Date().toISOString()} | فشلت عملية التحديث | الخطأ: ${error.message || 'خطأ غير معروف'}\n`;
       fs.appendFileSync(path.join(dataDir, 'update.log'), updateFailedEntry);
     }
   } catch (error: any) {
-    console.error('خطأ في بدء عملية التحديث:', error);
+    await logsService.logError('update', `Failed to start system update for user: ${req.user!.username}`, {
+      action: 'system_update_start_failed',
+      username: req.user!.username,
+      userId: req.user!.id,
+      error: error.message || 'Unknown error',
+      clientIP: req.ip || 'unknown'
+    });
     res.status(500).json({ 
       success: false, 
       message: `حدث خطأ في بدء عملية التحديث: ${error.message || 'خطأ غير معروف'}` 

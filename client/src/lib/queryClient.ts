@@ -245,6 +245,7 @@ export function getWebSocketUrl(path: string = '/ws'): string {
 
       // تحذير من إمكانية حدوث مشاكل WebSocket في بيئة HTTPS
       console.warn('⚠️ WebSocket over HTTPS في Replit قد يواجه مشاكل، يُنصح بتفعيل وضع عدم الاتصال للاستقرار');
+      console.log('ℹ️ Note: Fast WebSocket disconnection in HTTPS environment is normal and protected behavior');
 
     } else if (isDevelopment) {
       // في بيئة التطوير المحلي

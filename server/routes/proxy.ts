@@ -1,6 +1,7 @@
 
 import express from 'express';
 import axios, { AxiosError } from 'axios';
+import { logsService } from '../services/logs-service';
 // إنشاء دالة محلية للتحقق من المصادقة
 function isAuthenticated(req: any, res: any, next: any) {
   if (!req.isAuthenticated()) {
@@ -33,7 +34,15 @@ proxyRouter.post('/fetch', isAuthenticated, async (req, res) => {
       });
     }
 
-    console.log(`🌐 Proxy request: ${method} ${url}`);
+    await logsService.logInfo('proxy', `Proxy request initiated: ${method} ${url}`, {
+      action: 'proxy_request',
+      method: method.toUpperCase(),
+      targetUrl: url,
+      userId: req.user?.id,
+      username: req.user?.username,
+      clientIP: req.ip || 'unknown',
+      userAgent: req.get('User-Agent') || 'unknown'
+    });
 
     // إعداد الطلب
     const config = {
@@ -53,6 +62,15 @@ proxyRouter.post('/fetch', isAuthenticated, async (req, res) => {
 
     const response = await axios(config);
 
+    await logsService.logInfo('proxy', `Proxy request successful: ${method} ${url}`, {
+      action: 'proxy_success',
+      method: method.toUpperCase(),
+      targetUrl: url,
+      responseStatus: response.status,
+      userId: req.user?.id,
+      username: req.user?.username
+    });
+
     res.json({
       success: true,
       data: response.data,
@@ -61,7 +79,15 @@ proxyRouter.post('/fetch', isAuthenticated, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('خطأ في الوكيل:', error);
+    await logsService.logError('proxy', `Proxy request failed: ${req.body.method || 'GET'} ${req.body.url}`, {
+      action: 'proxy_error',
+      method: req.body.method || 'GET',
+      targetUrl: req.body.url,
+      error: error instanceof Error ? error.message : String(error),
+      userId: req.user?.id,
+      username: req.user?.username,
+      clientIP: req.ip || 'unknown'
+    });
 
     if (error instanceof AxiosError) {
       res.status(error.response?.status || 500).json({
@@ -108,11 +134,27 @@ proxyRouter.get('/market-data/:provider/:symbol', isAuthenticated, async (req, r
         });
     }
 
-    console.log(`📊 Market data proxy: ${provider} - ${symbol}`);
+    await logsService.logInfo('proxy', `Market data request: ${provider} - ${symbol}`, {
+      action: 'market_data_request',
+      provider,
+      symbol,
+      userId: req.user?.id,
+      username: req.user?.username,
+      clientIP: req.ip || 'unknown'
+    });
 
     const response = await axios.get(apiUrl, {
       headers,
       timeout: 8000
+    });
+
+    await logsService.logInfo('proxy', `Market data request successful: ${provider} - ${symbol}`, {
+      action: 'market_data_success',
+      provider,
+      symbol,
+      responseStatus: response.status,
+      userId: req.user?.id,
+      username: req.user?.username
     });
 
     res.json({
@@ -124,7 +166,15 @@ proxyRouter.get('/market-data/:provider/:symbol', isAuthenticated, async (req, r
     });
 
   } catch (error) {
-    console.error(`خطأ في جلب بيانات السوق:`, error);
+    await logsService.logError('proxy', `Market data request failed: ${req.params.provider} - ${req.params.symbol}`, {
+      action: 'market_data_error',
+      provider: req.params.provider,
+      symbol: req.params.symbol,
+      error: error instanceof Error ? error.message : String(error),
+      userId: req.user?.id,
+      username: req.user?.username,
+      clientIP: req.ip || 'unknown'
+    });
 
     if (error instanceof AxiosError) {
       res.status(error.response?.status || 500).json({
