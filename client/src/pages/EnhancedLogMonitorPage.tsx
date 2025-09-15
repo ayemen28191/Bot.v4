@@ -46,7 +46,6 @@ export default function EnhancedLogMonitorPage() {
   const [isConnected, setIsConnected] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const wsRef = useRef<any>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   // Safe JSON.stringify that handles circular structures
@@ -227,16 +226,11 @@ export default function EnhancedLogMonitorPage() {
   // مراقبة التمرير لإظهار زر العودة للأعلى
   useEffect(() => {
     const handleScroll = () => {
-      if (scrollRef.current) {
-        setShowScrollTop(scrollRef.current.scrollTop > 200);
-      }
+      setShowScrollTop(window.scrollY > 200);
     };
 
-    const scrollElement = scrollRef.current;
-    if (scrollElement) {
-      scrollElement.addEventListener('scroll', handleScroll);
-      return () => scrollElement.removeEventListener('scroll', handleScroll);
-    }
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const handleRefresh = () => {
@@ -278,7 +272,7 @@ export default function EnhancedLogMonitorPage() {
   };
 
   const scrollToTop = () => {
-    scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // معالج فلترة السجلات من لوحة الإحصائيات
@@ -404,7 +398,7 @@ export default function EnhancedLogMonitorPage() {
       />
 
       {/* قائمة السجلات مع نظام التبويبات المحسّن */}
-      <div className="relative flex-1 px-3 sm:px-4">
+      <div className="px-3 sm:px-4 pb-20">
         <div className="mb-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-semibold text-foreground flex items-center space-x-2 space-x-reverse">
@@ -417,39 +411,38 @@ export default function EnhancedLogMonitorPage() {
           </div>
         </div>
         
-        <ScrollArea ref={scrollRef} className="h-[calc(100vh-520px)] sm:h-[calc(100vh-500px)] xl:h-[calc(100vh-480px)]">
-          <div className="pb-20 space-y-2 sm:space-y-3 xl:space-y-2">
-            {filteredLogs.length === 0 ? (
-              <Card className="border-dashed border-2 bg-muted/30 backdrop-blur-sm" data-testid="no-logs-card">
-                <CardContent className="p-8 sm:p-12 text-center">
-                  <div className="mb-4 opacity-50">
-                    {getTabIcon()}
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2 text-foreground">{getEmptyStateTitle()}</h3>
-                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                    {getEmptyStateDescription()}
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-1.5 sm:space-y-2 xl:space-y-1.5" data-testid="logs-list">
-                {filteredLogs.map((log, index) => (
-                  <div 
-                    key={log.id} 
-                    className="animate-in slide-in-from-top duration-200" 
-                    style={{ animationDelay: `${Math.min(index * 20, 300)}ms` }}
-                  >
-                    <LogCard
-                      log={log}
-                      onClick={() => setSelectedLog(log)}
-                      isSelected={selectedLog?.id === log.id}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </ScrollArea>
+        {/* السجلات بدون تمرير منفصل - تتحرك مع الصفحة طبيعياً */}
+        <div className="space-y-2 sm:space-y-3 xl:space-y-2">
+          {filteredLogs.length === 0 ? (
+            <Card className="border-dashed border-2 bg-muted/30 backdrop-blur-sm" data-testid="no-logs-card">
+              <CardContent className="p-8 sm:p-12 text-center">
+                <div className="mb-4 opacity-50">
+                  {getTabIcon()}
+                </div>
+                <h3 className="text-lg font-semibold mb-2 text-foreground">{getEmptyStateTitle()}</h3>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                  {getEmptyStateDescription()}
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-1.5 sm:space-y-2 xl:space-y-1.5" data-testid="logs-list">
+              {filteredLogs.map((log, index) => (
+                <div 
+                  key={log.id} 
+                  className="animate-in slide-in-from-top duration-200" 
+                  style={{ animationDelay: `${Math.min(index * 20, 300)}ms` }}
+                >
+                  <LogCard
+                    log={log}
+                    onClick={() => setSelectedLog(log)}
+                    isSelected={selectedLog?.id === log.id}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* زر العودة للأعلى المحسّن */}
         {showScrollTop && (
