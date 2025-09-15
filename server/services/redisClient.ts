@@ -1,34 +1,38 @@
 import Redis from 'ioredis';
 import env from '../env';
 
-// تكوين Redis - يمكن استخدام في الذاكرة إذا لم يكن Redis متاحاً
+// تكوين Cache - يستخدم الذاكرة في بيئة Replit
 let redis: Redis | null = null;
 
-try {
-  // محاولة الاتصال بـ Redis (يستخدم localhost:6379 افتراضياً)
-  redis = new Redis({
-    host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT || '6379'),
-    connectTimeout: 5000,
-    lazyConnect: true, // لا يتصل حتى نستخدمه
-    enableReadyCheck: false,
-    maxRetriesPerRequest: 1,
-  });
+// في بيئة Replit، نعتمد على cache الذاكرة فقط
+if (process.env.ENABLE_REDIS === 'true' && process.env.REDIS_HOST) {
+  try {
+    // محاولة الاتصال بـ Redis فقط إذا كان مطلوباً صراحة
+    redis = new Redis({
+      host: process.env.REDIS_HOST,
+      port: parseInt(process.env.REDIS_PORT || '6379'),
+      connectTimeout: 5000,
+      lazyConnect: true,
+      enableReadyCheck: false,
+      maxRetriesPerRequest: 1,
+    });
 
-  // التحقق من الاتصال
-  redis.on('connect', () => {
-    console.log('✅ متصل بـ Redis بنجاح');
-  });
+    redis.on('connect', () => {
+      console.log('✅ متصل بـ Redis بنجاح');
+    });
 
-  redis.on('error', (err) => {
-    console.warn('⚠️ خطأ في اتصال Redis:', err.message);
+    redis.on('error', (err) => {
+      console.warn('⚠️ خطأ في اتصال Redis:', err.message);
+      console.log('🔄 سيتم استخدام cache في الذاكرة بدلاً من Redis');
+      redis = null;
+    });
+  } catch (error) {
+    console.warn('⚠️ فشل في تهيئة Redis:', error);
     console.log('🔄 سيتم استخدام cache في الذاكرة بدلاً من Redis');
     redis = null;
-  });
-} catch (error) {
-  console.warn('⚠️ فشل في تهيئة Redis:', error);
-  console.log('🔄 سيتم استخدام cache في الذاكرة بدلاً من Redis');
-  redis = null;
+  }
+} else {
+  console.log('🏪 استخدام cache الذاكرة (مُحسن لبيئة Replit)');
 }
 
 // Cache بديل في الذاكرة

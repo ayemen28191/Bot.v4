@@ -1,5 +1,6 @@
 {pkgs}: {
   deps = [
+    pkgs.redis
     pkgs.nano
     pkgs.sshpass
     pkgs.inetutils
