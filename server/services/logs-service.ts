@@ -42,6 +42,10 @@ class LogsService {
       requestId,
       sessionId,
       combinedTrackingId,
+      // إضافة القيم الافتراضية للحقول التراكمية
+      previousTotal: logData.previousTotal ?? null,
+      dailyTotal: logData.dailyTotal ?? null,
+      monthlyTotal: logData.monthlyTotal ?? null,
       // إضافة معلومات السياق الإضافية إلى meta إذا متوفرة
       meta: this.enrichMetaWithContext(logData.meta ?? undefined, context)
     };
@@ -83,6 +87,10 @@ class LogsService {
         action: newLog.action || null,
         result: newLog.result || null,
         details: newLog.details || null,
+        // Cumulative counter fields
+        previousTotal: newLog.previousTotal || null,
+        dailyTotal: newLog.dailyTotal || null,
+        monthlyTotal: newLog.monthlyTotal || null,
         // Legacy fields for backward compatibility
         userId: newLog.userId || null,
         username: newLog.username || null,

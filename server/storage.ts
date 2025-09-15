@@ -258,6 +258,9 @@ try {
       action TEXT,
       result TEXT,
       details TEXT,
+      previous_total INTEGER,
+      daily_total INTEGER,
+      monthly_total INTEGER,
       user_id INTEGER,
       username TEXT,
       user_display_name TEXT,
@@ -282,6 +285,9 @@ try {
         'ADD COLUMN action TEXT',
         'ADD COLUMN result TEXT',
         'ADD COLUMN details TEXT',
+        'ADD COLUMN previous_total INTEGER',
+        'ADD COLUMN daily_total INTEGER',
+        'ADD COLUMN monthly_total INTEGER',
         'ADD COLUMN username TEXT',
         'ADD COLUMN user_display_name TEXT',
         'ADD COLUMN user_avatar TEXT'
@@ -1370,13 +1376,15 @@ export class DatabaseStorage implements IStorage {
           timestamp, level, source, message, meta, 
           request_id, session_id, combined_tracking_id,
           actor_type, actor_id, actor_display_name, action, result, details,
+          previous_total, daily_total, monthly_total,
           user_id, username, user_display_name, user_avatar, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           now, log.level, log.source, log.message, log.meta || null,
           log.requestId || null, log.sessionId || null, log.combinedTrackingId || null,
           log.actorType || null, log.actorId || null, log.actorDisplayName || null, 
           log.action || null, log.result || null, log.details || null,
+          log.previousTotal || null, log.dailyTotal || null, log.monthlyTotal || null,
           log.userId || null, log.username || null, log.userDisplayName || null, 
           log.userAvatar || null, now
         ],
@@ -1403,6 +1411,10 @@ export class DatabaseStorage implements IStorage {
               action: log.action || null,
               result: log.result || null,
               details: log.details || null,
+              // Cumulative counter fields
+              previousTotal: log.previousTotal || null,
+              dailyTotal: log.dailyTotal || null,
+              monthlyTotal: log.monthlyTotal || null,
               // Legacy fields for backward compatibility
               userId: log.userId || null,
               username: log.username || null,
@@ -1472,6 +1484,10 @@ export class DatabaseStorage implements IStorage {
             action: row.action,
             result: row.result,
             details: row.details,
+            // Cumulative counter fields
+            previousTotal: row.previous_total,
+            dailyTotal: row.daily_total,
+            monthlyTotal: row.monthly_total,
             // Legacy fields for backward compatibility
             userId: row.user_id,
             username: row.username,

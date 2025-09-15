@@ -82,6 +82,10 @@ export const systemLogs = sqliteTable("system_logs", {
   action: text("action"), // login|logout|signal_request|error|server_off|server_on|password_change|change_avatar|chat_message|etc
   result: text("result"), // success|failure|error
   details: text("details"), // JSON string for additional structured details
+  // Cumulative counter fields
+  previousTotal: integer("previous_total"), // العدد التراكمي قبل هذا الحدث
+  dailyTotal: integer("daily_total"), // إجمالي الأحداث اليومية
+  monthlyTotal: integer("monthly_total"), // إجمالي الأحداث الشهرية
   // Legacy fields for backward compatibility
   userId: integer("user_id"), // المستخدم المتعلق بالسجل (اختياري)
   username: text("username"), // اسم المستخدم للعرض السريع
@@ -213,6 +217,10 @@ export const insertSystemLogSchema = createInsertSchema(systemLogs).pick({
   action: true,
   result: true,
   details: true,
+  // Cumulative counter fields
+  previousTotal: true,
+  dailyTotal: true,
+  monthlyTotal: true,
   // Legacy fields for backward compatibility
   userId: true,
   username: true,
