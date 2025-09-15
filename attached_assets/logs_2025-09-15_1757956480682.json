@@ -1,0 +1,2596 @@
+[
+  {
+    "id": "189",
+    "timestamp": "2025-09-15T13:20:00.759Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session check for user: admin",
+    "meta": {
+      "action": "session_check_authenticated",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "clientIP": "10.84.4.32",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "188",
+    "timestamp": "2025-09-15T13:19:38.842Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session check for user: Mr-199-App",
+    "meta": {
+      "action": "session_check_authenticated",
+      "username": "Mr-199-App",
+      "userId": 11,
+      "isAdmin": false,
+      "clientIP": "10.84.1.26",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "187",
+    "timestamp": "2025-09-15T13:19:38.558Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session created successfully for user: Mr-199-App",
+    "meta": {
+      "action": "session_created",
+      "username": "Mr-199-App",
+      "userId": 11,
+      "isAdmin": false,
+      "clientIP": "10.84.1.26",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "186",
+    "timestamp": "2025-09-15T13:19:38.511Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Login successful for user: Mr-199-App",
+    "meta": {
+      "action": "login_success",
+      "username": "Mr-199-App",
+      "userId": 11,
+      "isAdmin": false,
+      "timestamp": "2025-09-15T13:19:38.511Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "185",
+    "timestamp": "2025-09-15T13:19:38.487Z",
+    "level": "debug",
+    "source": "auth",
+    "message": "Password verification successful for user: Mr-199-App",
+    "meta": {
+      "action": "password_verification",
+      "username": "Mr-199-App",
+      "status": "success"
+    },
+    "userId": null
+  },
+  {
+    "id": "184",
+    "timestamp": "2025-09-15T13:19:38.356Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Login attempt for user: Mr-199-App",
+    "meta": {
+      "action": "login_attempt",
+      "username": "Mr-199-App",
+      "timestamp": "2025-09-15T13:19:38.356Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "183",
+    "timestamp": "2025-09-15T13:19:20.735Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.1.26",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "182",
+    "timestamp": "2025-09-15T13:19:20.406Z",
+    "level": "info",
+    "source": "auth",
+    "message": "User logged out successfully: Mr-199-App",
+    "meta": {
+      "action": "logout_success",
+      "username": "Mr-199-App",
+      "userId": 11,
+      "clientIP": "10.84.1.26",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "181",
+    "timestamp": "2025-09-15T13:18:33.240Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session check for user: Mr-199-App",
+    "meta": {
+      "action": "session_check_authenticated",
+      "username": "Mr-199-App",
+      "userId": 11,
+      "isAdmin": false,
+      "clientIP": "10.84.5.2",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "180",
+    "timestamp": "2025-09-15T13:18:32.873Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session created successfully for user: Mr-199-App",
+    "meta": {
+      "action": "session_created",
+      "username": "Mr-199-App",
+      "userId": 11,
+      "isAdmin": false,
+      "clientIP": "10.84.5.2",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "179",
+    "timestamp": "2025-09-15T13:18:32.849Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Login successful for user: Mr-199-App",
+    "meta": {
+      "action": "login_success",
+      "username": "Mr-199-App",
+      "userId": 11,
+      "isAdmin": false,
+      "timestamp": "2025-09-15T13:18:32.849Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "178",
+    "timestamp": "2025-09-15T13:18:32.825Z",
+    "level": "debug",
+    "source": "auth",
+    "message": "Password verification successful for user: Mr-199-App",
+    "meta": {
+      "action": "password_verification",
+      "username": "Mr-199-App",
+      "status": "success"
+    },
+    "userId": null
+  },
+  {
+    "id": "177",
+    "timestamp": "2025-09-15T13:18:32.780Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Login attempt for user: Mr-199-App",
+    "meta": {
+      "action": "login_attempt",
+      "username": "Mr-199-App",
+      "timestamp": "2025-09-15T13:18:32.780Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "176",
+    "timestamp": "2025-09-15T13:18:09.499Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session check for user: admin",
+    "meta": {
+      "action": "session_check_authenticated",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "clientIP": "10.84.1.26",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "175",
+    "timestamp": "2025-09-15T13:18:09.141Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session created successfully for user: admin",
+    "meta": {
+      "action": "session_created",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "clientIP": "10.84.1.26",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "174",
+    "timestamp": "2025-09-15T13:18:09.106Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Login successful for user: admin",
+    "meta": {
+      "action": "login_success",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "timestamp": "2025-09-15T13:18:09.106Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "173",
+    "timestamp": "2025-09-15T13:18:09.081Z",
+    "level": "debug",
+    "source": "auth",
+    "message": "Password verification successful for user: admin",
+    "meta": {
+      "action": "password_verification",
+      "username": "admin",
+      "status": "success"
+    },
+    "userId": null
+  },
+  {
+    "id": "172",
+    "timestamp": "2025-09-15T13:18:08.972Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Login attempt for user: admin",
+    "meta": {
+      "action": "login_attempt",
+      "username": "admin",
+      "timestamp": "2025-09-15T13:18:08.972Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "171",
+    "timestamp": "2025-09-15T13:18:01.309Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.3.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "170",
+    "timestamp": "2025-09-15T13:17:57.622Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.6.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "169",
+    "timestamp": "2025-09-15T13:17:57.389Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.4.32",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "168",
+    "timestamp": "2025-09-15T13:17:55.284Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.3.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "167",
+    "timestamp": "2025-09-15T13:11:00.206Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.3.2",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "166",
+    "timestamp": "2025-09-15T13:10:55.654Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.4.32",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "165",
+    "timestamp": "2025-09-15T13:10:55.213Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.3.2",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "164",
+    "timestamp": "2025-09-15T13:10:54.454Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.6.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "163",
+    "timestamp": "2025-09-15T13:10:47.819Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session check for user: admin",
+    "meta": {
+      "action": "session_check_authenticated",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "clientIP": "10.84.4.32",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "162",
+    "timestamp": "2025-09-15T13:06:11.653Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.1.26",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "161",
+    "timestamp": "2025-09-15T13:06:06.498Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.3.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "160",
+    "timestamp": "2025-09-15T13:06:06.064Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.1.26",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "159",
+    "timestamp": "2025-09-15T13:06:03.901Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.1.26",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "158",
+    "timestamp": "2025-09-15T13:05:11.006Z",
+    "level": "info",
+    "source": "signal-logger",
+    "message": "إشارة ناجحة: GBP/USD -> buy",
+    "meta": {
+      "requestId": "1757941510057_mx9fwxbi8",
+      "executionTime": 824,
+      "signal": "buy",
+      "probability": "63.30"
+    },
+    "userId": null
+  },
+  {
+    "id": "157",
+    "timestamp": "2025-09-15T13:05:10.083Z",
+    "level": "info",
+    "source": "signal-logger",
+    "message": "بدء طلب إشارة: GBP/USD (1M)",
+    "meta": {
+      "requestId": "1757941510057_mx9fwxbi8",
+      "symbol": "GBP/USD",
+      "marketType": "forex"
+    },
+    "userId": null
+  },
+  {
+    "id": "156",
+    "timestamp": "2025-09-15T13:03:02.819Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.4.32",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "155",
+    "timestamp": "2025-09-15T13:02:56.470Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.5.2",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "154",
+    "timestamp": "2025-09-15T13:02:27.239Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session check for user: admin",
+    "meta": {
+      "action": "session_check_authenticated",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "clientIP": "10.84.1.26",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "153",
+    "timestamp": "2025-09-15T13:02:14.381Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.5.2",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "152",
+    "timestamp": "2025-09-15T12:59:28.014Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.5.2",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "151",
+    "timestamp": "2025-09-15T12:53:18.693Z",
+    "level": "info",
+    "source": "signal-logger",
+    "message": "إشارة ناجحة: GBP/USD -> buy",
+    "meta": {
+      "requestId": "1757940797797_lfkdt6y0j",
+      "executionTime": 822,
+      "signal": "buy",
+      "probability": "61.82"
+    },
+    "userId": null
+  },
+  {
+    "id": "150",
+    "timestamp": "2025-09-15T12:53:17.832Z",
+    "level": "info",
+    "source": "signal-logger",
+    "message": "بدء طلب إشارة: GBP/USD (1M)",
+    "meta": {
+      "requestId": "1757940797797_lfkdt6y0j",
+      "symbol": "GBP/USD",
+      "marketType": "forex"
+    },
+    "userId": null
+  },
+  {
+    "id": "149",
+    "timestamp": "2025-09-15T12:52:57.658Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session check for user: Mr-199-App",
+    "meta": {
+      "action": "session_check_authenticated",
+      "username": "Mr-199-App",
+      "userId": 11,
+      "isAdmin": false,
+      "clientIP": "10.84.6.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "148",
+    "timestamp": "2025-09-15T12:51:30.330Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session check for user: admin",
+    "meta": {
+      "action": "session_check_authenticated",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "clientIP": "10.84.4.32",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "147",
+    "timestamp": "2025-09-15T12:51:09.326Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.6.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "146",
+    "timestamp": "2025-09-15T12:50:38.219Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.5.2",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "145",
+    "timestamp": "2025-09-15T12:50:37.711Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.3.2",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "144",
+    "timestamp": "2025-09-15T12:50:33.555Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.6.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "143",
+    "timestamp": "2025-09-15T12:50:29.394Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/140.0.0.0 Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "142",
+    "timestamp": "2025-09-15T12:50:19.482Z",
+    "level": "info",
+    "source": "signal-logger",
+    "message": "إشارة ناجحة: BTC/USDT -> wait",
+    "meta": {
+      "requestId": "1757940618663_es67juneo",
+      "executionTime": 731,
+      "signal": "wait",
+      "probability": "50.00"
+    },
+    "userId": null
+  },
+  {
+    "id": "141",
+    "timestamp": "2025-09-15T12:50:18.684Z",
+    "level": "info",
+    "source": "signal-logger",
+    "message": "بدء طلب إشارة: BTC/USDT (1M)",
+    "meta": {
+      "requestId": "1757940618663_es67juneo",
+      "symbol": "BTC/USDT",
+      "marketType": "crypto"
+    },
+    "userId": null
+  },
+  {
+    "id": "140",
+    "timestamp": "2025-09-15T12:48:54.862Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.6.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "139",
+    "timestamp": "2025-09-15T12:48:48.159Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.4.32",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "138",
+    "timestamp": "2025-09-15T12:48:46.904Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/140.0.0.0 Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "137",
+    "timestamp": "2025-09-15T12:45:55.186Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.3.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "136",
+    "timestamp": "2025-09-15T12:45:48.953Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.6.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "135",
+    "timestamp": "2025-09-15T12:45:48.740Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.1.26",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "134",
+    "timestamp": "2025-09-15T12:40:54.045Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session check for user: Mr-199-App",
+    "meta": {
+      "action": "session_check_authenticated",
+      "username": "Mr-199-App",
+      "userId": 11,
+      "isAdmin": false,
+      "clientIP": "10.84.1.26",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "133",
+    "timestamp": "2025-09-15T12:40:53.668Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session created successfully for user: Mr-199-App",
+    "meta": {
+      "action": "session_created",
+      "username": "Mr-199-App",
+      "userId": 11,
+      "isAdmin": false,
+      "clientIP": "10.84.1.26",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "132",
+    "timestamp": "2025-09-15T12:40:53.632Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Login successful for user: Mr-199-App",
+    "meta": {
+      "action": "login_success",
+      "username": "Mr-199-App",
+      "userId": 11,
+      "isAdmin": false,
+      "timestamp": "2025-09-15T12:40:53.632Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "131",
+    "timestamp": "2025-09-15T12:40:53.606Z",
+    "level": "debug",
+    "source": "auth",
+    "message": "Password verification successful for user: Mr-199-App",
+    "meta": {
+      "action": "password_verification",
+      "username": "Mr-199-App",
+      "status": "success"
+    },
+    "userId": null
+  },
+  {
+    "id": "130",
+    "timestamp": "2025-09-15T12:40:53.531Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Login attempt for user: Mr-199-App",
+    "meta": {
+      "action": "login_attempt",
+      "username": "Mr-199-App",
+      "timestamp": "2025-09-15T12:40:53.531Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "129",
+    "timestamp": "2025-09-15T12:40:19.335Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session check for user: admin",
+    "meta": {
+      "action": "session_check_authenticated",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "clientIP": "10.84.6.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "128",
+    "timestamp": "2025-09-15T12:40:19.052Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session created successfully for user: admin",
+    "meta": {
+      "action": "session_created",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "clientIP": "10.84.6.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "127",
+    "timestamp": "2025-09-15T12:40:19.023Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Login successful for user: admin",
+    "meta": {
+      "action": "login_success",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "timestamp": "2025-09-15T12:40:19.023Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "126",
+    "timestamp": "2025-09-15T12:40:19.000Z",
+    "level": "debug",
+    "source": "auth",
+    "message": "Password verification successful for user: admin",
+    "meta": {
+      "action": "password_verification",
+      "username": "admin",
+      "status": "success"
+    },
+    "userId": null
+  },
+  {
+    "id": "125",
+    "timestamp": "2025-09-15T12:40:18.869Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Login attempt for user: admin",
+    "meta": {
+      "action": "login_attempt",
+      "username": "admin",
+      "timestamp": "2025-09-15T12:40:18.869Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "124",
+    "timestamp": "2025-09-15T12:40:08.125Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.3.2",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "123",
+    "timestamp": "2025-09-15T12:40:06.837Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.4.32",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "122",
+    "timestamp": "2025-09-15T12:40:06.403Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.6.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "121",
+    "timestamp": "2025-09-15T12:40:05.231Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.1.26",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "120",
+    "timestamp": "2025-09-15T12:22:25.720Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session check for user: admin",
+    "meta": {
+      "action": "session_check_authenticated",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "clientIP": "10.84.4.32",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "119",
+    "timestamp": "2025-09-15T12:15:59.076Z",
+    "level": "info",
+    "source": "signal-logger",
+    "message": "إشارة ناجحة: GBP/JPY -> wait",
+    "meta": {
+      "requestId": "1757938558257_gkfvqk2np",
+      "executionTime": 777,
+      "signal": "wait",
+      "probability": "50.00"
+    },
+    "userId": null
+  },
+  {
+    "id": "118",
+    "timestamp": "2025-09-15T12:15:58.271Z",
+    "level": "info",
+    "source": "signal-logger",
+    "message": "بدء طلب إشارة: GBP/JPY (15M)",
+    "meta": {
+      "requestId": "1757938558257_gkfvqk2np",
+      "symbol": "GBP/JPY",
+      "marketType": "forex"
+    },
+    "userId": null
+  },
+  {
+    "id": "117",
+    "timestamp": "2025-09-15T12:14:49.775Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.1.26",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "116",
+    "timestamp": "2025-09-15T12:14:46.083Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.6.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "115",
+    "timestamp": "2025-09-15T12:13:48.736Z",
+    "level": "info",
+    "source": "signal-logger",
+    "message": "إشارة ناجحة: GOOGL -> wait",
+    "meta": {
+      "requestId": "1757938427708_9pvdth17d",
+      "executionTime": 973,
+      "signal": "wait",
+      "probability": "50.00"
+    },
+    "userId": null
+  },
+  {
+    "id": "114",
+    "timestamp": "2025-09-15T12:13:47.735Z",
+    "level": "info",
+    "source": "signal-logger",
+    "message": "بدء طلب إشارة: GOOGL (1M)",
+    "meta": {
+      "requestId": "1757938427708_9pvdth17d",
+      "symbol": "GOOGL",
+      "marketType": "stocks"
+    },
+    "userId": null
+  },
+  {
+    "id": "113",
+    "timestamp": "2025-09-15T12:13:18.226Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.6.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "112",
+    "timestamp": "2025-09-15T12:13:12.712Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.6.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "111",
+    "timestamp": "2025-09-15T12:13:12.489Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.4.32",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "110",
+    "timestamp": "2025-09-15T12:11:14.674Z",
+    "level": "info",
+    "source": "signal-logger",
+    "message": "إشارة ناجحة: ETH/USDT -> wait",
+    "meta": {
+      "requestId": "1757938273938_p7q5348ac",
+      "executionTime": 688,
+      "signal": "wait",
+      "probability": "50.00"
+    },
+    "userId": null
+  },
+  {
+    "id": "109",
+    "timestamp": "2025-09-15T12:11:13.962Z",
+    "level": "info",
+    "source": "signal-logger",
+    "message": "بدء طلب إشارة: ETH/USDT (1M)",
+    "meta": {
+      "requestId": "1757938273938_p7q5348ac",
+      "symbol": "ETH/USDT",
+      "marketType": "crypto"
+    },
+    "userId": null
+  },
+  {
+    "id": "108",
+    "timestamp": "2025-09-15T12:09:45.332Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.3.2",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "107",
+    "timestamp": "2025-09-15T12:09:40.799Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.6.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "106",
+    "timestamp": "2025-09-15T12:09:39.981Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.6.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "105",
+    "timestamp": "2025-09-15T12:09:34.798Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.5.2",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "104",
+    "timestamp": "2025-09-15T12:08:51.441Z",
+    "level": "info",
+    "source": "signal-logger",
+    "message": "إشارة ناجحة: XRP/USDT -> wait",
+    "meta": {
+      "requestId": "1757938130715_yuovmrdy3",
+      "executionTime": 684,
+      "signal": "wait",
+      "probability": "50.00"
+    },
+    "userId": null
+  },
+  {
+    "id": "103",
+    "timestamp": "2025-09-15T12:08:50.741Z",
+    "level": "info",
+    "source": "signal-logger",
+    "message": "بدء طلب إشارة: XRP/USDT (1M)",
+    "meta": {
+      "requestId": "1757938130715_yuovmrdy3",
+      "symbol": "XRP/USDT",
+      "marketType": "crypto"
+    },
+    "userId": null
+  },
+  {
+    "id": "102",
+    "timestamp": "2025-09-15T12:07:19.627Z",
+    "level": "info",
+    "source": "signal-logger",
+    "message": "إشارة ناجحة: EUR/JPY -> wait",
+    "meta": {
+      "requestId": "1757938038771_gee1zscuz",
+      "executionTime": 785,
+      "signal": "wait",
+      "probability": "50.00"
+    },
+    "userId": null
+  },
+  {
+    "id": "101",
+    "timestamp": "2025-09-15T12:07:18.789Z",
+    "level": "info",
+    "source": "signal-logger",
+    "message": "بدء طلب إشارة: EUR/JPY (1M)",
+    "meta": {
+      "requestId": "1757938038771_gee1zscuz",
+      "symbol": "EUR/JPY",
+      "marketType": "forex"
+    },
+    "userId": null
+  },
+  {
+    "id": "100",
+    "timestamp": "2025-09-15T12:06:46.434Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.4.32",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "99",
+    "timestamp": "2025-09-15T12:06:34.993Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/140.0.0.0 Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "98",
+    "timestamp": "2025-09-15T11:59:34.854Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.3.2",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "97",
+    "timestamp": "2025-09-15T11:59:30.097Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.6.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "96",
+    "timestamp": "2025-09-15T11:59:29.283Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.5.2",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "95",
+    "timestamp": "2025-09-15T11:58:46.436Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session check for user: Mr-199-App",
+    "meta": {
+      "action": "session_check_authenticated",
+      "username": "Mr-199-App",
+      "userId": 11,
+      "isAdmin": false,
+      "clientIP": "10.84.4.32",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "94",
+    "timestamp": "2025-09-15T11:58:46.148Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session created successfully for user: Mr-199-App",
+    "meta": {
+      "action": "session_created",
+      "username": "Mr-199-App",
+      "userId": 11,
+      "isAdmin": false,
+      "clientIP": "10.84.4.32",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "93",
+    "timestamp": "2025-09-15T11:58:46.121Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Login successful for user: Mr-199-App",
+    "meta": {
+      "action": "login_success",
+      "username": "Mr-199-App",
+      "userId": 11,
+      "isAdmin": false,
+      "timestamp": "2025-09-15T11:58:46.121Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "92",
+    "timestamp": "2025-09-15T11:58:46.100Z",
+    "level": "debug",
+    "source": "auth",
+    "message": "Password verification successful for user: Mr-199-App",
+    "meta": {
+      "action": "password_verification",
+      "username": "Mr-199-App",
+      "status": "success"
+    },
+    "userId": null
+  },
+  {
+    "id": "91",
+    "timestamp": "2025-09-15T11:58:46.045Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Login attempt for user: Mr-199-App",
+    "meta": {
+      "action": "login_attempt",
+      "username": "Mr-199-App",
+      "timestamp": "2025-09-15T11:58:46.045Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "90",
+    "timestamp": "2025-09-15T11:57:51.731Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session check for user: admin",
+    "meta": {
+      "action": "session_check_authenticated",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "clientIP": "10.84.3.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "89",
+    "timestamp": "2025-09-15T11:57:51.330Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session created successfully for user: admin",
+    "meta": {
+      "action": "session_created",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "clientIP": "10.84.3.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "88",
+    "timestamp": "2025-09-15T11:57:51.298Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Login successful for user: admin",
+    "meta": {
+      "action": "login_success",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "timestamp": "2025-09-15T11:57:51.298Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "87",
+    "timestamp": "2025-09-15T11:57:51.274Z",
+    "level": "debug",
+    "source": "auth",
+    "message": "Password verification successful for user: admin",
+    "meta": {
+      "action": "password_verification",
+      "username": "admin",
+      "status": "success"
+    },
+    "userId": null
+  },
+  {
+    "id": "86",
+    "timestamp": "2025-09-15T11:57:51.126Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Login attempt for user: admin",
+    "meta": {
+      "action": "login_attempt",
+      "username": "admin",
+      "timestamp": "2025-09-15T11:57:51.126Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "85",
+    "timestamp": "2025-09-15T11:57:45.047Z",
+    "level": "warn",
+    "source": "auth",
+    "message": "Login route failed for user: admin",
+    "meta": {
+      "action": "login_route_failed",
+      "username": "admin",
+      "clientIP": "10.84.3.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36",
+      "reason": "اسم المستخدم أو كلمة المرور غير صحيحة"
+    },
+    "userId": null
+  },
+  {
+    "id": "84",
+    "timestamp": "2025-09-15T11:57:45.023Z",
+    "level": "warn",
+    "source": "auth",
+    "message": "Login failed: Invalid credentials for user - admin",
+    "meta": {
+      "action": "login_failed",
+      "username": "admin",
+      "reason": "invalid_credentials",
+      "timestamp": "2025-09-15T11:57:45.023Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "83",
+    "timestamp": "2025-09-15T11:57:45.002Z",
+    "level": "warn",
+    "source": "auth",
+    "message": "Password verification failed for user: admin",
+    "meta": {
+      "action": "password_verification",
+      "username": "admin",
+      "status": "failed",
+      "reason": "invalid_password"
+    },
+    "userId": null
+  },
+  {
+    "id": "82",
+    "timestamp": "2025-09-15T11:57:44.936Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Login attempt for user: admin",
+    "meta": {
+      "action": "login_attempt",
+      "username": "admin",
+      "timestamp": "2025-09-15T11:57:44.936Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "81",
+    "timestamp": "2025-09-15T11:57:35.617Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.5.2",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "80",
+    "timestamp": "2025-09-15T11:57:33.219Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.4.32",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "79",
+    "timestamp": "2025-09-15T11:57:32.623Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.3.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "78",
+    "timestamp": "2025-09-15T11:57:25.521Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.3.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "77",
+    "timestamp": "2025-09-15T11:46:41.036Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.6.4",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "76",
+    "timestamp": "2025-09-15T11:46:36.702Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.6.4",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "75",
+    "timestamp": "2025-09-15T11:46:36.421Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.5.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "74",
+    "timestamp": "2025-09-15T11:27:17.505Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/140.0.0.0 Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "73",
+    "timestamp": "2025-09-15T11:23:59.940Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.1.27",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "72",
+    "timestamp": "2025-09-15T11:23:54.834Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.5.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "71",
+    "timestamp": "2025-09-15T11:16:23.968Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.6.4",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "70",
+    "timestamp": "2025-09-15T11:16:18.606Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.5.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "69",
+    "timestamp": "2025-09-15T11:16:18.369Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.4.35",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "68",
+    "timestamp": "2025-09-15T11:10:16.710Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.3.4",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "67",
+    "timestamp": "2025-09-15T11:09:52.201Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session check for user: Mr-199-App",
+    "meta": {
+      "action": "session_check_authenticated",
+      "username": "Mr-199-App",
+      "userId": 11,
+      "isAdmin": false,
+      "clientIP": "10.84.1.27",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "66",
+    "timestamp": "2025-09-15T11:09:51.885Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session created successfully for user: Mr-199-App",
+    "meta": {
+      "action": "session_created",
+      "username": "Mr-199-App",
+      "userId": 11,
+      "isAdmin": false,
+      "clientIP": "10.84.1.27",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "65",
+    "timestamp": "2025-09-15T11:09:51.858Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Login successful for user: Mr-199-App",
+    "meta": {
+      "action": "login_success",
+      "username": "Mr-199-App",
+      "userId": 11,
+      "isAdmin": false,
+      "timestamp": "2025-09-15T11:09:51.858Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "64",
+    "timestamp": "2025-09-15T11:09:51.845Z",
+    "level": "debug",
+    "source": "auth",
+    "message": "Password verification successful for user: Mr-199-App",
+    "meta": {
+      "action": "password_verification",
+      "username": "Mr-199-App",
+      "status": "success"
+    },
+    "userId": null
+  },
+  {
+    "id": "63",
+    "timestamp": "2025-09-15T11:09:51.790Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Login attempt for user: Mr-199-App",
+    "meta": {
+      "action": "login_attempt",
+      "username": "Mr-199-App",
+      "timestamp": "2025-09-15T11:09:51.790Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "62",
+    "timestamp": "2025-09-15T11:09:05.280Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.2.21",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "61",
+    "timestamp": "2025-09-15T11:09:02.331Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.2.21",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "60",
+    "timestamp": "2025-09-15T11:08:26.932Z",
+    "level": "warn",
+    "source": "auth",
+    "message": "Login route failed for user: Mr-199-App",
+    "meta": {
+      "action": "login_route_failed",
+      "username": "Mr-199-App",
+      "clientIP": "10.84.1.27",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",
+      "reason": "اسم المستخدم أو كلمة المرور غير صحيحة"
+    },
+    "userId": null
+  },
+  {
+    "id": "59",
+    "timestamp": "2025-09-15T11:08:26.911Z",
+    "level": "warn",
+    "source": "auth",
+    "message": "Login failed: Invalid credentials for user - Mr-199-App",
+    "meta": {
+      "action": "login_failed",
+      "username": "Mr-199-App",
+      "reason": "invalid_credentials",
+      "timestamp": "2025-09-15T11:08:26.911Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "58",
+    "timestamp": "2025-09-15T11:08:26.896Z",
+    "level": "debug",
+    "source": "auth",
+    "message": "Invalid password format detected",
+    "meta": {
+      "action": "password_verification",
+      "status": "failed",
+      "reason": "invalid_format"
+    },
+    "userId": null
+  },
+  {
+    "id": "57",
+    "timestamp": "2025-09-15T11:08:26.824Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Login attempt for user: Mr-199-App",
+    "meta": {
+      "action": "login_attempt",
+      "username": "Mr-199-App",
+      "timestamp": "2025-09-15T11:08:26.824Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "56",
+    "timestamp": "2025-09-15T11:07:51.215Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "127.0.0.1",
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/140.0.0.0 Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "55",
+    "timestamp": "2025-09-15T11:07:20.887Z",
+    "level": "warn",
+    "source": "auth",
+    "message": "Login route failed for user: admin",
+    "meta": {
+      "action": "login_route_failed",
+      "username": "admin",
+      "clientIP": "10.84.1.27",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",
+      "reason": "اسم المستخدم أو كلمة المرور غير صحيحة"
+    },
+    "userId": null
+  },
+  {
+    "id": "54",
+    "timestamp": "2025-09-15T11:07:20.872Z",
+    "level": "warn",
+    "source": "auth",
+    "message": "Login failed: Invalid credentials for user - admin",
+    "meta": {
+      "action": "login_failed",
+      "username": "admin",
+      "reason": "invalid_credentials",
+      "timestamp": "2025-09-15T11:07:20.872Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "53",
+    "timestamp": "2025-09-15T11:07:20.849Z",
+    "level": "warn",
+    "source": "auth",
+    "message": "Password verification failed for user: admin",
+    "meta": {
+      "action": "password_verification",
+      "username": "admin",
+      "status": "failed",
+      "reason": "invalid_password"
+    },
+    "userId": null
+  },
+  {
+    "id": "52",
+    "timestamp": "2025-09-15T11:07:20.791Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Login attempt for user: admin",
+    "meta": {
+      "action": "login_attempt",
+      "username": "admin",
+      "timestamp": "2025-09-15T11:07:20.791Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "51",
+    "timestamp": "2025-09-15T11:07:15.099Z",
+    "level": "warn",
+    "source": "auth",
+    "message": "Login route failed for user: admin",
+    "meta": {
+      "action": "login_route_failed",
+      "username": "admin",
+      "clientIP": "10.84.1.27",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",
+      "reason": "اسم المستخدم أو كلمة المرور غير صحيحة"
+    },
+    "userId": null
+  },
+  {
+    "id": "50",
+    "timestamp": "2025-09-15T11:07:15.083Z",
+    "level": "warn",
+    "source": "auth",
+    "message": "Login failed: Invalid credentials for user - admin",
+    "meta": {
+      "action": "login_failed",
+      "username": "admin",
+      "reason": "invalid_credentials",
+      "timestamp": "2025-09-15T11:07:15.083Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "49",
+    "timestamp": "2025-09-15T11:07:15.065Z",
+    "level": "warn",
+    "source": "auth",
+    "message": "Password verification failed for user: admin",
+    "meta": {
+      "action": "password_verification",
+      "username": "admin",
+      "status": "failed",
+      "reason": "invalid_password"
+    },
+    "userId": null
+  },
+  {
+    "id": "48",
+    "timestamp": "2025-09-15T11:07:14.993Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Login attempt for user: admin",
+    "meta": {
+      "action": "login_attempt",
+      "username": "admin",
+      "timestamp": "2025-09-15T11:07:14.993Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "47",
+    "timestamp": "2025-09-15T10:59:21.000Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session check for user: admin",
+    "meta": {
+      "action": "session_check_authenticated",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "clientIP": "10.84.3.4",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "46",
+    "timestamp": "2025-09-15T10:59:20.725Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session created successfully for user: admin",
+    "meta": {
+      "action": "session_created",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "clientIP": "10.84.3.4",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "45",
+    "timestamp": "2025-09-15T10:59:20.690Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Login successful for user: admin",
+    "meta": {
+      "action": "login_success",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "timestamp": "2025-09-15T10:59:20.690Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "44",
+    "timestamp": "2025-09-15T10:59:20.667Z",
+    "level": "debug",
+    "source": "auth",
+    "message": "Password verification successful for user: admin",
+    "meta": {
+      "action": "password_verification",
+      "username": "admin",
+      "status": "success"
+    },
+    "userId": null
+  },
+  {
+    "id": "43",
+    "timestamp": "2025-09-15T10:59:20.609Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Login attempt for user: admin",
+    "meta": {
+      "action": "login_attempt",
+      "username": "admin",
+      "timestamp": "2025-09-15T10:59:20.609Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "42",
+    "timestamp": "2025-09-15T10:59:12.140Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.4.35",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "41",
+    "timestamp": "2025-09-15T10:58:54.879Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.4.35",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36"
+    },
+    "userId": null
+  },
+  {
+    "id": "40",
+    "timestamp": "2025-09-15T10:58:21.270Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.5.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "39",
+    "timestamp": "2025-09-15T10:58:15.413Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.5.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "38",
+    "timestamp": "2025-09-15T10:58:15.162Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.5.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "37",
+    "timestamp": "2025-09-15T10:53:36.999Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session check for user: admin",
+    "meta": {
+      "action": "session_check_authenticated",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "clientIP": "10.84.4.35",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "36",
+    "timestamp": "2025-09-15T10:53:36.876Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session check for user: admin",
+    "meta": {
+      "action": "session_check_authenticated",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "clientIP": "10.84.5.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "35",
+    "timestamp": "2025-09-15T10:50:29.251Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session check for user: admin",
+    "meta": {
+      "action": "session_check_authenticated",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "clientIP": "10.84.2.21",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "34",
+    "timestamp": "2025-09-15T10:50:14.869Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session check for user: admin",
+    "meta": {
+      "action": "session_check_authenticated",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "clientIP": "10.84.5.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "33",
+    "timestamp": "2025-09-15T10:50:14.450Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session check for user: admin",
+    "meta": {
+      "action": "session_check_authenticated",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "clientIP": "10.84.5.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "32",
+    "timestamp": "2025-09-15T10:42:48.329Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session check for user: admin",
+    "meta": {
+      "action": "session_check_authenticated",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "clientIP": "10.84.4.35",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "31",
+    "timestamp": "2025-09-15T10:42:41.997Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session check for user: admin",
+    "meta": {
+      "action": "session_check_authenticated",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "clientIP": "10.84.5.3",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "30",
+    "timestamp": "2025-09-15T10:42:19.820Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session check for user: admin",
+    "meta": {
+      "action": "session_check_authenticated",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "clientIP": "10.84.3.4",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "29",
+    "timestamp": "2025-09-15T10:42:10.812Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session check for user: admin",
+    "meta": {
+      "action": "session_check_authenticated",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "clientIP": "10.84.3.4",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "28",
+    "timestamp": "2025-09-15T10:42:10.335Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session created successfully for user: admin",
+    "meta": {
+      "action": "session_created",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "clientIP": "10.84.3.4",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "27",
+    "timestamp": "2025-09-15T10:42:10.296Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Login successful for user: admin",
+    "meta": {
+      "action": "login_success",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "timestamp": "2025-09-15T10:42:10.296Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "26",
+    "timestamp": "2025-09-15T10:42:10.266Z",
+    "level": "debug",
+    "source": "auth",
+    "message": "Password verification successful for user: admin",
+    "meta": {
+      "action": "password_verification",
+      "username": "admin",
+      "status": "success"
+    },
+    "userId": null
+  },
+  {
+    "id": "25",
+    "timestamp": "2025-09-15T10:42:10.169Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Login attempt for user: admin",
+    "meta": {
+      "action": "login_attempt",
+      "username": "admin",
+      "timestamp": "2025-09-15T10:42:10.169Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "24",
+    "timestamp": "2025-09-15T10:40:43.799Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.2.21",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "23",
+    "timestamp": "2025-09-15T10:40:39.616Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.2.21",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "22",
+    "timestamp": "2025-09-15T10:40:39.060Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.1.27",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "21",
+    "timestamp": "2025-09-15T10:36:02.380Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.4.35",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "20",
+    "timestamp": "2025-09-15T10:35:58.334Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Unauthenticated session check attempt",
+    "meta": {
+      "action": "session_check_unauthenticated",
+      "clientIP": "10.84.1.27",
+      "userAgent": "Mozilla/5.0 (Linux; Android 13; SM-N986U Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.7339.51 Mobile Safari/537.36 Replit-Bonsai/2.152.13 (samsung/c2qsqw/c2q:13/TP1A.220624.014/N986USQU5HWH9:user/release-keys 13)"
+    },
+    "userId": null
+  },
+  {
+    "id": "19",
+    "timestamp": "2025-09-15T10:31:38.659Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Session created successfully for user: admin",
+    "meta": {
+      "action": "session_created",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "clientIP": "10.84.6.4",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",
+      "sessionId": "_mx47jqfAoQZMURgc1Nc2qCU8CyuFisJ"
+    },
+    "userId": null
+  },
+  {
+    "id": "18",
+    "timestamp": "2025-09-15T10:31:38.618Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Login successful for user: admin",
+    "meta": {
+      "action": "login_success",
+      "username": "admin",
+      "userId": 1,
+      "isAdmin": true,
+      "timestamp": "2025-09-15T10:31:38.618Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "17",
+    "timestamp": "2025-09-15T10:31:38.596Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Password verification successful for user: admin",
+    "meta": {
+      "action": "password_verification",
+      "username": "admin",
+      "status": "success"
+    },
+    "userId": null
+  },
+  {
+    "id": "16",
+    "timestamp": "2025-09-15T10:31:38.489Z",
+    "level": "info",
+    "source": "auth",
+    "message": "Login attempt for user: admin",
+    "meta": {
+      "action": "login_attempt",
+      "username": "admin",
+      "timestamp": "2025-09-15T10:31:38.488Z"
+    },
+    "userId": null
+  },
+  {
+    "id": "11",
+    "timestamp": "2025-09-15T03:03:16+00:00",
+    "level": "info",
+    "source": "system",
+    "message": "تحديث صفحة السجلات - تم تحسين العرض",
+    "meta": {
+      "feature": "log_monitor",
+      "status": "updated"
+    },
+    "userId": null
+  },
+  {
+    "id": "12",
+    "timestamp": "2025-09-15T03:03:16+00:00",
+    "level": "success",
+    "source": "frontend",
+    "message": "تم تحميل الواجهة الأمامية بنجاح",
+    "meta": {
+      "page": "log_monitor",
+      "load_time": "1.2s"
+    },
+    "userId": null
+  },
+  {
+    "id": "13",
+    "timestamp": "2025-09-15T03:03:16+00:00",
+    "level": "info",
+    "source": "websocket",
+    "message": "تم تأسيس اتصال WebSocket",
+    "meta": {
+      "client_id": "mobile_user",
+      "protocol": "socket.io"
+    },
+    "userId": null
+  },
+  {
+    "id": "14",
+    "timestamp": "2025-09-15T03:03:16+00:00",
+    "level": "warn",
+    "source": "security",
+    "message": "محاولة دخول متكررة من IP واحد",
+    "meta": {
+      "ip": "192.168.1.100",
+      "attempts": 3
+    },
+    "userId": null
+  },
+  {
+    "id": "15",
+    "timestamp": "2025-09-15T03:03:16+00:00",
+    "level": "info",
+    "source": "api",
+    "message": "طلب API جديد - جلب السجلات",
+    "meta": {
+      "endpoint": "/api/logs",
+      "method": "GET",
+      "user": "admin"
+    },
+    "userId": null
+  },
+  {
+    "id": "1",
+    "timestamp": "2025-09-15T03:01:25+00:00",
+    "level": "info",
+    "source": "system",
+    "message": "تم بدء تشغيل النظام بنجاح",
+    "meta": {},
+    "userId": null
+  },
+  {
+    "id": "2",
+    "timestamp": "2025-09-15T03:01:25+00:00",
+    "level": "warn",
+    "source": "api",
+    "message": "تحذير: استخدام مفرط لـ API",
+    "meta": {
+      "api": "twelvedata",
+      "usage": "85%"
+    },
+    "userId": null
+  },
+  {
+    "id": "3",
+    "timestamp": "2025-09-15T03:01:25+00:00",
+    "level": "error",
+    "source": "database",
+    "message": "خطأ في الاتصال بقاعدة البيانات",
+    "meta": {
+      "error": "timeout",
+      "duration": 5000
+    },
+    "userId": null
+  },
+  {
+    "id": "4",
+    "timestamp": "2025-09-15T03:01:25+00:00",
+    "level": "info",
+    "source": "auth",
+    "message": "تم تسجيل دخول المستخدم admin",
+    "meta": {
+      "user": "admin",
+      "ip": "127.0.0.1"
+    },
+    "userId": null
+  },
+  {
+    "id": "5",
+    "timestamp": "2025-09-15T03:01:25+00:00",
+    "level": "debug",
+    "source": "trading",
+    "message": "تحليل إشارة التداول لـ USD/CHF",
+    "meta": {
+      "pair": "USD/CHF",
+      "signal": "buy",
+      "confidence": 73.6
+    },
+    "userId": null
+  },
+  {
+    "id": "6",
+    "timestamp": "2025-09-15T03:01:25+00:00",
+    "level": "warn",
+    "source": "market",
+    "message": "تحذير: السوق مغلق",
+    "meta": {
+      "status": "closed",
+      "next_open": "09:30"
+    },
+    "userId": null
+  },
+  {
+    "id": "7",
+    "timestamp": "2025-09-15T03:01:25+00:00",
+    "level": "info",
+    "source": "deployment",
+    "message": "تم نشر النسخة الجديدة",
+    "meta": {
+      "version": "1.2.0",
+      "changes": 15
+    },
+    "userId": null
+  },
+  {
+    "id": "8",
+    "timestamp": "2025-09-15T03:01:25+00:00",
+    "level": "error",
+    "source": "notification",
+    "message": "فشل في إرسال الإشعار",
+    "meta": {
+      "type": "email",
+      "recipient": "admin@example.com"
+    },
+    "userId": null
+  },
+  {
+    "id": "9",
+    "timestamp": "2025-09-15T03:01:25+00:00",
+    "level": "info",
+    "source": "backup",
+    "message": "تم إنشاء نسخة احتياطية",
+    "meta": {
+      "size": "2.5MB",
+      "duration": "1.2s"
+    },
+    "userId": null
+  },
+  {
+    "id": "10",
+    "timestamp": "2025-09-15T03:01:25+00:00",
+    "level": "debug",
+    "source": "cache",
+    "message": "تم تحديث الكاش",
+    "meta": {
+      "key": "market_data",
+      "ttl": 300
+    },
+    "userId": null
+  }
+]
