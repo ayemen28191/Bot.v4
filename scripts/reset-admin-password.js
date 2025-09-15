@@ -18,7 +18,7 @@ async function hashPassword(password) {
 }
 
 async function resetAdminPassword() {
-  const newPassword = 'newpassword123';
+  const newPassword = 'Ay**--772283228';
   const dbPath = path.join(__dirname, '..', 'data', 'database.sqlite');
   
   try {

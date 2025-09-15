@@ -4,8 +4,24 @@ type UnauthorizedBehavior = "throw" | "returnNull";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    let errorMessage = res.statusText;
+    try {
+      const text = await res.text();
+      if (text) {
+        errorMessage = text;
+      }
+    } catch (parseError) {
+      console.warn('Failed to parse error response:', parseError);
+    }
+    
+    const error = new Error(`${res.status}: ${errorMessage}`);
+    console.error('HTTP Error:', {
+      status: res.status,
+      statusText: res.statusText,
+      url: res.url,
+      message: errorMessage
+    });
+    throw error;
   }
 }
 
@@ -23,6 +39,12 @@ export async function apiRequest(
     const cleanUrl = url.startsWith('http') ? url : 
                      url.startsWith('/') ? url : `/${url}`;
 
+    // تحديد الوضع المناسب للطلب حسب البيئة
+    const isHTTPS = typeof window !== 'undefined' && window.location.protocol === 'https:';
+    const isSameOrigin = cleanUrl.startsWith('/');
+    
+    const requestMode = isSameOrigin ? 'same-origin' : 'cors';
+
     const res = await fetch(cleanUrl, {
       method,
       headers: {
@@ -36,13 +58,16 @@ export async function apiRequest(
       },
       body: data ? JSON.stringify(data) : undefined,
       credentials: "include", // مهم لإرسال ملفات تعريف الارتباط
-      mode: 'cors', // تغيير إلى cors للسماح بطلبات cross-origin
+      mode: requestMode, // استخدام الوضع المناسب
       signal: AbortSignal.timeout(15000) // timeout بعد 15 ثانية
     });
 
     await throwIfResNotOk(res);
     return res;
   } catch (error: any) {
+    // تحسين تسجيل الأخطاء
+    console.error(`API Request Error [${method} ${url}]:`, error);
+    
     // تجاهل أخطاء AbortError ومنع الإبلاغ عنها
     if (error?.name === 'AbortError' || error?.message?.includes('user aborted') || error?.message?.includes('aborted')) {
       // لا تعيد المحاولة عند الإلغاء المتعمد
