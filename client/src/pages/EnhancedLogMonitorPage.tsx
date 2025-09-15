@@ -295,31 +295,20 @@ export default function EnhancedLogMonitorPage() {
 
   // تحديد محتوى التبويبات المحسّن
   const getTabTitle = () => {
-    switch (selectedTab) {
-      case 'user':
-        return 'سجلات المستخدمين النشطة';
-      case 'system':
-        return 'سجلات النظام النشطة';
-      default:
-        return 'جميع السجلات النشطة';
-    }
-  };
-
-  const getTabDescription = () => {
     const activeFilters = [];
-    if (selectedLevel) activeFilters.push(`المستوى: ${selectedLevel}`);
-    if (selectedSource) activeFilters.push(`المصدر: ${selectedSource}`);
-    if (searchTerm) activeFilters.push(`البحث: "${searchTerm}"`);
+    if (selectedLevel) activeFilters.push(`${selectedLevel}`);
+    if (selectedSource) activeFilters.push(`${selectedSource}`);
+    if (searchTerm) activeFilters.push(`"${searchTerm}"`);
     
     const filterText = activeFilters.length > 0 ? ` (${activeFilters.join(' • ')})` : '';
     
     switch (selectedTab) {
       case 'user':
-        return `عرض سجلات المستخدمين${filterText}`;
+        return `سجلات المستخدمين النشطة${filterText}`;
       case 'system':
-        return `عرض سجلات النظام${filterText}`;
+        return `سجلات النظام النشطة${filterText}`;
       default:
-        return `عرض جميع السجلات${filterText}`;
+        return `جميع السجلات النشطة${filterText}`;
     }
   };
 
@@ -407,15 +396,10 @@ export default function EnhancedLogMonitorPage() {
       {/* قائمة السجلات مع نظام التبويبات المحسّن */}
       <div className="px-3 sm:px-4 pb-20">
         <div className="mb-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-foreground flex items-center space-x-2 space-x-reverse">
-              <Activity className="h-5 w-5 text-primary" />
-              <span>{getTabTitle()}</span>
-            </h3>
-            <div className="text-sm text-muted-foreground bg-muted/30 px-3 py-1 rounded-full border">
-              {getTabDescription()}
-            </div>
-          </div>
+          <h3 className="text-lg font-semibold text-foreground flex items-center space-x-2 space-x-reverse">
+            <Activity className="h-5 w-5 text-primary" />
+            <span>{getTabTitle()}</span>
+          </h3>
         </div>
         
         {/* السجلات بدون تمرير منفصل - تتحرك مع الصفحة طبيعياً */}
