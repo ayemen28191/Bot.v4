@@ -7,6 +7,7 @@ import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 import env from "./env";
+import { logsService } from "./services/logs-service";
 
 declare global {
   namespace Express {
@@ -22,7 +23,7 @@ export async function hashPassword(password: string) {
   return `${buf.toString("hex")}.${salt}`;
 }
 
-export async function comparePasswords(supplied: string, stored: string) {
+export async function comparePasswords(supplied: string, stored: string, username?: string) {
   try {
     // فقط التحقق من كلمات المرور المشفرة بتنسيق [hash].[salt]
     if (stored && stored.includes(".")) {
@@ -36,22 +37,60 @@ export async function comparePasswords(supplied: string, stored: string) {
           
           if (isEqual) {
             console.log("Password verification successful");
+            if (username) {
+              await logsService.logDebug("auth", `Password verification successful for user: ${username}`, {
+                action: "password_verification",
+                username,
+                status: "success"
+              });
+            }
           } else {
             console.log("Password verification failed");
+            if (username) {
+              await logsService.logWarn("auth", `Password verification failed for user: ${username}`, {
+                action: "password_verification",
+                username,
+                status: "failed",
+                reason: "invalid_password"
+              });
+            }
           }
           
           return isEqual;
         } catch (error) {
           console.error("Error comparing hashed passwords:", error);
+          if (username) {
+            await logsService.logError("auth", `Error during password comparison for user: ${username}`, {
+              action: "password_verification",
+              username,
+              status: "error",
+              error: error instanceof Error ? error.message : String(error)
+            });
+          }
         }
       }
     }
     
     // رفض أي كلمة مرور غير مشفرة أو غير صالحة
     console.log("Invalid password format - only properly hashed passwords are accepted");
+    if (username) {
+      await logsService.logDebug("auth", "Invalid password format detected", {
+        action: "password_verification",
+        status: "failed",
+        reason: "invalid_format"
+      });
+    }
     return false;
   } catch (error) {
     console.error("Error in password comparison:", error);
+    if (username) {
+      await logsService.logError("auth", `Critical error in password comparison for user: ${username}`, {
+        action: "password_verification",
+        username,
+        status: "error",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
     return false;
   }
 }
@@ -129,8 +168,15 @@ export function setupAuth(app: Express) {
           isAdmin: true
         });
         console.log('Admin account created successfully');
-        console.log('🔐 IMPORTANT: Admin password for first login:', randomPassword);
-        console.log('🔐 Please change this password immediately after first login!');
+        console.log('🔐 SECURITY: Admin password has been generated and stored securely');
+        console.log('🔐 Use password reset functionality to set a new admin password');
+        
+        // Log admin creation event securely (without password)
+        await logsService.logInfo("auth", "Admin account created during system initialization", {
+          action: "admin_account_created",
+          username: "admin",
+          email: "admin@example.com"
+        });
       } else {
         console.log('Admin account already exists');
         
@@ -165,23 +211,54 @@ export function setupAuth(app: Express) {
     new LocalStrategy(async (username, password, done) => {
       try {
         console.log(`Attempting authentication for user: ${username}`);
+        await logsService.logInfo("auth", `Login attempt for user: ${username}`, {
+          action: "login_attempt",
+          username,
+          timestamp: new Date().toISOString()
+        });
+
         const user = await storage.getUserByUsername(username);
 
         if (!user) {
           console.log(`Authentication failed: User ${username} not found`);
+          await logsService.logWarn("auth", `Login failed: User not found - ${username}`, {
+            action: "login_failed",
+            username,
+            reason: "user_not_found",
+            timestamp: new Date().toISOString()
+          });
           return done(null, false, { message: "اسم المستخدم أو كلمة المرور غير صحيحة" });
         }
 
-        const isValid = await comparePasswords(password, user.password);
+        const isValid = await comparePasswords(password, user.password, username);
         if (!isValid) {
           console.log(`Authentication failed: Invalid password for user ${username}`);
+          await logsService.logWarn("auth", `Login failed: Invalid credentials for user - ${username}`, {
+            action: "login_failed",
+            username,
+            reason: "invalid_credentials",
+            timestamp: new Date().toISOString()
+          });
           return done(null, false, { message: "اسم المستخدم أو كلمة المرور غير صحيحة" });
         }
 
         console.log(`Authentication successful for user: ${username}`);
+        await logsService.logInfo("auth", `Login successful for user: ${username}`, {
+          action: "login_success",
+          username,
+          userId: user.id,
+          isAdmin: user.isAdmin,
+          timestamp: new Date().toISOString()
+        });
         return done(null, user);
       } catch (err) {
         console.error('Authentication error:', err);
+        await logsService.logError("auth", `Authentication error for user: ${username}`, {
+          action: "login_error",
+          username,
+          error: err instanceof Error ? err.message : String(err),
+          timestamp: new Date().toISOString()
+        });
         return done(err);
       }
     }),
@@ -208,27 +285,60 @@ export function setupAuth(app: Express) {
 
   // مسارات المصادقة
   app.post("/api/login", (req, res, next) => {
+    const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+    const userAgent = req.get('User-Agent') || 'unknown';
+    
     console.log('Processing login request:', {
       username: req.body.username,
       hasPassword: !!req.body.password
     });
 
-    passport.authenticate("local", (err: any, user: SelectUser | false, info: { message: string }) => {
+    passport.authenticate("local", async (err: any, user: SelectUser | false, info: { message: string }) => {
       if (err) {
         console.error('Login error:', err);
+        await logsService.logError("auth", `Login route error: ${err.message}`, {
+          action: "login_route_error",
+          username: req.body.username,
+          clientIP,
+          userAgent,
+          error: err.message
+        });
         return next(err);
       }
       if (!user) {
         console.log('Login failed:', info.message);
+        await logsService.logWarn("auth", `Login route failed for user: ${req.body.username}`, {
+          action: "login_route_failed",
+          username: req.body.username,
+          clientIP,
+          userAgent,
+          reason: info.message
+        });
         return res.status(401).json({ message: info.message });
       }
 
-      req.login(user, (err) => {
+      req.login(user, async (err) => {
         if (err) {
           console.error('Session creation error:', err);
+          await logsService.logError("auth", `Session creation failed for user: ${user.username}`, {
+            action: "session_creation_failed",
+            username: user.username,
+            userId: user.id,
+            clientIP,
+            userAgent,
+            error: err.message
+          });
           return next(err);
         }
         console.log(`User logged in successfully: ${user.id}`);
+        await logsService.logInfo("auth", `Session created successfully for user: ${user.username}`, {
+          action: "session_created",
+          username: user.username,
+          userId: user.id,
+          isAdmin: user.isAdmin,
+          clientIP,
+          userAgent
+        });
         // إزالة كلمة المرور من الاستجابة لأسباب أمنية
         const { password, ...safeUser } = user;
         res.json(safeUser);
@@ -236,27 +346,57 @@ export function setupAuth(app: Express) {
     })(req, res, next);
   });
 
-  app.post("/api/logout", (req, res, next) => {
+  app.post("/api/logout", async (req, res, next) => {
     const userId = req.user?.id;
+    const username = req.user?.username;
+    const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+    const userAgent = req.get('User-Agent') || 'unknown';
+    
     console.log(`Processing logout request for user: ${userId}`);
 
-    req.logout((err) => {
+    req.logout(async (err) => {
       if (err) {
         console.error('Logout error:', err);
+        await logsService.logError("auth", `Logout error for user: ${username}`, {
+          action: "logout_error",
+          username,
+          userId,
+          clientIP,
+          userAgent,
+          error: err.message
+        });
         return next(err);
       }
       console.log(`User ${userId} logged out successfully`);
+      await logsService.logInfo("auth", `User logged out successfully: ${username}`, {
+        action: "logout_success",
+        username,
+        userId,
+        clientIP,
+        userAgent
+      });
       res.sendStatus(200);
     });
   });
 
   // إنشاء حساب جديد
   app.post("/api/register", async (req, res, next) => {
+    const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+    const userAgent = req.get('User-Agent') || 'unknown';
+    
     try {
       console.log('Processing registration request:', {
         username: req.body.username,
         email: req.body.email,
         hasPassword: !!req.body.password
+      });
+
+      await logsService.logInfo("auth", `Registration attempt for user: ${req.body.username}`, {
+        action: "registration_attempt",
+        username: req.body.username,
+        email: req.body.email,
+        clientIP,
+        userAgent
       });
 
       // التحقق من صحة البيانات مع whitelist للغة
@@ -271,6 +411,13 @@ export function setupAuth(app: Express) {
 
       // التحقق من الحقول المطلوبة
       if (!validatedUser.username || !validatedUser.password || !validatedUser.displayName || !validatedUser.email) {
+        await logsService.logWarn("auth", `Registration failed - missing required fields for: ${req.body.username}`, {
+          action: "registration_failed",
+          username: req.body.username,
+          reason: "missing_required_fields",
+          clientIP,
+          userAgent
+        });
         return res.status(400).json({ error: 'جميع الحقول مطلوبة' });
       }
 
@@ -282,13 +429,39 @@ export function setupAuth(app: Express) {
         password: hashedPassword
       });
 
+      await logsService.logInfo("auth", `User account created successfully: ${newUser.username}`, {
+        action: "user_created",
+        username: newUser.username,
+        userId: newUser.id,
+        email: newUser.email,
+        isAdmin: newUser.isAdmin,
+        clientIP,
+        userAgent
+      });
+
       // تسجيل المستخدم الجديد تلقائياً
-      req.login(newUser, (err) => {
+      req.login(newUser, async (err) => {
         if (err) {
           console.error('Auto-login error after registration:', err);
+          await logsService.logError("auth", `Auto-login failed after registration for: ${newUser.username}`, {
+            action: "auto_login_failed",
+            username: newUser.username,
+            userId: newUser.id,
+            clientIP,
+            userAgent,
+            error: err.message
+          });
           return next(err);
         }
         console.log(`User registered and logged in successfully: ${newUser.id}`);
+        await logsService.logInfo("auth", `User registered and auto-logged in successfully: ${newUser.username}`, {
+          action: "registration_success",
+          username: newUser.username,
+          userId: newUser.id,
+          isAdmin: newUser.isAdmin,
+          clientIP,
+          userAgent
+        });
         // إزالة كلمة المرور من الاستجابة لأسباب أمنية
         const { password, ...safeUser } = newUser;
         res.status(201).json(safeUser);
@@ -297,22 +470,57 @@ export function setupAuth(app: Express) {
       console.error('Registration error:', error);
       
       if (error.code === 'SQLITE_CONSTRAINT') {
+        await logsService.logWarn("auth", `Registration failed - duplicate user/email: ${req.body.username}`, {
+          action: "registration_failed",
+          username: req.body.username,
+          email: req.body.email,
+          reason: "duplicate_constraint",
+          clientIP,
+          userAgent
+        });
         return res.status(400).json({ error: 'اسم المستخدم أو البريد الإلكتروني مستخدم بالفعل' });
       }
       
-      res.status(400).json({ error: error.message || 'فشل في إنشاء الحساب' });
+      await logsService.logError("auth", `Registration error for user: ${req.body.username}`, {
+        action: "registration_error",
+        username: req.body.username,
+        email: req.body.email,
+        clientIP,
+        userAgent,
+        error: error.message || String(error)
+      });
+      
+      res.status(400).json({ error: 'فشل في إنشاء الحساب' });
     }
   });
 
-  app.get("/api/user", (req, res) => {
+  app.get("/api/user", async (req, res) => {
+    const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+    const userAgent = req.get('User-Agent') || 'unknown';
+    
     console.log('Checking current user session:', {
       isAuthenticated: req.isAuthenticated(),
       userId: req.user?.id
     });
 
     if (!req.isAuthenticated()) {
+      await logsService.logInfo("auth", "Unauthenticated session check attempt", {
+        action: "session_check_unauthenticated",
+        clientIP,
+        userAgent
+      });
       return res.status(401).json({ message: "غير مسجل الدخول" });
     }
+    
+    await logsService.logInfo("auth", `Session check for user: ${req.user!.username}`, {
+      action: "session_check_authenticated",
+      username: req.user!.username,
+      userId: req.user!.id,
+      isAdmin: req.user!.isAdmin,
+      clientIP,
+      userAgent
+    });
+    
     // إزالة كلمة المرور من الاستجابة لأسباب أمنية
     const { password, ...safeUser } = req.user!;
     res.json(safeUser);
