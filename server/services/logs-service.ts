@@ -60,6 +60,11 @@ class LogsService {
       // فحص الإشعارات
       await this.checkNotifications(savedLog);
       
+      // تحديث العدادات إذا توفر معلومات المستخدم والعمل
+      if (newLog.userId && newLog.action) {
+        await this.updateUserCounters(newLog.userId, newLog.action);
+      }
+      
       // إشعار المستمعين بالسجل الجديد
       this.notifyNewLog(savedLog);
       
@@ -163,6 +168,26 @@ class LogsService {
       } catch (error) {
         console.error(`[LogsService] Notification failed for config ${configId}:`, error);
       }
+    }
+  }
+
+  // تحديث العدادات للمستخدم
+  private async updateUserCounters(userId: number, action: string): Promise<void> {
+    try {
+      const now = new Date();
+      const dailyDate = now.toISOString().split('T')[0]; // YYYY-MM-DD
+      const monthlyDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`; // YYYY-MM-01
+
+      // تحديث العداد اليومي والشهري بشكل متوازي
+      await Promise.allSettled([
+        storage.createOrUpdateCounter(userId, action, dailyDate, 'daily'),
+        storage.createOrUpdateCounter(userId, action, monthlyDate, 'monthly')
+      ]);
+
+      console.log(`[LogsService] Updated counters for user ${userId}, action: ${action}`);
+    } catch (error) {
+      console.error(`[LogsService] Failed to update counters for user ${userId}:`, error);
+      // لا نرمي الخطأ لأن فشل تحديث العدادات لا يجب أن يوقف عملية الログ
     }
   }
 

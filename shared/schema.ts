@@ -1,4 +1,5 @@
 import { sqliteTable, text, integer, blob } from "drizzle-orm/sqlite-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -141,6 +142,22 @@ export const signalLogs = sqliteTable("signal_logs", {
   requestedAt: text("requested_at").notNull().default(new Date().toISOString()), // وقت الطلب
   completedAt: text("completed_at"), // وقت الانتهاء من المعالجة
   createdAt: text("created_at").notNull().default(new Date().toISOString()),
+});
+
+// جدول العدادات التراكمية للمستخدمين (محسّن للاستعلام السريع)
+export const userCounters = sqliteTable("user_counters", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id"), // معرف المستخدم (nullable للأحداث غير المصرح بها)
+  normalizedUserId: integer("normalized_user_id").generatedAlwaysAs(
+    sql`COALESCE(user_id, -1)`
+  ), // عمود محسوب للتعامل مع NULL userId في UPSERT
+  action: text("action").notNull(), // نوع العمل (login, logout, signal_request, error, etc.)
+  date: text("date").notNull(), // تاريخ العداد بصيغة YYYY-MM-DD
+  period: text("period").notNull(), // نوع الفترة (daily, monthly)
+  count: integer("count").notNull().default(1), // العدد التراكمي
+  lastUpdated: text("last_updated").notNull().default(new Date().toISOString()), // آخر تحديث
+  createdAt: text("created_at").notNull().default(new Date().toISOString()),
+  updatedAt: text("updated_at").notNull().default(new Date().toISOString()),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -286,3 +303,24 @@ export const insertSignalLogSchema = createInsertSchema(signalLogs).pick({
 
 export type InsertSignalLog = z.infer<typeof insertSignalLogSchema>;
 export type SignalLog = typeof signalLogs.$inferSelect;
+
+// سكيما لإنشاء عداد مستخدم جديد
+export const insertUserCounterSchema = createInsertSchema(userCounters).pick({
+  userId: true,
+  action: true,
+  date: true,
+  period: true,
+  count: true,
+  lastUpdated: true,
+});
+
+// سكيما محسّن للعدادات مع validation
+export const enhancedUserCounterSchema = insertUserCounterSchema.extend({
+  action: z.enum(['login', 'logout', 'signal_request', 'error', 'server_off', 'server_on', 'password_change', 'change_avatar', 'chat_message']).optional(),
+  period: z.enum(['daily', 'monthly']),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
+});
+
+export type InsertUserCounter = z.infer<typeof insertUserCounterSchema>;
+export type EnhancedInsertUserCounter = z.infer<typeof enhancedUserCounterSchema>;
+export type UserCounter = typeof userCounters.$inferSelect;

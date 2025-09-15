@@ -3,6 +3,8 @@ import session from "express-session";
 import path from "path";
 import fs from "fs";
 import sqlite3 from "sqlite3";
+import { UAParser } from "ua-parser-js";
+import geoip from "geoip-lite";
 import {
   users, type User, type InsertUser,
   configKeys, type ConfigKey, type InsertConfigKey,
@@ -10,7 +12,8 @@ import {
   deploymentLogs, type DeploymentLog, type InsertDeploymentLog,
   systemLogs, type SystemLog, type InsertSystemLog,
   notificationSettings, type NotificationSetting, type InsertNotificationSetting,
-  signalLogs, type SignalLog, type InsertSignalLog
+  signalLogs, type SignalLog, type InsertSignalLog,
+  userCounters, type UserCounter, type InsertUserCounter
 } from "@shared/schema";
 import env from "./env";
 
@@ -91,6 +94,26 @@ export interface IStorage {
     averageExecutionTime: number;
   }>;
   deleteOldSignalLogs(cutoffDate: string): Promise<number>;
+
+  // User counters methods
+  createOrUpdateCounter(userId: number | null, action: string, date: string, period: 'daily' | 'monthly', increment?: number): Promise<UserCounter>;
+  getCounter(userId: number | null, action: string, date: string, period: 'daily' | 'monthly'): Promise<UserCounter | undefined>;
+  getCountersByPeriod(filters: {
+    userId?: number | null;
+    action?: string;
+    period: 'daily' | 'monthly';
+    dateFrom?: string;
+    dateTo?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<UserCounter[]>;
+  getUserCountersSummary(userId: number | null, actions?: string[]): Promise<{
+    daily: Record<string, number>;
+    monthly: Record<string, number>;
+    totalActions: number;
+    mostActiveDay: string | null;
+    mostActiveAction: string | null;
+  }>;
 
   // Database access
   getDatabase(): any;
@@ -394,6 +417,87 @@ try {
         }
       });
     }
+  });
+
+  // تأكد من إنشاء جدول العدادات التراكمية للمستخدمين مع التحقق من البنية الصحيحة
+  sqliteDb.get("PRAGMA table_info(user_counters)", (pragmaErr, tableInfo) => {
+    if (pragmaErr) {
+      console.error('Error checking user_counters table info:', pragmaErr);
+      return;
+    }
+
+    // Check if table exists and has normalized_user_id column
+    sqliteDb.get("SELECT sql FROM sqlite_master WHERE type='table' AND name='user_counters'", (err, row: any) => {
+      const hasNormalizedUserId = row && row.sql && row.sql.includes('normalized_user_id');
+      
+      if (!hasNormalizedUserId) {
+        console.log('User_counters table needs recreation to add normalized_user_id column');
+        
+        // Drop existing table if it exists and recreate with correct structure
+        sqliteDb.exec(`
+          DROP TABLE IF EXISTS user_counters;
+          
+          CREATE TABLE user_counters (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            normalized_user_id INTEGER GENERATED ALWAYS AS (COALESCE(user_id, -1)) STORED,
+            action TEXT NOT NULL,
+            date TEXT NOT NULL,
+            period TEXT NOT NULL CHECK (period IN ('daily', 'monthly')),
+            count INTEGER NOT NULL DEFAULT 1,
+            last_updated TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            UNIQUE (normalized_user_id, action, date, period)
+          );
+        `, (createErr) => {
+          if (createErr) {
+            console.error('Error recreating user_counters table:', createErr);
+          } else {
+            console.log('✅ User_counters table recreated successfully with normalized_user_id');
+            
+            // إنشاء فهارس الأداء
+            sqliteDb.exec(`
+              CREATE INDEX IF NOT EXISTS idx_user_counters_user_period 
+              ON user_counters(user_id, period, date DESC);
+              
+              CREATE INDEX IF NOT EXISTS idx_user_counters_action_period 
+              ON user_counters(action, period, date DESC);
+              
+              CREATE INDEX IF NOT EXISTS idx_user_counters_normalized_user_id 
+              ON user_counters(normalized_user_id, period, date DESC);
+            `, (indexErr) => {
+              if (indexErr) {
+                console.error('Error creating user_counters indexes:', indexErr);
+              } else {
+                console.log('✅ User_counters performance indexes created successfully');
+              }
+            });
+          }
+        });
+      } else {
+        console.log('User_counters table already has correct structure');
+        
+        // إنشاء فهارس الأداء
+        sqliteDb.exec(`
+          CREATE INDEX IF NOT EXISTS idx_user_counters_user_period 
+          ON user_counters(user_id, period, date DESC);
+          
+          CREATE INDEX IF NOT EXISTS idx_user_counters_action_period 
+          ON user_counters(action, period, date DESC);
+          
+          CREATE INDEX IF NOT EXISTS idx_user_counters_normalized_user_id 
+          ON user_counters(normalized_user_id, period, date DESC);
+        `, (indexErr) => {
+          if (indexErr) {
+            console.error('Error creating user_counters indexes:', indexErr);
+          } else {
+            console.log('✅ User_counters performance indexes created successfully');
+          }
+        });
+      }
+    });
   });
 
   console.log('✅ تم إنشاء جداول قاعدة البيانات بنجاح');
@@ -1368,64 +1472,103 @@ export class DatabaseStorage implements IStorage {
   // ========================= دوال إدارة السجلات النظام =========================
 
   async createSystemLog(log: InsertSystemLog): Promise<SystemLog> {
-    return new Promise<SystemLog>((resolve, reject) => {
-      const now = new Date().toISOString();
-      
-      sqliteDb.run(
-        `INSERT INTO system_logs (
-          timestamp, level, source, message, meta, 
-          request_id, session_id, combined_tracking_id,
-          actor_type, actor_id, actor_display_name, action, result, details,
-          previous_total, daily_total, monthly_total,
-          user_id, username, user_display_name, user_avatar, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          now, log.level, log.source, log.message, log.meta || null,
-          log.requestId || null, log.sessionId || null, log.combinedTrackingId || null,
-          log.actorType || null, log.actorId || null, log.actorDisplayName || null, 
-          log.action || null, log.result || null, log.details || null,
-          log.previousTotal || null, log.dailyTotal || null, log.monthlyTotal || null,
-          log.userId || null, log.username || null, log.userDisplayName || null, 
-          log.userAvatar || null, now
-        ],
-        function(err) {
-          if (err) {
-            console.error('Error creating system log:', err);
-            reject(err);
-          } else {
-            const newLog: SystemLog = {
-              id: this.lastID,
-              timestamp: now,
-              level: log.level,
-              source: log.source,
-              message: log.message,
-              meta: log.meta || null,
-              // Request tracking fields
-              requestId: log.requestId || null,
-              sessionId: log.sessionId || null,
-              combinedTrackingId: log.combinedTrackingId || null,
-              // Enhanced fields
-              actorType: log.actorType || null,
-              actorId: log.actorId || null,
-              actorDisplayName: log.actorDisplayName || null,
-              action: log.action || null,
-              result: log.result || null,
-              details: log.details || null,
-              // Cumulative counter fields
-              previousTotal: log.previousTotal || null,
-              dailyTotal: log.dailyTotal || null,
-              monthlyTotal: log.monthlyTotal || null,
-              // Legacy fields for backward compatibility
-              userId: log.userId || null,
-              username: log.username || null,
-              userDisplayName: log.userDisplayName || null,
-              userAvatar: log.userAvatar || null,
-              createdAt: now
-            };
-            resolve(newLog);
+    return new Promise<SystemLog>(async (resolve, reject) => {
+      try {
+        const now = new Date().toISOString();
+        const today = now.split('T')[0]; // YYYY-MM-DD format
+        const thisMonth = `${now.split('-')[0]}-${now.split('-')[1]}-01`; // YYYY-MM-01 format
+        
+        let calculatedPreviousTotal = log.previousTotal || null;
+        let calculatedDailyTotal = log.dailyTotal || null;
+        let calculatedMonthlyTotal = log.monthlyTotal || null;
+        
+        // حساب العدادات فقط إذا كان لدينا userId و action
+        if (log.userId && log.action) {
+          try {
+            // الحصول على العدادات الحالية قبل الزيادة
+            const [dailyCounter, monthlyCounter] = await Promise.all([
+              this.getCounter(log.userId, log.action, today, 'daily'),
+              this.getCounter(log.userId, log.action, thisMonth, 'monthly')
+            ]);
+            
+            // حساب previousTotal (المجموع الإجمالي للعمل قبل هذا السجل)
+            calculatedPreviousTotal = (dailyCounter?.count || 0);
+            
+            // زيادة العدادات وحفظها
+            const [updatedDailyCounter, updatedMonthlyCounter] = await Promise.all([
+              this.createOrUpdateCounter(log.userId, log.action, today, 'daily', 1),
+              this.createOrUpdateCounter(log.userId, log.action, thisMonth, 'monthly', 1)
+            ]);
+            
+            // حساب القيم الجديدة
+            calculatedDailyTotal = updatedDailyCounter.count;
+            calculatedMonthlyTotal = updatedMonthlyCounter.count;
+            
+          } catch (counterError) {
+            console.warn('Error calculating counters for system log:', counterError);
+            // في حالة الفشل، نستخدم القيم المرسلة أو null
           }
         }
-      );
+        
+        sqliteDb.run(
+          `INSERT INTO system_logs (
+            timestamp, level, source, message, meta, 
+            request_id, session_id, combined_tracking_id,
+            actor_type, actor_id, actor_display_name, action, result, details,
+            previous_total, daily_total, monthly_total,
+            user_id, username, user_display_name, user_avatar, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            now, log.level, log.source, log.message, log.meta || null,
+            log.requestId || null, log.sessionId || null, log.combinedTrackingId || null,
+            log.actorType || null, log.actorId || null, log.actorDisplayName || null, 
+            log.action || null, log.result || null, log.details || null,
+            calculatedPreviousTotal, calculatedDailyTotal, calculatedMonthlyTotal,
+            log.userId || null, log.username || null, log.userDisplayName || null, 
+            log.userAvatar || null, now
+          ],
+          function(err) {
+            if (err) {
+              console.error('Error creating system log:', err);
+              reject(err);
+            } else {
+              const newLog: SystemLog = {
+                id: this.lastID,
+                timestamp: now,
+                level: log.level,
+                source: log.source,
+                message: log.message,
+                meta: log.meta || null,
+                // Request tracking fields
+                requestId: log.requestId || null,
+                sessionId: log.sessionId || null,
+                combinedTrackingId: log.combinedTrackingId || null,
+                // Enhanced fields
+                actorType: log.actorType || null,
+                actorId: log.actorId || null,
+                actorDisplayName: log.actorDisplayName || null,
+                action: log.action || null,
+                result: log.result || null,
+                details: log.details || null,
+                // Cumulative counter fields
+                previousTotal: calculatedPreviousTotal,
+                dailyTotal: calculatedDailyTotal,
+                monthlyTotal: calculatedMonthlyTotal,
+                // Legacy fields for backward compatibility
+                userId: log.userId || null,
+                username: log.username || null,
+                userDisplayName: log.userDisplayName || null,
+                userAvatar: log.userAvatar || null,
+                createdAt: now
+              };
+              resolve(newLog);
+            }
+          }
+        );
+      } catch (error) {
+        console.error('Error in createSystemLog:', error);
+        reject(error);
+      }
     });
   }
 
@@ -2183,6 +2326,374 @@ export class DatabaseStorage implements IStorage {
           } else {
             resolve(this.changes || 0);
           }
+        }
+      );
+    });
+  }
+
+  // Helper method to extract device and location information
+  private enrichWithDeviceAndLocation(userAgent?: string | null, ip?: string | null): {
+    deviceInfo: {
+      device?: string;
+      os?: string;
+      browser?: string;
+      model?: string;
+    };
+    locationInfo: {
+      country?: string;
+      city?: string;
+      region?: string;
+      timezone?: string;
+    };
+  } {
+    const result = {
+      deviceInfo: {},
+      locationInfo: {}
+    };
+
+    // Parse user agent for device information
+    if (userAgent) {
+      try {
+        const parser = new UAParser(userAgent);
+        const parsedResult = parser.getResult();
+        
+        result.deviceInfo = {
+          device: parsedResult.device?.type || 'desktop',
+          os: `${parsedResult.os?.name || 'Unknown'} ${parsedResult.os?.version || ''}`.trim(),
+          browser: `${parsedResult.browser?.name || 'Unknown'} ${parsedResult.browser?.version || ''}`.trim(),
+          model: parsedResult.device?.model || parsedResult.device?.vendor || null
+        };
+      } catch (error) {
+        console.warn('Error parsing user agent:', error);
+      }
+    }
+
+    // Parse IP for location information  
+    if (ip && ip !== '127.0.0.1' && ip !== '::1' && !ip.startsWith('10.') && !ip.startsWith('192.168.')) {
+      try {
+        const geo = geoip.lookup(ip);
+        if (geo) {
+          result.locationInfo = {
+            country: geo.country || undefined,
+            city: geo.city || undefined,
+            region: geo.region || undefined,
+            timezone: geo.timezone || undefined
+          };
+        }
+      } catch (error) {
+        console.warn('Error looking up IP location:', error);
+      }
+    }
+
+    return result;
+  }
+
+  // Helper method to normalize date format
+  private normalizeDateFormat(date: string, period: 'daily' | 'monthly'): string {
+    try {
+      const parsedDate = new Date(date);
+      if (isNaN(parsedDate.getTime())) {
+        // If parsing fails, use current date
+        const now = new Date();
+        if (period === 'monthly') {
+          return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+        }
+        return now.toISOString().split('T')[0]; // YYYY-MM-DD
+      }
+      
+      // Format based on period
+      if (period === 'monthly') {
+        return `${parsedDate.getFullYear()}-${String(parsedDate.getMonth() + 1).padStart(2, '0')}-01`;
+      } else {
+        return parsedDate.toISOString().split('T')[0]; // YYYY-MM-DD
+      }
+    } catch (error) {
+      console.error('Error normalizing date format:', error);
+      const now = new Date();
+      if (period === 'monthly') {
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+      }
+      return now.toISOString().split('T')[0];
+    }
+  }
+
+  // User counters methods implementation
+  async createOrUpdateCounter(
+    userId: number | null, 
+    action: string, 
+    date: string, 
+    period: 'daily' | 'monthly', 
+    increment: number = 1
+  ): Promise<UserCounter> {
+    return new Promise<UserCounter>((resolve, reject) => {
+      const now = new Date().toISOString();
+      const normalizedDate = this.normalizeDateFormat(date, period);
+      
+      // Use UPSERT with normalized_user_id for NULL userId handling
+      sqliteDb.run(`
+        INSERT INTO user_counters (user_id, action, date, period, count, last_updated, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT (normalized_user_id, action, date, period)
+        DO UPDATE SET 
+          count = count + excluded.count,
+          last_updated = excluded.last_updated,
+          updated_at = excluded.updated_at
+      `, [
+        userId, action, normalizedDate, period, increment, now, now, now
+      ], function(err) {
+        if (err) {
+          console.error('Error creating/updating counter:', err);
+          reject(err);
+          return;
+        }
+
+        // Get the updated counter using normalized_user_id for consistent lookup
+        sqliteDb.get(
+          'SELECT * FROM user_counters WHERE normalized_user_id = COALESCE(?, -1) AND action = ? AND date = ? AND period = ?',
+          [userId, action, normalizedDate, period],
+          (err, row: any) => {
+            if (err) {
+              console.error('Error fetching updated counter:', err);
+              reject(err);
+            } else if (row) {
+              resolve({
+                id: row.id,
+                userId: row.user_id,
+                normalizedUserId: row.normalized_user_id,
+                action: row.action,
+                date: row.date,
+                period: row.period,
+                count: row.count,
+                lastUpdated: row.last_updated,
+                createdAt: row.created_at,
+                updatedAt: row.updated_at
+              });
+            } else {
+              reject(new Error('Counter not found after creation/update'));
+            }
+          }
+        );
+      });
+    });
+  }
+
+  async getCounter(
+    userId: number | null, 
+    action: string, 
+    date: string, 
+    period: 'daily' | 'monthly'
+  ): Promise<UserCounter | undefined> {
+    return new Promise<UserCounter | undefined>((resolve, reject) => {
+      const normalizedDate = this.normalizeDateFormat(date, period);
+      
+      sqliteDb.get(
+        'SELECT * FROM user_counters WHERE normalized_user_id = COALESCE(?, -1) AND action = ? AND date = ? AND period = ?',
+        [userId, action, normalizedDate, period],
+        (err, row: any) => {
+          if (err) {
+            console.error('Error getting counter:', err);
+            reject(err);
+          } else if (row) {
+            resolve({
+              id: row.id,
+              userId: row.user_id,
+              normalizedUserId: row.normalized_user_id,
+              action: row.action,
+              date: row.date,
+              period: row.period,
+              count: row.count,
+              lastUpdated: row.last_updated,
+              createdAt: row.created_at,
+              updatedAt: row.updated_at
+            });
+          } else {
+            resolve(undefined);
+          }
+        }
+      );
+    });
+  }
+
+  async getCountersByPeriod(filters: {
+    userId?: number | null;
+    action?: string;
+    period: 'daily' | 'monthly';
+    dateFrom?: string;
+    dateTo?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<UserCounter[]> {
+    return new Promise<UserCounter[]>((resolve, reject) => {
+      let query = 'SELECT * FROM user_counters WHERE period = ?';
+      const params: any[] = [filters.period];
+
+      if (filters.userId !== undefined) {
+        query += ' AND user_id = ?';
+        params.push(filters.userId);
+      }
+
+      if (filters.action) {
+        query += ' AND action = ?';
+        params.push(filters.action);
+      }
+
+      if (filters.dateFrom) {
+        query += ' AND date >= ?';
+        params.push(filters.dateFrom);
+      }
+
+      if (filters.dateTo) {
+        query += ' AND date <= ?';
+        params.push(filters.dateTo);
+      }
+
+      query += ' ORDER BY date DESC, action ASC';
+
+      if (filters.limit) {
+        query += ' LIMIT ?';
+        params.push(filters.limit);
+      }
+
+      if (filters.offset) {
+        query += ' OFFSET ?';
+        params.push(filters.offset);
+      }
+
+      sqliteDb.all(query, params, (err, rows: any[]) => {
+        if (err) {
+          console.error('Error getting counters by period:', err);
+          reject(err);
+        } else {
+          const counters: UserCounter[] = rows.map(row => ({
+            id: row.id,
+            userId: row.user_id,
+            normalizedUserId: row.normalized_user_id,
+            action: row.action,
+            date: row.date,
+            period: row.period,
+            count: row.count,
+            lastUpdated: row.last_updated,
+            createdAt: row.created_at,
+            updatedAt: row.updated_at
+          }));
+          resolve(counters);
+        }
+      });
+    });
+  }
+
+  async getUserCountersSummary(
+    userId: number | null, 
+    actions?: string[]
+  ): Promise<{
+    daily: Record<string, number>;
+    monthly: Record<string, number>;
+    totalActions: number;
+    mostActiveDay: string | null;
+    mostActiveAction: string | null;
+  }> {
+    return new Promise<{
+      daily: Record<string, number>;
+      monthly: Record<string, number>;
+      totalActions: number;
+      mostActiveDay: string | null;
+      mostActiveAction: string | null;
+    }>((resolve, reject) => {
+      let baseQuery = 'FROM user_counters WHERE user_id = ?';
+      const baseParams: any[] = [userId];
+
+      if (actions && actions.length > 0) {
+        const placeholders = actions.map(() => '?').join(',');
+        baseQuery += ` AND action IN (${placeholders})`;
+        baseParams.push(...actions);
+      }
+
+      // Get daily totals
+      sqliteDb.all(
+        `SELECT action, SUM(count) as total ${baseQuery} AND period = 'daily' GROUP BY action`,
+        baseParams,
+        (err, dailyRows: any[]) => {
+          if (err) {
+            console.error('Error getting daily counters:', err);
+            reject(err);
+            return;
+          }
+
+          const daily: Record<string, number> = {};
+          dailyRows.forEach(row => {
+            daily[row.action] = row.total;
+          });
+
+          // Get monthly totals
+          sqliteDb.all(
+            `SELECT action, SUM(count) as total ${baseQuery} AND period = 'monthly' GROUP BY action`,
+            baseParams,
+            (err, monthlyRows: any[]) => {
+              if (err) {
+                console.error('Error getting monthly counters:', err);
+                reject(err);
+                return;
+              }
+
+              const monthly: Record<string, number> = {};
+              monthlyRows.forEach(row => {
+                monthly[row.action] = row.total;
+              });
+
+              // Get total actions
+              sqliteDb.get(
+                `SELECT SUM(count) as total ${baseQuery} AND period = 'daily'`,
+                baseParams,
+                (err, totalRow: any) => {
+                  if (err) {
+                    console.error('Error getting total actions:', err);
+                    reject(err);
+                    return;
+                  }
+
+                  const totalActions = totalRow?.total || 0;
+
+                  // Get most active day
+                  sqliteDb.get(
+                    `SELECT date, SUM(count) as total ${baseQuery} AND period = 'daily' GROUP BY date ORDER BY total DESC LIMIT 1`,
+                    baseParams,
+                    (err, mostActiveDayRow: any) => {
+                      if (err) {
+                        console.error('Error getting most active day:', err);
+                        reject(err);
+                        return;
+                      }
+
+                      const mostActiveDay = mostActiveDayRow?.date || null;
+
+                      // Get most active action
+                      sqliteDb.get(
+                        `SELECT action, SUM(count) as total ${baseQuery} AND period = 'daily' GROUP BY action ORDER BY total DESC LIMIT 1`,
+                        baseParams,
+                        (err, mostActiveActionRow: any) => {
+                          if (err) {
+                            console.error('Error getting most active action:', err);
+                            reject(err);
+                            return;
+                          }
+
+                          const mostActiveAction = mostActiveActionRow?.action || null;
+
+                          resolve({
+                            daily,
+                            monthly,
+                            totalActions,
+                            mostActiveDay,
+                            mostActiveAction
+                          });
+                        }
+                      );
+                    }
+                  );
+                }
+              );
+            }
+          );
         }
       );
     });
