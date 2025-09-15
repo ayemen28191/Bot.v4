@@ -271,8 +271,8 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
         </CardHeader>
       </Card>
 
-      {/* المقاييس السريعة المضغوطة */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" data-testid="quick-metrics-grid">
+      {/* المقاييس السريعة المحسّنة للهاتف */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3" data-testid="quick-metrics-grid">
         {/* إجمالي السجلات */}
         <Card className="hover:shadow-md transition-shadow" data-testid="metric-total-logs">
           <CardContent className="p-3">
@@ -346,8 +346,8 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
         </Card>
       </div>
 
-      {/* مقاييس إضافية مضغوطة */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" data-testid="additional-metrics-grid">
+      {/* مقاييس إضافية محسّنة للهاتف */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3" data-testid="additional-metrics-grid">
         {/* المستخدمين النشطين */}
         <Card className="hover:shadow-md transition-shadow" data-testid="metric-active-users">
           <CardContent className="p-3">
@@ -409,10 +409,10 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
         </Card>
       </div>
 
-      {/* الرسوم البيانية المضغوطة */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4" data-testid="charts-grid">
+      {/* الرسوم البيانية المتجاوبة */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" data-testid="charts-grid">
         {/* السجلات عبر الزمن */}
-        <Card className="col-span-1 lg:col-span-3" data-testid="chart-logs-over-time">
+        <Card className="col-span-1 md:col-span-2 xl:col-span-3" data-testid="chart-logs-over-time">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center space-x-1.5 space-x-reverse">
               <TrendingUp className="h-3 w-3" />
@@ -420,7 +420,7 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="h-40">
+            <div className="h-48 sm:h-40">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={stats.timeDistribution}>
                   <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} />
@@ -429,6 +429,7 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
                     tick={{ fontSize: 10 }}
                     stroke="currentColor"
                     opacity={0.7}
+                    interval="preserveStartEnd"
                   />
                   <YAxis 
                     tick={{ fontSize: 10 }}
@@ -440,7 +441,7 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
                     type="monotone" 
                     dataKey="total" 
                     stroke={CHART_COLORS.primary} 
-                    strokeWidth={1.5}
+                    strokeWidth={2}
                     dot={false}
                     name={t('total_logs')}
                   />
@@ -448,7 +449,7 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
                     type="monotone" 
                     dataKey="errors" 
                     stroke={CHART_COLORS.error} 
-                    strokeWidth={1.5}
+                    strokeWidth={2}
                     dot={false}
                     name={t('total_errors')}
                   />
@@ -456,7 +457,7 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
                     type="monotone" 
                     dataKey="warnings" 
                     stroke={CHART_COLORS.warn} 
-                    strokeWidth={1.5}
+                    strokeWidth={2}
                     dot={false}
                     name={t('total_warnings')}
                   />
@@ -473,14 +474,15 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
             <CardDescription className="text-xs">{t('click_to_filter')}</CardDescription>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="h-40">
+            <div className="h-48 sm:h-40">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={stats.levelDistribution}
                     cx="50%"
                     cy="50%"
-                    outerRadius={60}
+                    outerRadius={70}
+                    innerRadius={30}
                     dataKey="value"
                     onClick={(data) => handleChartClick(data, 'level')}
                     className="cursor-pointer"
@@ -503,7 +505,7 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
             <CardDescription className="text-xs">{t('click_to_filter')}</CardDescription>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="h-40">
+            <div className="h-48 sm:h-40">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stats.sourceActivity.slice(0, 5)} layout="horizontal">
                   <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} />
@@ -516,10 +518,10 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
                   <YAxis 
                     type="category" 
                     dataKey="source" 
-                    tick={{ fontSize: 10 }}
+                    tick={{ fontSize: 9 }}
                     stroke="currentColor"
                     opacity={0.7}
-                    width={60}
+                    width={70}
                   />
                   <Tooltip content={<CustomTooltip />} />
                   <Bar 
@@ -527,6 +529,7 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
                     fill={CHART_COLORS.secondary}
                     onClick={(data) => handleChartClick(data, 'source')}
                     className="cursor-pointer"
+                    radius={[0, 4, 4, 0]}
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -542,15 +545,18 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
               <CardDescription className="text-xs">{t('click_to_filter')}</CardDescription>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="h-40">
+              <div className="h-48 sm:h-40">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={stats.userActivity.slice(0, 5)}>
                     <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} />
                     <XAxis 
                       dataKey="username" 
-                      tick={{ fontSize: 10 }}
+                      tick={{ fontSize: 9 }}
                       stroke="currentColor"
                       opacity={0.7}
+                      angle={-45}
+                      textAnchor="end"
+                      height={50}
                     />
                     <YAxis 
                       tick={{ fontSize: 10 }}
@@ -563,6 +569,7 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
                       fill={CHART_COLORS.accent}
                       onClick={(data) => handleChartClick(data, 'user')}
                       className="cursor-pointer"
+                      radius={[4, 4, 0, 0]}
                     />
                   </BarChart>
                 </ResponsiveContainer>
