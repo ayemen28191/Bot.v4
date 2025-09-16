@@ -266,7 +266,7 @@ interface UnifiedAppProviderProps {
   children: ReactNode;
 }
 
-export function UnifiedAppProvider({ children }: UnifiedAppProviderProps) {
+function UnifiedAppProvider({ children }: UnifiedAppProviderProps) {
   const [state, dispatch] = useReducer(unifiedAppReducer, initialState);
   const queryClient = useQueryClient();
   const { toast } = useToast();

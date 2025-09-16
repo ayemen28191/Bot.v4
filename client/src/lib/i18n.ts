@@ -1,6 +1,6 @@
 // نظام الترجمة متعدد اللغات
 import { z } from "zod";
-import { safeSetLocalStorageString, safeGetLocalStorage, safeSetLocalStorage, safeGetLocalStorageString } from '@/lib/storage-utils';
+import { safeSetLocalStorageString, safeGetLocalStorage, safeSetLocalStorage, safeGetLocalStorageString, safeRemoveLocalStorage } from '@/lib/storage-utils';
 
 interface Translations {
   [key: string]: {
