@@ -23,12 +23,24 @@ import { updateCurrentContext, getCurrentContext } from './request-context';
  */
 export function authContextUpdaterMiddleware(req: Request, res: Response, next: NextFunction): void {
   try {
+    // تجنب التحديثات المتكررة في نفس الطلب
+    if ((req as any).__authContextUpdated) {
+      next();
+      return;
+    }
+    
     // التحقق من وجود مستخدم مصادق عليه
     if (req.isAuthenticated && req.isAuthenticated() && req.user) {
       // تحديث السياق الحالي بمعلومات المستخدم فقط إذا لم يكن محدثاً بالفعل
       const currentContext = getCurrentContext();
       
-      if (!currentContext || currentContext.userId !== req.user.id) {
+      // التحقق من أن السياق يحتاج للتحديث فعلاً
+      const needsUpdate = !currentContext || 
+                         currentContext.userId !== req.user.id ||
+                         currentContext.username !== req.user.username ||
+                         currentContext.isAdmin !== (req.user.isAdmin || false);
+      
+      if (needsUpdate) {
         updateCurrentContext({
           userId: req.user.id,
           username: req.user.username,
@@ -48,6 +60,9 @@ export function authContextUpdaterMiddleware(req: Request, res: Response, next: 
         if (process.env.NODE_ENV === 'development') {
           console.log(`[AuthContextUpdater] Updated context for user: ${req.user.username} (ID: ${req.user.id})`);
         }
+        
+        // وضع علامة على الطلب لتجنب التحديثات المتكررة
+        (req as any).__authContextUpdated = true;
       }
     }
     
