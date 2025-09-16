@@ -2467,7 +2467,7 @@ export const supportedLanguages = [
 
 // Function to initialize language system with user context
 // Function to change language programmatically
-export const changeLanguage = (newLanguage: string, saveToStorage: boolean = true, user?: any) => {
+export const changeLanguage = (newLanguage: string, saveToStorage: boolean = true, user?: any): string => {
   if (typeof window !== 'undefined') {
     // Validate language
     const supportedLanguages = ['en', 'ar', 'hi'];

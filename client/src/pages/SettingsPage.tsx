@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { ArrowLeft, Bell, Clock, DollarSign, LineChart, Settings, MessageCircle, Globe, BarChart, Users, LogOut, Bot } from 'lucide-react';
-import { setLanguage, supportedLanguages, t, getCurrentLanguage } from '@/lib/i18n';
+import { setLanguage, supportedLanguages, t, getCurrentLanguage, changeLanguage } from '@/lib/i18n';
 import { changeTheme, getCurrentTheme, supportedThemes, type Theme } from '@/lib/themeSystem';
 import { useAuth } from '@/hooks/use-auth';
 import { useMutation } from '@tanstack/react-query';
@@ -136,7 +136,7 @@ export default function SettingsPage() {
 
     setLanguageState(newLang);
 
-    // Use the improved changeLanguage function
+    // Use the imported changeLanguage function
     changeLanguage(newLang, true);
 
     // Save to database if user is logged in
