@@ -274,7 +274,6 @@ export function createClientError(
   options?: Partial<AppError>
 ): AppError {
   return createError(category, code, message, {
-    timestamp: new Date().toISOString(),
     severity: options?.severity || ErrorSeverity.MEDIUM,
     userFriendly: options?.userFriendly ?? true,
     retryable: options?.retryable ?? false,
@@ -534,7 +533,9 @@ window.fetch = function(...args): Promise<Response> {
 // تنظيف الـ throttles القديمة كل 5 دقائق
 setInterval(() => {
   const now = Date.now();
-  for (const [key, throttle] of errorReportThrottles.entries()) {
+  // استخدام Array.from لتجنب مشكلة MapIterator
+  const entries = Array.from(errorReportThrottles.entries());
+  for (const [key, throttle] of entries) {
     if (now > throttle.resetTime + 300000) { // 5 دقائق إضافية
       errorReportThrottles.delete(key);
     }

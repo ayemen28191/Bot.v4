@@ -335,12 +335,16 @@ export function createValidationError(
   field?: string,
   value?: any
 ): ValidationError {
-  return createError(ErrorCategory.VALIDATION, code, message, {
-    field,
-    value,
+  const baseError = createError(ErrorCategory.VALIDATION, code, message, {
     severity: ErrorSeverity.LOW,
     userFriendly: true
-  }) as ValidationError;
+  });
+  
+  return {
+    ...baseError,
+    field,
+    value
+  } as ValidationError;
 }
 
 export function createAuthenticationError(
@@ -349,12 +353,16 @@ export function createAuthenticationError(
   userId?: number,
   attemptCount?: number
 ): AuthenticationError {
-  return createError(ErrorCategory.AUTHENTICATION, code, message, {
-    userId,
-    attemptCount,
+  const baseError = createError(ErrorCategory.AUTHENTICATION, code, message, {
     severity: ErrorSeverity.HIGH,
     userFriendly: true
-  }) as AuthenticationError;
+  });
+  
+  return {
+    ...baseError,
+    userId,
+    attemptCount
+  } as AuthenticationError;
 }
 
 export function createNetworkError(
@@ -364,13 +372,19 @@ export function createNetworkError(
   statusCode?: number,
   retryable: boolean = true
 ): NetworkError {
-  return createError(ErrorCategory.NETWORK, code, message, {
-    url,
+  const baseError = createError(ErrorCategory.NETWORK, code, message, {
     details: { statusCode },
     severity: statusCode && statusCode >= 500 ? ErrorSeverity.HIGH : ErrorSeverity.MEDIUM,
     retryable,
     userFriendly: true
-  }) as NetworkError;
+  });
+  
+  return {
+    ...baseError,
+    url,
+    method: undefined,
+    timeout: undefined
+  } as NetworkError;
 }
 
 export function createDatabaseError(
@@ -379,12 +393,17 @@ export function createDatabaseError(
   table?: string,
   operation?: string
 ): DatabaseError {
-  return createError(ErrorCategory.DATABASE, code, message, {
-    table,
-    operation,
+  const baseError = createError(ErrorCategory.DATABASE, code, message, {
     severity: ErrorSeverity.HIGH,
     userFriendly: false
-  }) as DatabaseError;
+  });
+  
+  return {
+    ...baseError,
+    table,
+    operation,
+    query: undefined
+  } as DatabaseError;
 }
 
 export function createApiLimitError(
@@ -394,13 +413,18 @@ export function createApiLimitError(
   keyId?: number,
   resetTime?: string
 ): ApiLimitError {
-  return createError(ErrorCategory.API_LIMIT, code, message, {
-    provider,
+  const baseError = createError(ErrorCategory.API_LIMIT, code, message, {
     details: { keyId, resetTime },
     severity: ErrorSeverity.MEDIUM,
     retryable: true,
     userFriendly: true
-  }) as ApiLimitError;
+  });
+  
+  return {
+    ...baseError,
+    provider,
+    limit: undefined
+  } as ApiLimitError;
 }
 
 // =============================================================================
