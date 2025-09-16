@@ -747,7 +747,7 @@ export function LogCard({ log, onClick, isSelected, onSearch }: LogCardProps) {
               )}
             </div>
           </div>
-        )}
+        ) : null}
 
         {/* Action Footer Enhanced */}
         <div className="flex items-center justify-between pt-3 border-t border-border/30">
