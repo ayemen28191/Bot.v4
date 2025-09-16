@@ -1,4 +1,4 @@
-import { useContext, createContext, useState, ReactNode, useEffect } from 'react';
+import { useContext, createContext, useState, ReactNode, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest, getQueryFn } from '@/lib/queryClient';
 import { User } from '@shared/schema';
@@ -23,8 +23,10 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
+  const [initialCheckComplete, setInitialCheckComplete] = useState(false);
+  const hasCheckedSession = useRef(false);
 
-  // Query to get current user
+  // Query to get current user - يتم تشغيله مرة واحدة فقط
   const {
     data: userData,
     isLoading,
@@ -34,6 +36,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     queryKey: ["/api/user"],
     queryFn: async () => {
       try {
+        // تجنب التكرار الإضافي
+        if (hasCheckedSession.current && initialCheckComplete) {
+          return user; // إرجاع البيانات المحفوظة محلياً
+        }
+
         const response = await fetch("/api/user", {
           credentials: "include",
           headers: {
@@ -45,10 +52,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         if (!response.ok) {
           if (response.status === 401) {
-            // تسجيل هادئ للمطورين فقط
-            if (process.env.NODE_ENV === 'development') {
+            // تسجيل هادئ للمطورين فقط - مرة واحدة
+            if (process.env.NODE_ENV === 'development' && !hasCheckedSession.current) {
               console.debug('🔓 No authenticated session found');
             }
+            hasCheckedSession.current = true;
             return null;
           }
           throw new Error(`Failed to fetch user: ${response.statusText}`);
@@ -56,15 +64,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         const userData = await response.json();
         // تسجيل نجاح المصادقة فقط مرة واحدة
-        if (process.env.NODE_ENV === 'development') {
+        if (process.env.NODE_ENV === 'development' && !hasCheckedSession.current) {
           console.log('✅ User authenticated:', userData.username);
         }
+        hasCheckedSession.current = true;
         return userData;
       } catch (fetchError) {
-        // تسجيل الأخطاء الحقيقية فقط
-        if (process.env.NODE_ENV === 'development') {
+        // تسجيل الأخطاء الحقيقية فقط - مرة واحدة
+        if (process.env.NODE_ENV === 'development' && !hasCheckedSession.current) {
           console.debug('Auth check failed:', fetchError);
         }
+        hasCheckedSession.current = true;
         return null;
       }
     },
@@ -76,41 +86,46 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // إعادة محاولة محدودة للأخطاء الأخرى
       return failureCount < 1;
     },
-    staleTime: 30 * 60 * 1000, // 30 دقيقة
+    staleTime: 60 * 60 * 1000, // ساعة واحدة
+    gcTime: 60 * 60 * 1000, // ساعة واحدة في الكاش
     refetchInterval: false, // منع الفحص التلقائي
     refetchOnWindowFocus: false, // منع الفحص عند التركيز
     refetchOnMount: false, // منع إعادة التحميل التلقائي
     refetchOnReconnect: false, // منع الفحص عند إعادة الاتصال
-    enabled: true, // التأكد من تفعيل الاستعلام
+    enabled: !initialCheckComplete, // تفعيل فقط للفحص الأولي
   });
 
   // Update user state when query data changes
   useEffect(() => {
     // تأكد من انتهاء فحص الجلسة قبل المتابعة
-    if (!isLoading) {
+    if (!isLoading && !initialCheckComplete) {
       setSessionChecked(true);
+      setInitialCheckComplete(true);
     }
 
     if (userData && typeof userData === 'object') {
       const userDataObj = userData as User;
-      setUser(userDataObj);
+      // تجنب التحديث المتكرر إذا كان المستخدم هو نفسه
+      if (!user || user.id !== userDataObj.id) {
+        setUser(userDataObj);
 
-      // Apply user's preferred language from database with priority
-      try {
-        if (userDataObj.preferredLanguage) {
-          console.log('🌍 Applying user preferred language from database:', userDataObj.preferredLanguage);
-          // Import language functions dynamically to avoid circular dependency
-          import('@/lib/i18n').then(({ setLanguage }) => {
-            // Always apply user's database language preference when logged in
-            setLanguage(userDataObj.preferredLanguage, false);
-          });
-        } else {
-          console.log('📝 User has no preferred language set, using current language');
+        // Apply user's preferred language from database with priority
+        try {
+          if (userDataObj.preferredLanguage) {
+            console.log('🌍 Applying user preferred language from database:', userDataObj.preferredLanguage);
+            // Import language functions dynamically to avoid circular dependency
+            import('@/lib/i18n').then(({ setLanguage }) => {
+              // Always apply user's database language preference when logged in
+              setLanguage(userDataObj.preferredLanguage, false);
+            });
+          } else {
+            console.log('📝 User has no preferred language set, using current language');
+          }
+        } catch (error) {
+          console.error('Error applying user preferred language:', error);
         }
-      } catch (error) {
-        console.error('Error applying user preferred language:', error);
       }
-    } else {
+    } else if (userData === null && user !== null) {
       setUser(null);
       // Clear language on logout and reset to English
       try {
@@ -121,7 +136,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         console.error('Error clearing language on logout:', error);
       }
     }
-  }, [userData, isLoading]);
+  }, [userData, isLoading, user, initialCheckComplete]);
 
   // Login mutation
   const loginMutation = useMutation({
@@ -131,6 +146,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     },
     onSuccess: (userData) => {
       setUser(userData);
+      hasCheckedSession.current = false; // إعادة تعيين للفحص الجديد
+      setInitialCheckComplete(false);
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
     },
   });
@@ -142,6 +159,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     },
     onSuccess: () => {
       setUser(null);
+      hasCheckedSession.current = false; // إعادة تعيين للفحص الجديد
+      setInitialCheckComplete(false);
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
     },
   });
@@ -154,6 +173,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     },
     onSuccess: (userData) => {
       setUser(userData);
+      hasCheckedSession.current = false; // إعادة تعيين للفحص الجديد
+      setInitialCheckComplete(false);
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
     },
   });
