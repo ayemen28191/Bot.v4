@@ -99,12 +99,15 @@ class SignalLogger {
       // إشعار المستمعين
       this.notifyNewSignal(savedLog);
       
-      // تسجيل في النظام
+      // تسجيل في النظام مع معلومات المستخدم المحسنة
       await logsService.logInfo('signal-logger', `بدء طلب إشارة: ${requestData.symbol} (${requestData.timeframe})`, {
         requestId,
         symbol: requestData.symbol,
         marketType: requestData.marketType,
-        platform: requestData.platform
+        platform: requestData.platform,
+        action: 'signal_request',
+        userId: requestData.userId,
+        username: requestData.username
       }, requestData.userId);
 
       console.log(`[SignalLogger] Started request: ${requestId} for ${requestData.symbol}`);
@@ -181,12 +184,17 @@ class SignalLogger {
       // إشعار المستمعين
       this.notifyNewSignal(updatedLog);
       
-      // تسجيل في النظام
+      // تسجيل في النظام مع معلومات محسنة
       await logsService.logInfo('signal-logger', `إشارة ناجحة: ${activeRequest.data.symbol} -> ${resultData.signal}`, {
         requestId,
         executionTime,
         signal: resultData.signal,
-        probability: resultData.probability
+        probability: resultData.probability,
+        action: 'signal_success',
+        result: 'success',
+        actorType: 'user',
+        userId: activeRequest.data.userId,
+        username: activeRequest.data.username
       }, activeRequest.data.userId || undefined);
 
       // إزالة من الطلبات النشطة
@@ -259,11 +267,16 @@ class SignalLogger {
       // إشعار المستمعين
       this.notifyNewSignal(updatedLog);
       
-      // تسجيل في النظام
+      // تسجيل في النظام مع معلومات محسنة
       await logsService.logError('signal-logger', `فشل في الإشارة: ${activeRequest.data.symbol} - ${errorData.errorMessage}`, {
         requestId,
         executionTime,
-        errorCode: errorData.errorCode
+        errorCode: errorData.errorCode,
+        action: 'signal_failure',
+        result: 'failed',
+        actorType: 'user',
+        userId: activeRequest.data.userId,
+        username: activeRequest.data.username
       }, activeRequest.data.userId || undefined);
 
       // إزالة من الطلبات النشطة

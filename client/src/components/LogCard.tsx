@@ -476,7 +476,19 @@ export function LogCard({ log, onClick, isSelected, onSearch }: LogCardProps) {
 
   const timeInfo = formatTime(log.timestamp);
   const actorDisplayName = log.actorDisplayName || log.userDisplayName || log.username || log.source;
-  const isUserAction = log.actorType === 'user' || log.userId;
+  const isUserAction = log.actorType === 'user' || 
+                     log.userId || 
+                     log.username || 
+                     log.userDisplayName ||
+                     (log.source === 'signal-logger' && log.meta && 
+                      (() => {
+                        try {
+                          const metaData = JSON.parse(log.meta);
+                          return metaData.context?.userId;
+                        } catch {
+                          return false;
+                        }
+                      })());
 
   return (
     <Card 
@@ -701,7 +713,9 @@ export function LogCard({ log, onClick, isSelected, onSearch }: LogCardProps) {
         />
 
         {/* Enhanced Cumulative Counters */}
-        {(log.previousTotal || log.dailyTotal || log.monthlyTotal) && (
+        {((log.previousTotal !== undefined && log.previousTotal !== null) || 
+          (log.dailyTotal !== undefined && log.dailyTotal !== null) || 
+          (log.monthlyTotal !== undefined && log.monthlyTotal !== null)) && (
           <div className="my-4">
             <div className="flex items-center space-x-2 space-x-reverse flex-wrap gap-2">
               {log.previousTotal !== undefined && log.previousTotal !== null && (
