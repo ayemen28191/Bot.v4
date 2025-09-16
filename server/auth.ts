@@ -520,33 +520,59 @@ export function setupAuth(app: Express) {
     const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
     const userAgent = req.get('User-Agent') || 'unknown';
     
-    console.log('Checking current user session:', {
-      isAuthenticated: req.isAuthenticated(),
-      userId: req.user?.id
-    });
+    try {
+      console.log('Checking current user session:', {
+        isAuthenticated: req.isAuthenticated(),
+        userId: req.user?.id,
+        hasSession: !!req.session,
+        sessionID: req.sessionID?.substring(0, 8) + '...'
+      });
 
-    if (!req.isAuthenticated()) {
-      await logsService.logInfo("auth", "Unauthenticated session check attempt", {
-        action: "session_check_unauthenticated",
+      if (!req.isAuthenticated() || !req.user) {
+        await logsService.logInfo("auth", "Unauthenticated session check attempt", {
+          action: "session_check_unauthenticated",
+          clientIP,
+          userAgent,
+          hasSession: !!req.session,
+          sessionID: req.sessionID?.substring(0, 8) + '...'
+        });
+        return res.status(401).json({ message: "غير مسجل الدخول" });
+      }
+
+      // التحقق من صحة بيانات المستخدم
+      if (!req.user.id || !req.user.username) {
+        console.warn('Invalid user data in session:', req.user);
+        await logsService.logWarn("auth", "Invalid user data in session", {
+          action: "invalid_session_data",
+          clientIP,
+          userAgent
+        });
+        return res.status(401).json({ message: "بيانات الجلسة غير صحيحة" });
+      }
+      
+      await logsService.logUserInfo("auth", `Session check for user: ${req.user.username}`, {
+        id: req.user.id,
+        username: req.user.username,
+        displayName: req.user.displayName || req.user.username
+      }, {
+        action: "session_check_authenticated",
+        isAdmin: req.user.isAdmin,
         clientIP,
         userAgent
       });
-      return res.status(401).json({ message: "غير مسجل الدخول" });
+      
+      // إزالة كلمة المرور من الاستجابة لأسباب أمنية
+      const { password, ...safeUser } = req.user;
+      res.json(safeUser);
+    } catch (error) {
+      console.error('Error in /api/user endpoint:', error);
+      await logsService.error("auth", "Error checking user session", {
+        action: "session_check_error",
+        clientIP,
+        userAgent,
+        error: error instanceof Error ? error.message : String(error)
+      });
+      res.status(500).json({ message: "خطأ في الخادم" });
     }
-    
-    await logsService.logUserInfo("auth", `Session check for user: ${req.user!.username}`, {
-      id: req.user!.id,
-      username: req.user!.username,
-      displayName: req.user!.displayName || req.user!.username
-    }, {
-      action: "session_check_authenticated",
-      isAdmin: req.user!.isAdmin,
-      clientIP,
-      userAgent
-    });
-    
-    // إزالة كلمة المرور من الاستجابة لأسباب أمنية
-    const { password, ...safeUser } = req.user!;
-    res.json(safeUser);
   });
 }

@@ -80,11 +80,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
       return failureCount < 2;
     },
-    staleTime: 30 * 60 * 1000, // 30 دقيقة - زيادة لتقليل التحققات المتكررة
-    refetchInterval: false, // إيقاف الفحص التلقائي المتكرر
-    refetchOnWindowFocus: false, // إيقاف التحديث عند العودة للنافذة
-    refetchOnMount: false, // إيقاف إعادة التحميل المتكررة
-    refetchOnReconnect: true, // فقط عند إعادة الاتصال
+    staleTime: 15 * 60 * 1000, // 15 دقيقة
+    refetchInterval: false, // تعطيل الفحص التلقائي المستمر
+    refetchOnWindowFocus: false, // تعطيل التحديث عند العودة للنافذة
+    refetchOnMount: 'always', // إعادة التحميل عند تحميل المكون
+    refetchOnReconnect: true, // إعادة التحميل عند إعادة الاتصال
     enabled: true, // التأكد من تفعيل الاستعلام
   });
 

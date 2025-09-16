@@ -15,6 +15,8 @@ import testCountdownRoutes from './routes/test-countdown';
 import { logsRouter } from "./routes/logs";
 import { Server as SocketIOServer } from "socket.io";
 import { logsService } from "./services/logs-service";
+// Import the debug session router
+import { debugSessionRouter } from "./routes/debug-session";
 
 
 // التأكد من أن المستخدم مُسجل الدخول
@@ -372,12 +374,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/admin/reset-keys', isAdmin, async (req, res) => {
     try {
       console.log('Admin reset keys triggered by:', req.user?.username);
-      
+
       // إعادة تعيين جميع المفاتيح (usage_today و failed_until)
       await storage.resetDailyUsage();
-      
+
       console.log('Manual key reset completed successfully');
-      
+
       res.json({
         success: true,
         message: 'تم إعادة تعيين جميع مفاتيح API بنجاح',
@@ -385,8 +387,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error('Error in manual key reset:', error);
-      res.status(500).json({ 
-        error: error.message || 'حدث خطأ أثناء إعادة تعيين المفاتيح' 
+      res.status(500).json({
+        error: error.message || 'حدث خطأ أثناء إعادة تعيين المفاتيح'
       });
     }
   });
@@ -506,9 +508,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     if (!req.isAuthenticated()) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         message: "غير مسجل الدخول",
-        authenticated: false 
+        authenticated: false
       });
     }
     // إزالة كلمة المرور من الاستجابة لأسباب أمنية
@@ -525,15 +527,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/proxy', proxyRouter);
   app.use('/api/update', updateRouter);
   app.use('/api/config-keys', apiKeysRouter);
+  // Register the debug session router
+  app.use('/api', debugSessionRouter);
 
   // =================== إعداد WebSocket للسجلات المباشرة ===================
-  
+
   const io = new SocketIOServer(httpServer, {
     cors: {
       origin: function (origin, callback) {
         // نفس إعدادات CORS الموجودة في app
         if (!origin) return callback(null, true);
-        
+
         const allowedOrigins = [
           'http://localhost:3000',
           'http://localhost:5000',
@@ -544,7 +548,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           /https:\/\/.*\.repl\.co$/,
           /https:\/\/.*\.replit\.app$/,
         ];
-        
+
         const isAllowed = allowedOrigins.some(allowed => {
           if (typeof allowed === 'string') {
             return origin === allowed;
@@ -553,7 +557,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           return false;
         });
-        
+
         if (isAllowed || process.env.NODE_ENV === 'development') {
           callback(null, true);
         } else {
@@ -580,7 +584,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // التحقق من الجلسة والصلاحيات عند الاتصال
     const req = socket.request as any;
     let isAdmin = false;
-    
+
     if (req.session && req.session.passport && req.session.passport.user) {
       // جلب بيانات المستخدم من قاعدة البيانات للتحقق من صلاحية المشرف
       storage.getUser(req.session.passport.user).then(user => {
@@ -616,11 +620,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // الانضمام لقناة السجلات
         socket.join('log-updates');
         socket.emit('subscribed', { channel: 'log-updates' });
-        
+
         // إرسال السجلات الحديثة للسياق
         const recentLogs = logsService.getRecentLogs(50);
         socket.emit('recent-logs', recentLogs);
-        
+
         console.log('[WebSocket] Admin user subscribed to logs:', user.username);
       } catch (error) {
         console.error('[WebSocket] Subscription failed:', error);

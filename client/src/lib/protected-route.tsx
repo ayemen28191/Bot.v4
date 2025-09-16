@@ -20,15 +20,15 @@ export function ProtectedRoute({ path, component: Component }: ProtectedRoutePro
     // 3. لا يوجد مستخدم
     // 4. لسنا في صفحة المصادقة
     // 5. لم نحاول إعادة التوجيه من قبل
-    if (!isLoading && 
-        sessionChecked && 
-        !user && 
-        location !== '/auth' && 
+    if (!isLoading &&
+        sessionChecked &&
+        !user &&
+        location !== '/auth' &&
         !redirectAttempted) {
-      
+
       console.log('🔓 No valid session, redirecting to auth page');
       setRedirectAttempted(true);
-      
+
       // محو أي بيانات محلية متعلقة بالجلسة
       try {
         localStorage.removeItem('auth_timestamp');
@@ -36,7 +36,7 @@ export function ProtectedRoute({ path, component: Component }: ProtectedRoutePro
       } catch (e) {
         console.warn('Could not clear storage on session loss');
       }
-      
+
       setLocation('/auth');
     }
   }, [user, isLoading, sessionChecked, location, setLocation, redirectAttempted]);
