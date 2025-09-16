@@ -22,6 +22,7 @@ import ConnectionError from '@/components/ConnectionError';
 import useConnection from '@/hooks/use-connection';
 import { useHeatmap } from '@/hooks/use-heatmap';
 import { BottomNavigation } from '@/components';
+import { safeGetLocalStorage, safeSetLocalStorage, safeGetLocalStorageString, safeSetLocalStorageString, safeRemoveLocalStorage } from '@/lib/storage-utils';
 
 // أنواع الأسواق والأزواج التداولية
 type MarketType = 'forex' | 'crypto' | 'stocks';
@@ -145,7 +146,7 @@ export default function TradingSignalPage() {
   // حالة وضع عدم الاتصال للتطبيق
   const [isOfflineMode, setIsOfflineMode] = useState<boolean>(() => {
     // تفضيل استخدام التخزين المحلي لتذكر تفضيلات المستخدم
-    return localStorage.getItem('offline_mode') === 'enabled';
+    return safeGetLocalStorageString('offline_mode', '') === 'enabled';
   });
 
   // حالة عرض خطأ الاتصال
@@ -159,7 +160,7 @@ export default function TradingSignalPage() {
   const enableOfflineMode = useCallback(() => {
     console.log(t('offline_mode_enabled_trading_page'));
     setIsOfflineMode(true);
-    localStorage.setItem('offline_mode', 'enabled');
+    safeSetLocalStorageString('offline_mode', 'enabled');
 
     // إخفاء خطأ الاتصال
     setShowConnectionError(false);
@@ -216,7 +217,7 @@ export default function TradingSignalPage() {
   const disableOfflineMode = useCallback(() => {
     console.log(t('offline_mode_disabled_trading_page'));
     setIsOfflineMode(false);
-    localStorage.removeItem('offline_mode');
+    safeRemoveLocalStorage('offline_mode');
 
     // إعادة تهيئة حالة الاتصال
     resetConnectionState();
@@ -248,17 +249,13 @@ export default function TradingSignalPage() {
 
   // دالة مساعدة لاسترجاع السعر المخزن محليًا
   const getCachedPrice = (symbol: string): number | null => {
-    try {
-      const cachedPriceData = localStorage.getItem(`price_${symbol}`);
-      if (cachedPriceData) {
-        const { price, expires } = JSON.parse(cachedPriceData);
-        if (expires > Date.now() || isOfflineMode) {
-          console.log(t('using_locally_stored_price'), price);
-          return Number(price);
-        }
+    const cachedPriceData = safeGetLocalStorage(`price_${symbol}`, null);
+    if (cachedPriceData) {
+      const { price, expires } = cachedPriceData;
+      if (expires > Date.now() || isOfflineMode) {
+        console.log(t('using_locally_stored_price'), price);
+        return Number(price);
       }
-    } catch (cacheError) {
-      console.warn(t('could_not_read_stored_price_warn'), cacheError);
     }
     return null;
   };
@@ -602,13 +599,7 @@ export default function TradingSignalPage() {
     probability: number;
     analysis?: MarketAnalysis;
   }>>(() => {
-    try {
-      const storedSignals = localStorage.getItem('previousSignals');
-      return storedSignals ? JSON.parse(storedSignals) : [];
-    } catch (e) {
-      console.error('Error loading previous signals:', e);
-      return [];
-    }
+    return safeGetLocalStorage('previousSignals', []);
   });
 
   // متغير لتفعيل/تعطيل عرض الإشارات السابقة
@@ -706,7 +697,7 @@ export default function TradingSignalPage() {
 
       // تخزين السعر الحالي للاستخدام في التحليل المستقبلي إذا كان متاحًا
       if (currentPrice) {
-        localStorage.setItem(`lastPrice_${pair}`, currentPrice.toString());
+        safeSetLocalStorageString(`lastPrice_${pair}`, currentPrice.toString());
       }
 
       console.log('نتائج التحليل من البيانات الحقيقية:', {
@@ -843,12 +834,12 @@ export default function TradingSignalPage() {
         }
 
         // تخزين السعر في التخزين المؤقت مع وقت انتهاء الصلاحية
-        localStorage.setItem(`price_${symbol}`, JSON.stringify({
+        safeSetLocalStorage(`price_${symbol}`, {
           price: data.price,
           timestamp: Date.now(),
           expires: Date.now() + 10 * 60 * 1000, // 10 دقائق من الصلاحية
           source: data.source || 'server'
-        }));
+        });
 
         return data.price;
 
@@ -1065,14 +1056,10 @@ export default function TradingSignalPage() {
 
   // متغيرات لتتبع الإشارة الحالية
   const [cooldownTime, setCooldownTime] = useState<number>(() => {
-    try {
-      const savedEndTime = localStorage.getItem('signalCooldownEndTime');
-      if (savedEndTime) {
-        const remainingTime = Math.ceil((parseInt(savedEndTime) - Date.now()) / 1000);
-        return remainingTime > 0 ? remainingTime : 0;
-      }
-    } catch (e) {
-      console.error('Error loading cooldown time:', e);
+    const savedEndTime = safeGetLocalStorageString('signalCooldownEndTime', null);
+    if (savedEndTime) {
+      const remainingTime = Math.ceil((parseInt(savedEndTime) - Date.now()) / 1000);
+      return remainingTime > 0 ? remainingTime : 0;
     }
     return 0;
   });
@@ -1264,7 +1251,7 @@ export default function TradingSignalPage() {
           const newTime = prevTime - 1;
           if (newTime <= 0) {
             // إزالة وقت الانتهاء من التخزين المحلي عندما ينتهي العداد
-            localStorage.removeItem('signalCooldownEndTime');
+            safeRemoveLocalStorage('signalCooldownEndTime');
           }
           return newTime;
         });
@@ -1273,7 +1260,7 @@ export default function TradingSignalPage() {
       // عندما ينتهي الوقت، نعيد تعيين الحالة
       timerId = setTimeout(() => {
         setIsCooldown(false);
-        localStorage.removeItem('signalCooldownEndTime');
+        safeRemoveLocalStorage('signalCooldownEndTime');
 
         // اهتزاز الزر عند الانتهاء
         const signalButton = document.querySelector('.get-signal-button');
@@ -1302,7 +1289,7 @@ export default function TradingSignalPage() {
   // استعادة اختيار المنصة من التخزين المحلي
   useEffect(() => {
     try {
-      const savedPlatformId = localStorage.getItem('selectedTradingPlatform');
+      const savedPlatformId = safeGetLocalStorageString('selectedTradingPlatform', null);
       if (savedPlatformId) {
         const platform = tradingPlatforms.find(p => p.id === savedPlatformId);
         if (platform) {
@@ -1594,7 +1581,7 @@ export default function TradingSignalPage() {
   // تحديث وقت الانتهاء وحفظ الإشارة الحالية
   const saveSignalAndStartCooldown = (analysisResults: any, timeoutDuration: number) => {
     const endTime = Date.now() + (timeoutDuration * 1000);
-    localStorage.setItem('signalCooldownEndTime', endTime.toString());
+    safeSetLocalStorageString('signalCooldownEndTime', endTime.toString());
 
     // حفظ الإشارة الحالية في قائمة الإشارات السابقة
     if (analysisResults.signal !== 'WAIT') {
@@ -1610,11 +1597,7 @@ export default function TradingSignalPage() {
       const updatedSignals = [newSignal, ...previousSignals].slice(0, maxPreviousSignals);
       setPreviousSignals(updatedSignals);
 
-      try {
-        localStorage.setItem('previousSignals', JSON.stringify(updatedSignals));
-      } catch (e) {
-        console.error('Error saving previous signals:', e);
-      }
+      safeSetLocalStorage('previousSignals', updatedSignals);
     }
   };
 
@@ -1798,11 +1781,7 @@ export default function TradingSignalPage() {
                         setIsPlatformDropdownOpen(false);
 
                         // حفظ اختيار المستخدم في التخزين المحلي
-                        try {
-                          localStorage.setItem('selectedTradingPlatform', platform.id);
-                        } catch (e) {
-                          console.error('Error saving platform selection to localStorage:', e);
-                        }
+                        safeSetLocalStorageString('selectedTradingPlatform', platform.id);
 
                         // تحديث نوع الزوج النشط إذا كان النوع الحالي غير مدعوم في المنصة الجديدة
                         if (!platform.supportedMarkets.includes(activePairType)) {

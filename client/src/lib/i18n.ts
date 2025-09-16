@@ -1,11 +1,12 @@
 // نظام الترجمة متعدد اللغات
+import { z } from "zod";
+import { safeSetLocalStorageString, safeGetLocalStorage, safeSetLocalStorage, safeGetLocalStorageString } from '@/lib/storage-utils';
+
 interface Translations {
   [key: string]: {
     [key: string]: string;
   };
 }
-
-import { z } from "zod";
 
 const translations: Translations = {
   ar: {
@@ -2378,14 +2379,12 @@ export const setLanguage = (lang: string, saveToDatabase: boolean = false) => {
   });
 
   // Update localStorage for persistence
-  localStorage.setItem('language', normalizedLang);
-  try {
-    const settings = JSON.parse(localStorage.getItem('settings') || '{}');
-    settings.language = normalizedLang;
-    localStorage.setItem('settings', JSON.stringify(settings));
+  safeSetLocalStorageString('language', normalizedLang);
+  const settings = safeGetLocalStorage('settings', {});
+  settings.language = normalizedLang;
+  const saved = safeSetLocalStorage('settings', settings);
+  if (saved) {
     console.log('Language saved to localStorage:', normalizedLang);
-  } catch (e) {
-    console.error('Error saving language to settings:', e);
   }
 
   // Clear translation cache to force refresh
@@ -2438,20 +2437,16 @@ export const getCurrentLanguage = (user?: any): string => {
     return user.preferredLanguage;
   }
   
-  try {
-    // Priority 2: check saved settings in localStorage
-    const settings = JSON.parse(localStorage.getItem('settings') || '{}');
-    if (settings.language && translations[settings.language]) {
-      return settings.language;
-    }
+  // Priority 2: check saved settings in localStorage
+  const settings = safeGetLocalStorage('settings', {});
+  if (settings.language && translations[settings.language]) {
+    return settings.language;
+  }
 
-    // Priority 3: check old localStorage
-    const storedLang = localStorage.getItem('language');
-    if (storedLang && translations[storedLang]) {
-      return storedLang;
-    }
-  } catch (error) {
-    console.error('Error reading language from localStorage:', error);
+  // Priority 3: check old localStorage
+  const storedLang = safeGetLocalStorageString('language', null);
+  if (storedLang && translations[storedLang]) {
+    return storedLang;
   }
 
   // Priority 4: Default to English (no browser language detection)

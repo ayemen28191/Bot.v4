@@ -314,48 +314,86 @@ function markKeyAsFailed(keyName: string): void {
   console.warn(`تم تمييز المفتاح ${keyName} كفاشل وسيتم تجاهله في المحاولات القادمة للتحليل`);
 }
 
-// دالة للحصول على مؤشر RSI (مؤشر القوة النسبية) من TwelveData
-async function getRSI(symbol: string, timeframe: string): Promise<TechnicalIndicatorResult> {
-  const apiKey = await getRotatedApiKey('TWELVEDATA_API_KEY', env.TWELVEDATA_API_KEY);
-  const interval = convertTimeframe(timeframe);
+// =============================================================================
+// دوال مساعدة موحدة لمعالجة استجابات API
+// =============================================================================
+
+/**
+ * دالة موحدة للتحقق من استجابة TwelveData API ومعالجة الأخطاء
+ */
+function validateTwelveDataResponse(response: any, operation: string, symbol?: string, timeframe?: string): void {
+  if (response.data?.code === 429) {
+    throw createApiLimitError(
+      ERROR_CODES.API_RATE_LIMITED,
+      ERROR_MESSAGES.API_LIMIT.RATE_LIMITED.ar,
+      'TwelveData',
+      undefined,
+      undefined
+    );
+  }
   
-  // احتفظ بمعلومات المفتاح المستخدم للتعامل مع الأخطاء
+  if (response.data?.status === 'error') {
+    throw createError(
+      ErrorCategory.API_LIMIT,
+      ERROR_CODES.API_KEY_INVALID,
+      response.data.message || `TwelveData API returned error response for ${operation}`,
+      {
+        messageAr: response.data.message || `خطأ في API لعملية ${operation}`,
+        severity: ErrorSeverity.MEDIUM,
+        details: { symbol, timeframe, provider: 'TwelveData', operation }
+      }
+    );
+  }
+}
+
+/**
+ * دالة موحدة لإجراء طلب API مع معالجة أخطاء موحدة
+ */
+async function makeApiRequest(
+  url: string, 
+  params: Record<string, any>, 
+  operation: string,
+  symbol?: string,
+  timeframe?: string
+): Promise<{ response: any; usedKeyName: string }> {
+  const apiKey = await getRotatedApiKey('TWELVEDATA_API_KEY', env.TWELVEDATA_API_KEY);
   const usedKeyName = getUsedKeyName('TWELVEDATA_API_KEY');
   
   try {
-    const response = await axios.get('https://api.twelvedata.com/rsi', {
-      params: {
+    const response = await axios.get(url, {
+      params: { ...params, apikey: apiKey },
+      timeout: 5000
+    });
+    
+    validateTwelveDataResponse(response, operation, symbol, timeframe);
+    return { response, usedKeyName };
+  } catch (error) {
+    // تمييز المفتاح كفاشل إذا كان الخطأ متعلق بالمفتاح
+    if (error.response?.status === 429 || error.response?.status === 401 || error.response?.status === 403) {
+      markKeyAsFailed(usedKeyName);
+    }
+    
+    throw error; // إعادة رمي الخطأ ليتم معالجته بواسطة handleTechnicalAnalysisError
+  }
+}
+
+// دالة للحصول على مؤشر RSI (مؤشر القوة النسبية) من TwelveData
+async function getRSI(symbol: string, timeframe: string): Promise<TechnicalIndicatorResult> {
+  const interval = convertTimeframe(timeframe);
+  
+  try {
+    const { response } = await makeApiRequest(
+      'https://api.twelvedata.com/rsi',
+      {
         symbol,
         interval,
         series_type: 'close',
-        outputsize: 1,
-        apikey: apiKey,
+        outputsize: 1
       },
-      timeout: 5000
-    });
-
-    // التحقق من وجود أخطاء API باستخدام النظام الموحد
-    if (response.data?.code === 429) {
-      throw createApiLimitError(
-        ERROR_CODES.API_RATE_LIMITED,
-        ERROR_MESSAGES.API_LIMIT.RATE_LIMITED.ar,
-        'TwelveData',
-        undefined,
-        undefined
-      );
-    }
-    
-    if (response.data?.status === 'error') {
-      throw createError(
-        ErrorCategory.API_LIMIT,
-        ERROR_CODES.API_KEY_INVALID,
-        response.data.message || 'TwelveData API returned error response',
-        {
-          severity: ErrorSeverity.MEDIUM,
-          details: { symbol, timeframe, provider: 'TwelveData', operation: 'getRSI' }
-        }
-      );
-    }
+      'getRSI',
+      symbol,
+      timeframe
+    );
 
     if (response.data?.values?.length > 0) {
       const rsiValue = parseFloat(response.data.values[0].rsi);
@@ -380,57 +418,33 @@ async function getRSI(symbol: string, timeframe: string): Promise<TechnicalIndic
       ERROR_CODES.SYSTEM_INTERNAL_ERROR,
       'لا توجد بيانات RSI متاحة للرمز المطلوب',
       {
+        messageAr: 'لا توجد بيانات RSI متاحة للرمز المطلوب',
         severity: ErrorSeverity.MEDIUM,
         details: { symbol, timeframe, url: 'https://api.twelvedata.com/rsi' }
       }
     );
   } catch (error) {
-    return await handleTechnicalAnalysisError(error, 'getRSI', symbol, usedKeyName, timeframe);
+    return await handleTechnicalAnalysisError(error, 'getRSI', symbol, getUsedKeyName('TWELVEDATA_API_KEY'), timeframe);
   }
 }
 
 // دالة للحصول على مؤشر MACD من TwelveData
 async function getMACD(symbol: string, timeframe: string): Promise<TechnicalIndicatorResult> {
-  const apiKey = await getRotatedApiKey('TWELVEDATA_API_KEY', env.TWELVEDATA_API_KEY);
   const interval = convertTimeframe(timeframe);
   
-  // احتفظ بمعلومات المفتاح المستخدم للتعامل مع الأخطاء
-  const usedKeyName = getUsedKeyName('TWELVEDATA_API_KEY');
-  
   try {
-    const response = await axios.get('https://api.twelvedata.com/macd', {
-      params: {
+    const { response } = await makeApiRequest(
+      'https://api.twelvedata.com/macd',
+      {
         symbol,
         interval,
         series_type: 'close',
-        outputsize: 1,
-        apikey: apiKey,
+        outputsize: 1
       },
-      timeout: 5000
-    });
-
-    // التحقق من وجود أخطاء API باستخدام النظام الموحد
-    if (response.data?.code === 429) {
-      throw createApiLimitError(
-        ERROR_CODES.API_RATE_LIMITED,
-        ERROR_MESSAGES.API_LIMIT.RATE_LIMITED.ar,
-        'TwelveData',
-        undefined,
-        undefined
-      );
-    }
-    
-    if (response.data?.status === 'error') {
-      throw createError(
-        ErrorCategory.API_LIMIT,
-        ERROR_CODES.API_KEY_INVALID,
-        response.data.message || 'TwelveData API returned error response',
-        {
-          severity: ErrorSeverity.MEDIUM,
-          details: { symbol, timeframe, provider: 'TwelveData', operation: 'getMACD' }
-        }
-      );
-    }
+      'getMACD',
+      symbol,
+      timeframe
+    );
     
     if (response.data?.values?.length > 0) {
       const macdValue = parseFloat(response.data.values[0].macd);
@@ -460,12 +474,13 @@ async function getMACD(symbol: string, timeframe: string): Promise<TechnicalIndi
       ERROR_CODES.SYSTEM_INTERNAL_ERROR,
       'لا توجد بيانات MACD متاحة للرمز المطلوب',
       {
+        messageAr: 'لا توجد بيانات MACD متاحة للرمز المطلوب',
         severity: ErrorSeverity.MEDIUM,
         details: { symbol, timeframe, url: 'https://api.twelvedata.com/macd' }
       }
     );
   } catch (error) {
-    return await handleTechnicalAnalysisError(error, 'getMACD', symbol, usedKeyName, timeframe);
+    return await handleTechnicalAnalysisError(error, 'getMACD', symbol, getUsedKeyName('TWELVEDATA_API_KEY'), timeframe);
   }
 }
 
