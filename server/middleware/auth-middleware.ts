@@ -93,7 +93,7 @@ export function isAuthenticated(
           action: 'auth_check_success',
           userId: user?.id,
           username: user?.username,
-          method: isPassportAuthenticated ? 'passport' : 'session',
+          authMethod: isPassportAuthenticated ? 'passport' : 'session',
           ...context
         });
       }
@@ -168,7 +168,8 @@ export function isAdmin(
         ? { message: getErrorMessage('notAuthenticated', language), error: 'Unauthorized' }
         : { success: false, message: getErrorMessage('notAuthenticated', language) };
       
-      return res.status(401).json(response);
+      res.status(401).json(response);
+      return;
     }
 
     const user = req.user || req.session?.user;
@@ -237,7 +238,8 @@ export function isAdmin(
         ? { message: getErrorMessage('notAdmin', language), error: 'Forbidden' }
         : { success: false, message: getErrorMessage('notAdmin', language) };
       
-      return res.status(403).json(response);
+      res.status(403).json(response);
+      return;
     }
 
     // نجح التحقق من صلاحيات المشرف

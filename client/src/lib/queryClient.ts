@@ -1,9 +1,10 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { handleError } from '@/lib/errorHandler';
+import { handleApiError, handleNetworkError } from '@/lib/errorHandler';
 import {
   AppError,
   createNetworkError,
   createAuthenticationError,
+  createValidationError,
   ERROR_CODES
 } from '@shared/error-types';
 
@@ -43,16 +44,18 @@ async function throwIfResNotOk(res: Response) {
         `Server error: ${errorMessage}`
       );
     } else if (res.status >= 400) {
-      error = new AppError(
-        'client',
+      error = createValidationError(
         ERROR_CODES.VALIDATION_INVALID_INPUT,
-        `Request error (${res.status}): ${errorMessage}`,
-        new Date().toISOString(),
-        'medium',
-        false,
-        true,
-        responseData || { status: res.status, url: res.url }
+        `Request error (${res.status}): ${errorMessage}`
       );
+      
+      // إضافة تفاصيل إضافية للخطأ
+      error.details = {
+        ...error.details,
+        ...responseData,
+        status: res.status,
+        url: res.url
+      };
     } else {
       error = createNetworkError(
         ERROR_CODES.NETWORK_REQUEST_FAILED,
@@ -61,7 +64,9 @@ async function throwIfResNotOk(res: Response) {
     }
     
     // تسجيل الخطأ وإلقاؤه
-    handleError(error);
+    if (res.status >= 500) {
+      handleApiError(res, res.url);
+    }
     throw error;
   }
 }
@@ -129,12 +134,12 @@ export async function apiRequest(
     }
 
     // إنشاء خطأ موحد إذا لم يكن AppError بالفعل
-    if (!(error instanceof AppError)) {
+    if (!(error && typeof error === 'object' && 'category' in error && 'code' in error)) {
       const networkError = createNetworkError(
         ERROR_CODES.NETWORK_REQUEST_FAILED,
         `API request failed [${method} ${url}]: ${error.message || error}`
       );
-      handleError(networkError);
+      handleNetworkError(error instanceof Error ? error : new Error(String(error)), url);
       throw networkError;
     }
 
@@ -191,7 +196,7 @@ export const getQueryFn: <T>(options: {
       return await res.json();
     } catch (error) {
       // إذا كان AppError بالفعل، فقط أعد إلقاؤه
-      if (error instanceof AppError) {
+      if (error && typeof error === 'object' && 'category' in error && 'code' in error) {
         throw error;
       }
       
@@ -200,7 +205,7 @@ export const getQueryFn: <T>(options: {
         ERROR_CODES.NETWORK_REQUEST_FAILED,
         `Query failed for ${queryKey[0]}: ${error instanceof Error ? error.message : String(error)}`
       );
-      handleError(queryError);
+      handleNetworkError(error instanceof Error ? error : new Error(String(error)), queryKey[0] as string);
       throw queryError;
     }
   };
