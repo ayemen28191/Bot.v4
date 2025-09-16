@@ -58,47 +58,52 @@ async function handleTechnicalAnalysisError(
   error: any, 
   operation: string, 
   symbol?: string,
-  usedKeyName?: string
+  usedKeyName?: string,
+  timeframe: string = '1H'
 ): Promise<TechnicalIndicatorResult> {
-  // تمييز المفتاح كفاشل إذا تم توفيره
-  if (usedKeyName) {
-    markKeyAsFailed(usedKeyName);
-  }
-
   // معالجة أخطاء محددة
   if (error.response?.status === 429 || error.message?.includes('429')) {
+    // تمييز المفتاح كفاشل فقط لأخطاء تجاوز الحد
+    if (usedKeyName) {
+      markKeyAsFailed(usedKeyName);
+    }
     console.warn(`تم تجاوز حد API للعملية: ${operation}${symbol ? ` للرمز ${symbol}` : ''}`);
     return {
       value: 50, // قيمة محايدة
       signal: 'neutral',
-      timeframe: '1H'
+      timeframe
     };
   }
 
   if (error.response?.status === 401 || error.response?.status === 403) {
+    // تمييز المفتاح كفاشل لأخطاء المصادقة
+    if (usedKeyName) {
+      markKeyAsFailed(usedKeyName);
+    }
     console.error(`خطأ في المصادقة للعملية: ${operation}${symbol ? ` للرمز ${symbol}` : ''}`);
     return {
       value: 50,
       signal: 'neutral', 
-      timeframe: '1H'
+      timeframe
     };
   }
 
   if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+    // لا تميز المفتاح كفاشل لأخطاء الاتصال العادية
     console.error(`خطأ في الاتصال للعملية: ${operation}${symbol ? ` للرمز ${symbol}` : ''}`);
     return {
       value: 50,
       signal: 'neutral',
-      timeframe: '1H'
+      timeframe
     };
   }
 
-  // خطأ عام
+  // خطأ عام - لا تميز المفتاح كفاشل للأخطاء العامة
   console.error(`خطأ في ${operation}${symbol ? ` للرمز ${symbol}` : ''}:`, error.message || error);
   return {
     value: 50,
     signal: 'neutral',
-    timeframe: '1H'
+    timeframe
   };
 }
 
@@ -190,7 +195,7 @@ function getEnvironmentKeyByName(keyName: string): string {
   }
 }
 
-// دالة مساعدة للحصول على مفتاح API مع دعم التناوب
+// دالة مساعدة للحصول على مفتاح API مع دعم التناوب مع إرجاع اسم المفتاح أيضاً
 async function getRotatedApiKey(baseName: string, fallbackValue: string): Promise<string> {
   // البحث عن مجموعة المفاتيح المناسبة
   const keyGroup = API_KEY_GROUPS.find(group => 
@@ -245,6 +250,27 @@ async function getRotatedApiKey(baseName: string, fallbackValue: string): Promis
   return fallbackValue;
 }
 
+// دالة مساعدة للحصول على اسم المفتاح المستخدم من مجموعة معينة
+function getUsedKeyName(baseName: string): string {
+  const keyGroup = API_KEY_GROUPS.find(group => 
+    group.baseName === baseName || group.alternativeKeys.includes(baseName)
+  );
+  
+  if (!keyGroup) {
+    return baseName;
+  }
+  
+  const allKeys = [keyGroup.baseName, ...keyGroup.alternativeKeys];
+  const currentIndex = keyGroup.lastUsedIndex;
+  
+  // التأكد من صحة المؤشر
+  if (currentIndex >= 0 && currentIndex < allKeys.length) {
+    return allKeys[currentIndex];
+  }
+  
+  return keyGroup.baseName;
+}
+
 // دالة لإضافة مفتاح إلى قائمة المفاتيح الفاشلة
 function markKeyAsFailed(keyName: string): void {
   failedKeys.add(keyName);
@@ -253,13 +279,13 @@ function markKeyAsFailed(keyName: string): void {
 
 // دالة للحصول على مؤشر RSI (مؤشر القوة النسبية) من TwelveData
 async function getRSI(symbol: string, timeframe: string): Promise<TechnicalIndicatorResult> {
+  const apiKey = await getRotatedApiKey('TWELVEDATA_API_KEY', env.TWELVEDATA_API_KEY);
+  const interval = convertTimeframe(timeframe);
+  
+  // احتفظ بمعلومات المفتاح المستخدم للتعامل مع الأخطاء
+  const usedKeyName = getUsedKeyName('TWELVEDATA_API_KEY');
+  
   try {
-    const apiKey = await getRotatedApiKey('TWELVEDATA_API_KEY', env.TWELVEDATA_API_KEY);
-    const interval = convertTimeframe(timeframe);
-    
-    // احتفظ بمعلومات المفتاح المستخدم للتعامل مع الأخطاء
-    const usedKeyName = API_KEY_GROUPS[0].alternativeKeys[API_KEY_GROUPS[0].lastUsedIndex] || 'TWELVEDATA_API_KEY';
-    
     const response = await axios.get('https://api.twelvedata.com/rsi', {
       params: {
         symbol,
@@ -273,9 +299,14 @@ async function getRSI(symbol: string, timeframe: string): Promise<TechnicalIndic
 
     // التحقق من وجود خطأ تجاوز الحد اليومي
     if (response.data && response.data.code === 429) {
-      // تمييز المفتاح كفاشل
-      markKeyAsFailed(usedKeyName);
-      throw new Error(`تم تجاوز الحد اليومي للمفتاح ${usedKeyName}`);
+      const error = createApiLimitError(
+        ERROR_CODES.API_RATE_LIMITED,
+        ERROR_MESSAGES.API_LIMIT.RATE_LIMITED.ar,
+        'TwelveData',
+        undefined,
+        undefined
+      );
+      throw error;
     }
 
     if (response.data && response.data.values && response.data.values.length > 0) {
@@ -296,35 +327,26 @@ async function getRSI(symbol: string, timeframe: string): Promise<TechnicalIndic
       };
     }
     
-    throw new Error('لا توجد بيانات RSI متاحة');
+    const error = createNetworkError(
+      ERROR_CODES.NETWORK_BAD_REQUEST,
+      'لا توجد بيانات RSI متاحة',
+      'https://api.twelvedata.com/rsi'
+    );
+    throw error;
   } catch (error) {
-    console.error('خطأ في الحصول على مؤشر RSI:', error);
-    
-    // تحديد إذا كان الخطأ متعلق بتجاوز الحد
-    const axiosError = error as any;
-    if (axiosError.response && axiosError.response.status === 429) {
-      // تمييز المفتاح الحالي كفاشل
-      const usedKeyName = API_KEY_GROUPS[0].alternativeKeys[API_KEY_GROUPS[0].lastUsedIndex] || 'TWELVEDATA_API_KEY';
-      markKeyAsFailed(usedKeyName);
-    }
-    
-    return {
-      value: 50, // قيمة محايدة افتراضية
-      signal: 'neutral',
-      timeframe
-    };
+    return await handleTechnicalAnalysisError(error, 'getRSI', symbol, usedKeyName, timeframe);
   }
 }
 
 // دالة للحصول على مؤشر MACD من TwelveData
 async function getMACD(symbol: string, timeframe: string): Promise<TechnicalIndicatorResult> {
+  const apiKey = await getRotatedApiKey('TWELVEDATA_API_KEY', env.TWELVEDATA_API_KEY);
+  const interval = convertTimeframe(timeframe);
+  
+  // احتفظ بمعلومات المفتاح المستخدم للتعامل مع الأخطاء
+  const usedKeyName = getUsedKeyName('TWELVEDATA_API_KEY');
+  
   try {
-    const apiKey = await getRotatedApiKey('TWELVEDATA_API_KEY', env.TWELVEDATA_API_KEY);
-    const interval = convertTimeframe(timeframe);
-    
-    // احتفظ بمعلومات المفتاح المستخدم للتعامل مع الأخطاء
-    const usedKeyName = API_KEY_GROUPS[0].alternativeKeys[API_KEY_GROUPS[0].lastUsedIndex] || 'TWELVEDATA_API_KEY';
-    
     const response = await axios.get('https://api.twelvedata.com/macd', {
       params: {
         symbol,
@@ -338,9 +360,14 @@ async function getMACD(symbol: string, timeframe: string): Promise<TechnicalIndi
 
     // التحقق من وجود خطأ تجاوز الحد اليومي
     if (response.data && response.data.code === 429) {
-      // تمييز المفتاح كفاشل
-      markKeyAsFailed(usedKeyName);
-      throw new Error(`تم تجاوز الحد اليومي للمفتاح ${usedKeyName}`);
+      const error = createApiLimitError(
+        ERROR_CODES.API_RATE_LIMITED,
+        ERROR_MESSAGES.API_LIMIT.RATE_LIMITED.ar,
+        'TwelveData',
+        undefined,
+        undefined
+      );
+      throw error;
     }
     
     if (response.data && response.data.values && response.data.values.length > 0) {
@@ -366,35 +393,26 @@ async function getMACD(symbol: string, timeframe: string): Promise<TechnicalIndi
       };
     }
     
-    throw new Error('لا توجد بيانات MACD متاحة');
+    const error = createNetworkError(
+      ERROR_CODES.NETWORK_BAD_REQUEST,
+      'لا توجد بيانات MACD متاحة',
+      'https://api.twelvedata.com/macd'
+    );
+    throw error;
   } catch (error) {
-    console.error('خطأ في الحصول على مؤشر MACD:', error);
-    
-    // تحديد إذا كان الخطأ متعلق بتجاوز الحد
-    const axiosError = error as any;
-    if (axiosError.response && axiosError.response.status === 429) {
-      // تمييز المفتاح الحالي كفاشل
-      const usedKeyName = API_KEY_GROUPS[0].alternativeKeys[API_KEY_GROUPS[0].lastUsedIndex] || 'TWELVEDATA_API_KEY';
-      markKeyAsFailed(usedKeyName);
-    }
-    
-    return {
-      value: 0, // قيمة محايدة افتراضية
-      signal: 'neutral',
-      timeframe
-    };
+    return await handleTechnicalAnalysisError(error, 'getMACD', symbol, usedKeyName, timeframe);
   }
 }
 
 // دالة للحصول على مؤشر المتوسطات المتحركة (ema/sma) من TwelveData
 async function getMovingAverages(symbol: string, timeframe: string): Promise<TechnicalIndicatorResult> {
+  const apiKey = await getRotatedApiKey('TWELVEDATA_API_KEY', env.TWELVEDATA_API_KEY);
+  const interval = convertTimeframe(timeframe);
+  
+  // احتفظ بمعلومات المفتاح المستخدم للتعامل مع الأخطاء
+  let usedKeyName = getUsedKeyName('TWELVEDATA_API_KEY');
+  
   try {
-    const apiKey = await getRotatedApiKey('TWELVEDATA_API_KEY', env.TWELVEDATA_API_KEY);
-    const interval = convertTimeframe(timeframe);
-    
-    // احتفظ بمعلومات المفتاح المستخدم للتعامل مع الأخطاء
-    const usedKeyName = API_KEY_GROUPS[0].alternativeKeys[API_KEY_GROUPS[0].lastUsedIndex] || 'TWELVEDATA_API_KEY';
-    
     // جلب المتوسط المتحرك الأسي القصير (9)
     const ema9Response = await axios.get('https://api.twelvedata.com/ema', {
       params: {
@@ -410,14 +428,19 @@ async function getMovingAverages(symbol: string, timeframe: string): Promise<Tec
     
     // التحقق من وجود خطأ تجاوز الحد اليومي في الاستجابة الأولى
     if (ema9Response.data && ema9Response.data.code === 429) {
-      // تمييز المفتاح كفاشل
-      markKeyAsFailed(usedKeyName);
-      throw new Error(`تم تجاوز الحد اليومي للمفتاح ${usedKeyName}`);
+      const error = createApiLimitError(
+        ERROR_CODES.API_RATE_LIMITED,
+        ERROR_MESSAGES.API_LIMIT.RATE_LIMITED.ar,
+        'TwelveData',
+        undefined,
+        undefined
+      );
+      throw error;
     }
     
     // الحصول على مفتاح جديد للطلب الثاني للتقليل من احتمالية تجاوز الحد
     const apiKey2 = await getRotatedApiKey('TWELVEDATA_API_KEY', env.TWELVEDATA_API_KEY);
-    const usedKeyName2 = API_KEY_GROUPS[0].alternativeKeys[API_KEY_GROUPS[0].lastUsedIndex] || 'TWELVEDATA_API_KEY';
+    usedKeyName = getUsedKeyName('TWELVEDATA_API_KEY');
     
     // جلب المتوسط المتحرك الأسي الطويل (21)
     const ema21Response = await axios.get('https://api.twelvedata.com/ema', {
@@ -434,9 +457,14 @@ async function getMovingAverages(symbol: string, timeframe: string): Promise<Tec
     
     // التحقق من وجود خطأ تجاوز الحد اليومي في الاستجابة الثانية
     if (ema21Response.data && ema21Response.data.code === 429) {
-      // تمييز المفتاح كفاشل
-      markKeyAsFailed(usedKeyName2);
-      throw new Error(`تم تجاوز الحد اليومي للمفتاح ${usedKeyName2}`);
+      const error = createApiLimitError(
+        ERROR_CODES.API_RATE_LIMITED,
+        ERROR_MESSAGES.API_LIMIT.RATE_LIMITED.ar,
+        'TwelveData',
+        undefined,
+        undefined
+      );
+      throw error;
     }
 
     if (ema9Response.data?.values?.[0] && ema21Response.data?.values?.[0]) {
@@ -462,35 +490,26 @@ async function getMovingAverages(symbol: string, timeframe: string): Promise<Tec
       };
     }
     
-    throw new Error('لا توجد بيانات المتوسطات المتحركة متاحة');
+    const error = createNetworkError(
+      ERROR_CODES.NETWORK_BAD_REQUEST,
+      'لا توجد بيانات المتوسطات المتحركة متاحة',
+      'https://api.twelvedata.com/ema'
+    );
+    throw error;
   } catch (error) {
-    console.error('خطأ في الحصول على المتوسطات المتحركة:', error);
-    
-    // تحديد إذا كان الخطأ متعلق بتجاوز الحد
-    const axiosError = error as any;
-    if (axiosError.response && axiosError.response.status === 429) {
-      // تمييز المفتاح الحالي كفاشل
-      const usedKeyName = API_KEY_GROUPS[0].alternativeKeys[API_KEY_GROUPS[0].lastUsedIndex] || 'TWELVEDATA_API_KEY';
-      markKeyAsFailed(usedKeyName);
-    }
-    
-    return {
-      value: 0, // قيمة محايدة افتراضية
-      signal: 'neutral',
-      timeframe
-    };
+    return await handleTechnicalAnalysisError(error, 'getMovingAverages', symbol, usedKeyName, timeframe);
   }
 }
 
 // دالة للحصول على مؤشر Bollinger Bands من TwelveData
 async function getBollingerBands(symbol: string, timeframe: string): Promise<TechnicalIndicatorResult> {
+  const apiKey = await getRotatedApiKey('TWELVEDATA_API_KEY', env.TWELVEDATA_API_KEY);
+  const interval = convertTimeframe(timeframe);
+  
+  // احتفظ بمعلومات المفتاح المستخدم للتعامل مع الأخطاء
+  let usedKeyName = getUsedKeyName('TWELVEDATA_API_KEY');
+  
   try {
-    const apiKey = await getRotatedApiKey('TWELVEDATA_API_KEY', env.TWELVEDATA_API_KEY);
-    const interval = convertTimeframe(timeframe);
-    
-    // احتفظ بمعلومات المفتاح المستخدم للتعامل مع الأخطاء
-    const usedKeyName = API_KEY_GROUPS[0].alternativeKeys[API_KEY_GROUPS[0].lastUsedIndex] || 'TWELVEDATA_API_KEY';
-    
     // طلب الحصول على Bollinger Bands
     const bbResponse = await axios.get('https://api.twelvedata.com/bbands', {
       params: {
@@ -507,14 +526,19 @@ async function getBollingerBands(symbol: string, timeframe: string): Promise<Tec
     
     // التحقق من وجود خطأ تجاوز الحد اليومي في الاستجابة الأولى
     if (bbResponse.data && bbResponse.data.code === 429) {
-      // تمييز المفتاح كفاشل
-      markKeyAsFailed(usedKeyName);
-      throw new Error(`تم تجاوز الحد اليومي للمفتاح ${usedKeyName}`);
+      const error = createApiLimitError(
+        ERROR_CODES.API_RATE_LIMITED,
+        ERROR_MESSAGES.API_LIMIT.RATE_LIMITED.ar,
+        'TwelveData',
+        undefined,
+        undefined
+      );
+      throw error;
     }
     
     // الحصول على مفتاح جديد للطلب الثاني للتقليل من احتمالية تجاوز الحد
     const apiKey2 = await getRotatedApiKey('TWELVEDATA_API_KEY', env.TWELVEDATA_API_KEY);
-    const usedKeyName2 = API_KEY_GROUPS[0].alternativeKeys[API_KEY_GROUPS[0].lastUsedIndex] || 'TWELVEDATA_API_KEY';
+    usedKeyName = getUsedKeyName('TWELVEDATA_API_KEY');
     
     // طلب الحصول على السعر الحالي
     const priceResponse = await axios.get('https://api.twelvedata.com/price', {
@@ -527,9 +551,14 @@ async function getBollingerBands(symbol: string, timeframe: string): Promise<Tec
     
     // التحقق من وجود خطأ تجاوز الحد اليومي في الاستجابة الثانية
     if (priceResponse.data && priceResponse.data.code === 429) {
-      // تمييز المفتاح كفاشل
-      markKeyAsFailed(usedKeyName2);
-      throw new Error(`تم تجاوز الحد اليومي للمفتاح ${usedKeyName2}`);
+      const error = createApiLimitError(
+        ERROR_CODES.API_RATE_LIMITED,
+        ERROR_MESSAGES.API_LIMIT.RATE_LIMITED.ar,
+        'TwelveData',
+        undefined,
+        undefined
+      );
+      throw error;
     }
 
     if (bbResponse.data?.values?.[0] && priceResponse.data?.price) {
@@ -559,35 +588,26 @@ async function getBollingerBands(symbol: string, timeframe: string): Promise<Tec
       };
     }
     
-    throw new Error('لا توجد بيانات Bollinger Bands متاحة');
+    const error = createNetworkError(
+      ERROR_CODES.NETWORK_BAD_REQUEST,
+      'لا توجد بيانات Bollinger Bands متاحة',
+      'https://api.twelvedata.com/bbands'
+    );
+    throw error;
   } catch (error) {
-    console.error('خطأ في الحصول على Bollinger Bands:', error);
-    
-    // تحديد إذا كان الخطأ متعلق بتجاوز الحد
-    const axiosError = error as any;
-    if (axiosError.response && axiosError.response.status === 429) {
-      // تمييز المفتاح الحالي كفاشل
-      const usedKeyName = API_KEY_GROUPS[0].alternativeKeys[API_KEY_GROUPS[0].lastUsedIndex] || 'TWELVEDATA_API_KEY';
-      markKeyAsFailed(usedKeyName);
-    }
-    
-    return {
-      value: 50, // قيمة محايدة افتراضية
-      signal: 'neutral',
-      timeframe
-    };
+    return await handleTechnicalAnalysisError(error, 'getBollingerBands', symbol, usedKeyName, timeframe);
   }
 }
 
 // دالة للحصول على مؤشر ADX (Average Directional Index) من TwelveData
 async function getADX(symbol: string, timeframe: string): Promise<TechnicalIndicatorResult> {
+  const apiKey = await getRotatedApiKey('TWELVEDATA_API_KEY', env.TWELVEDATA_API_KEY);
+  const interval = convertTimeframe(timeframe);
+  
+  // احتفظ بمعلومات المفتاح المستخدم للتعامل مع الأخطاء
+  const usedKeyName = getUsedKeyName('TWELVEDATA_API_KEY');
+  
   try {
-    const apiKey = await getRotatedApiKey('TWELVEDATA_API_KEY', env.TWELVEDATA_API_KEY);
-    const interval = convertTimeframe(timeframe);
-    
-    // احتفظ بمعلومات المفتاح المستخدم للتعامل مع الأخطاء
-    const usedKeyName = API_KEY_GROUPS[0].alternativeKeys[API_KEY_GROUPS[0].lastUsedIndex] || 'TWELVEDATA_API_KEY';
-    
     const adxResponse = await axios.get('https://api.twelvedata.com/adx', {
       params: {
         symbol,
@@ -601,9 +621,14 @@ async function getADX(symbol: string, timeframe: string): Promise<TechnicalIndic
     
     // التحقق من وجود خطأ تجاوز الحد اليومي
     if (adxResponse.data && adxResponse.data.code === 429) {
-      // تمييز المفتاح كفاشل
-      markKeyAsFailed(usedKeyName);
-      throw new Error(`تم تجاوز الحد اليومي للمفتاح ${usedKeyName}`);
+      const error = createApiLimitError(
+        ERROR_CODES.API_RATE_LIMITED,
+        ERROR_MESSAGES.API_LIMIT.RATE_LIMITED.ar,
+        'TwelveData',
+        undefined,
+        undefined
+      );
+      throw error;
     }
 
     if (adxResponse.data?.values?.[0]) {
@@ -628,23 +653,14 @@ async function getADX(symbol: string, timeframe: string): Promise<TechnicalIndic
       };
     }
     
-    throw new Error('لا توجد بيانات ADX متاحة');
+    const error = createNetworkError(
+      ERROR_CODES.NETWORK_BAD_REQUEST,
+      'لا توجد بيانات ADX متاحة',
+      'https://api.twelvedata.com/adx'
+    );
+    throw error;
   } catch (error) {
-    console.error('خطأ في الحصول على مؤشر ADX:', error);
-    
-    // تحديد إذا كان الخطأ متعلق بتجاوز الحد
-    const axiosError = error as any;
-    if (axiosError.response && axiosError.response.status === 429) {
-      // تمييز المفتاح الحالي كفاشل
-      const usedKeyName = API_KEY_GROUPS[0].alternativeKeys[API_KEY_GROUPS[0].lastUsedIndex] || 'TWELVEDATA_API_KEY';
-      markKeyAsFailed(usedKeyName);
-    }
-    
-    return {
-      value: 15, // قيمة منخفضة افتراضية
-      signal: 'neutral',
-      timeframe
-    };
+    return await handleTechnicalAnalysisError(error, 'getADX', symbol, usedKeyName, timeframe);
   }
 }
 
@@ -717,7 +733,7 @@ export async function analyzeMarket(
       try {
         // استخدام نظام تناوب المفاتيح
         const apiKey = await getRotatedApiKey('TWELVEDATA_API_KEY', env.TWELVEDATA_API_KEY);
-        const usedKeyName = API_KEY_GROUPS[0].alternativeKeys[API_KEY_GROUPS[0].lastUsedIndex] || 'TWELVEDATA_API_KEY';
+        const usedKeyName = getUsedKeyName('TWELVEDATA_API_KEY');
         
         const priceResponse = await axios.get('https://api.twelvedata.com/price', {
           params: {
@@ -754,7 +770,7 @@ export async function analyzeMarket(
         const axiosError = twelveDataError as any;
         if (axiosError.response && axiosError.response.status === 429) {
           // تمييز المفتاح الحالي كفاشل
-          const usedKeyName = API_KEY_GROUPS[0].alternativeKeys[API_KEY_GROUPS[0].lastUsedIndex] || 'TWELVEDATA_API_KEY';
+          const usedKeyName = getUsedKeyName('TWELVEDATA_API_KEY');
           markKeyAsFailed(usedKeyName);
           console.error(`تم تجاوز الحد اليومي للمفتاح ${usedKeyName} عند محاولة جلب السعر`);
         }
