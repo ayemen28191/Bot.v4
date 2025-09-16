@@ -3,14 +3,14 @@ import { Request, Response } from "express";
 import { storage } from "../storage";
 import { insertDeploymentServerSchema } from "@shared/schema";
 import { DeploymentService } from "../services/deployment-service";
-import { z } from "zod";
 import { validateRequest } from "../middleware/validate-request";
 import { requireAdminSecure, getCurrentUser } from "../middleware/auth-middleware";
 import * as SessionData from "express-session";
 import { catchAsync } from "../middleware/global-error-handler";
 import { 
   createValidationError, 
-  createDatabaseError,
+  createError,
+  ErrorCategory,
   ERROR_CODES, 
   ERROR_MESSAGES 
 } from '@shared/error-types';
@@ -75,11 +75,11 @@ deploymentRouter.put("/servers/:id", requireAdminSecure, catchAsync(async (req: 
   // التحقق من وجود الخادم
   const existingServer = await storage.getServer(id);
   if (!existingServer) {
-    throw createValidationError(
-      ERROR_CODES.VALIDATION_REQUIRED,
+    throw createError(
+      ErrorCategory.AUTHORIZATION,
+      ERROR_CODES.AUTHZ_RESOURCE_NOT_FOUND,
       "الخادم غير موجود",
-      "id",
-      id
+      { details: { serverId: id }, userFriendly: true }
     );
   }
 
@@ -119,133 +119,181 @@ deploymentRouter.put("/servers/:id", requireAdminSecure, catchAsync(async (req: 
 }));
 
 // حذف خادم
-deploymentRouter.delete("/servers/:id", requireAdminSecure, async (req, res) => {
-  try {
-    const id = parseInt(req.params.id, 10);
-    if (isNaN(id)) {
-      return res.status(400).json({ success: false, message: "معرف الخادم غير صالح" });
-    }
-
-    // التحقق من وجود الخادم
-    const existingServer = await storage.getServer(id);
-    if (!existingServer) {
-      return res.status(404).json({ success: false, message: "الخادم غير موجود" });
-    }
-
-    await storage.deleteServer(id);
-    res.json({ success: true, message: "تم حذف الخادم بنجاح" });
-  } catch (error) {
-    console.error("Error deleting server:", error);
-    res.status(500).json({ success: false, message: "خطأ في حذف الخادم" });
+deploymentRouter.delete("/servers/:id", requireAdminSecure, catchAsync(async (req: Request, res: Response) => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) {
+    throw createValidationError(
+      ERROR_CODES.VALIDATION_FORMAT,
+      "معرف الخادم غير صالح",
+      "id",
+      req.params.id
+    );
   }
-});
+
+  // التحقق من وجود الخادم
+  const existingServer = await storage.getServer(id);
+  if (!existingServer) {
+    throw createError(
+      ErrorCategory.AUTHORIZATION,
+      ERROR_CODES.AUTHZ_RESOURCE_NOT_FOUND,
+      "الخادم غير موجود",
+      { details: { serverId: id }, userFriendly: true }
+    );
+  }
+
+  await storage.deleteServer(id);
+  res.json({ success: true, message: "تم حذف الخادم بنجاح" });
+}));
 
 // اختبار الاتصال بالخادم
-deploymentRouter.post("/test-connection/:id", requireAdminSecure, async (req, res) => {
-  try {
-    const id = parseInt(req.params.id, 10);
-    if (isNaN(id)) {
-      return res.status(400).json({ success: false, message: "معرف الخادم غير صالح" });
-    }
-
-    // جلب معلومات الخادم
-    const server = await storage.getServer(id);
-    if (!server) {
-      return res.status(404).json({ success: false, message: "الخادم غير موجود" });
-    }
-
-    console.log("Testing connection to server:", server.name);
-
-    // اختبار الاتصال
-    const result = await DeploymentService.testConnection(server);
-    console.log("Connection test result:", result);
-    res.json(result);
-  } catch (error: any) {
-    console.error("Error testing connection:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: `خطأ في اختبار الاتصال: ${error.message || 'حدث خطأ غير معروف'}` 
-    });
+deploymentRouter.post("/test-connection/:id", requireAdminSecure, catchAsync(async (req: Request, res: Response) => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) {
+    throw createValidationError(
+      ERROR_CODES.VALIDATION_FORMAT,
+      "معرف الخادم غير صالح",
+      "id",
+      req.params.id
+    );
   }
-});
+
+  // جلب معلومات الخادم
+  const server = await storage.getServer(id);
+  if (!server) {
+    throw createError(
+      ErrorCategory.AUTHORIZATION,
+      ERROR_CODES.AUTHZ_RESOURCE_NOT_FOUND,
+      "الخادم غير موجود",
+      { details: { serverId: id }, userFriendly: true }
+    );
+  }
+
+  console.log("Testing connection to server:", server.name);
+
+  // اختبار الاتصال
+  const result = await DeploymentService.testConnection(server);
+  console.log("Connection test result:", result);
+  res.json(result);
+}));
 
 // نشر التطبيق إلى خادم محدد
-deploymentRouter.post("/deploy/:id", requireAdminSecure, async (req, res) => {
-  try {
-    const id = parseInt(req.params.id, 10);
-    if (isNaN(id)) {
-      return res.status(400).json({ success: false, message: "معرف الخادم غير صالح" });
-    }
-
-    // جلب معلومات الخادم
-    const server = await storage.getServer(id);
-    if (!server) {
-      return res.status(404).json({ success: false, message: "الخادم غير موجود" });
-    }
-
-    // التحقق من حالة الخادم
-    if (!server.isActive) {
-      return res.status(400).json({ success: false, message: "الخادم غير نشط" });
-    }
-
-    const currentUser = getCurrentUser(req);
-    console.log("Starting deployment to server:", server.name, "by user:", currentUser?.id);
-
-    // بدء عملية النشر
-    const result = await DeploymentService.deployToServer({
-      server,
-      userId: currentUser?.id,
-      // يمكن تمرير خيارات إضافية من الواجهة
-      ...req.body,
-    });
-
-    console.log("Deployment result:", result.success ? "Success" : "Failed", result.message);
-    res.json(result);
-  } catch (error: any) {
-    console.error("Error deploying to server:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: `خطأ في عملية النشر: ${error.message || 'حدث خطأ غير معروف'}` 
-    });
+deploymentRouter.post("/deploy/:id", requireAdminSecure, catchAsync(async (req: Request, res: Response) => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) {
+    throw createValidationError(
+      ERROR_CODES.VALIDATION_FORMAT,
+      "معرف الخادم غير صالح",
+      "id",
+      req.params.id
+    );
   }
-});
+
+  // جلب معلومات الخادم
+  const server = await storage.getServer(id);
+  if (!server) {
+    throw createError(
+      ErrorCategory.AUTHORIZATION,
+      ERROR_CODES.AUTHZ_RESOURCE_NOT_FOUND,
+      "الخادم غير موجود",
+      { details: { serverId: id }, userFriendly: true }
+    );
+  }
+
+  // التحقق من حالة الخادم
+  if (!server.isActive) {
+    throw createValidationError(
+      ERROR_CODES.VALIDATION_INVALID_INPUT,
+      "الخادم غير نشط",
+      "isActive",
+      server.isActive
+    );
+  }
+
+  const currentUser = getCurrentUser(req);
+  console.log("Starting deployment to server:", server.name, "by user:", currentUser?.id);
+
+  // بدء عملية النشر
+  const result = await DeploymentService.deployToServer({
+    server,
+    userId: currentUser?.id,
+    // يمكن تمرير خيارات إضافية من الواجهة
+    ...req.body,
+  });
+
+  console.log("Deployment result:", result.success ? "Success" : "Failed", result.message);
+  res.json(result);
+}));
 
 // جلب سجلات النشر
-deploymentRouter.get("/logs", requireAdminSecure, async (req, res) => {
-  try {
-    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
-    const logs = await storage.getAllLogs(limit);
-    res.json(logs);
-  } catch (error) {
-    console.error("Error fetching logs:", error);
-    res.status(500).json({ error: "خطأ في جلب سجلات النشر" });
+deploymentRouter.get("/logs", requireAdminSecure, catchAsync(async (req: Request, res: Response) => {
+  let limit = 50; // القيمة الافتراضية
+  
+  if (req.query.limit) {
+    const parsedLimit = parseInt(req.query.limit as string, 10);
+    if (isNaN(parsedLimit)) {
+      throw createValidationError(
+        ERROR_CODES.VALIDATION_FORMAT,
+        "قيمة limit غير صالحة - يجب أن تكون رقماً",
+        "limit",
+        req.query.limit
+      );
+    }
+    if (parsedLimit < 1 || parsedLimit > 1000) {
+      throw createValidationError(
+        ERROR_CODES.VALIDATION_RANGE,
+        "قيمة limit يجب أن تكون بين 1 و 1000",
+        "limit",
+        parsedLimit
+      );
+    }
+    limit = parsedLimit;
   }
-});
+  
+  const logs = await storage.getAllLogs(limit);
+  res.json(logs);
+}));
 
 // جلب سجلات النشر لخادم محدد
-deploymentRouter.get("/servers/:id/logs", requireAdminSecure, async (req, res) => {
-  try {
-    const id = parseInt(req.params.id, 10);
-    if (isNaN(id)) {
-      return res.status(400).json({ error: "معرف الخادم غير صالح" });
-    }
-
-    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
-    const logs = await storage.getLogsByServer(id, limit);
-    res.json(logs);
-  } catch (error) {
-    console.error("Error fetching server logs:", error);
-    res.status(500).json({ error: "خطأ في جلب سجلات النشر للخادم" });
+deploymentRouter.get("/servers/:id/logs", requireAdminSecure, catchAsync(async (req: Request, res: Response) => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) {
+    throw createValidationError(
+      ERROR_CODES.VALIDATION_FORMAT,
+      "معرف الخادم غير صالح",
+      "id",
+      req.params.id
+    );
   }
-});
+
+  let limit = 50; // القيمة الافتراضية
+  
+  if (req.query.limit) {
+    const parsedLimit = parseInt(req.query.limit as string, 10);
+    if (isNaN(parsedLimit)) {
+      throw createValidationError(
+        ERROR_CODES.VALIDATION_FORMAT,
+        "قيمة limit غير صالحة - يجب أن تكون رقماً",
+        "limit",
+        req.query.limit
+      );
+    }
+    if (parsedLimit < 1 || parsedLimit > 1000) {
+      throw createValidationError(
+        ERROR_CODES.VALIDATION_RANGE,
+        "قيمة limit يجب أن تكون بين 1 و 1000",
+        "limit",
+        parsedLimit
+      );
+    }
+    limit = parsedLimit;
+  }
+  
+  const logs = await storage.getLogsByServer(id, limit);
+  res.json(logs);
+}));
 
 // حذف جميع سجلات النشر
-deploymentRouter.delete("/logs", requireAdminSecure, async (req, res) => {
-  try {
-    await storage.clearAllLogs();
-    res.json({ success: true, message: "تم حذف جميع سجلات النشر بنجاح" });
-  } catch (error) {
-    console.error("Error clearing logs:", error);
-    res.status(500).json({ error: "خطأ في حذف سجلات النشر" });
-  }
-});
+deploymentRouter.delete("/logs", requireAdminSecure, catchAsync(async (req: Request, res: Response) => {
+  await storage.clearAllLogs();
+  res.json({ success: true, message: "تم حذف جميع سجلات النشر بنجاح" });
+}));
