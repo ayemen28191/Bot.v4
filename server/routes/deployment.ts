@@ -1,4 +1,5 @@
 import * as express from "express";
+import { Request, Response } from "express";
 import { storage } from "../storage";
 import { insertDeploymentServerSchema } from "@shared/schema";
 import { DeploymentService } from "../services/deployment-service";
@@ -6,6 +7,13 @@ import { z } from "zod";
 import { validateRequest } from "../middleware/validate-request";
 import { requireAdminSecure, getCurrentUser } from "../middleware/auth-middleware";
 import * as SessionData from "express-session";
+import { catchAsync } from "../middleware/global-error-handler";
+import { 
+  createValidationError, 
+  createDatabaseError,
+  ERROR_CODES, 
+  ERROR_MESSAGES 
+} from '@shared/error-types';
 
 // إضافة تعريف لجلسة المستخدم
 declare module "express-session" {
@@ -22,97 +30,93 @@ export const deploymentRouter = express.Router();
 
 
 // جلب جميع الخوادم
-deploymentRouter.get("/servers", requireAdminSecure, async (req, res) => {
-  try {
-    const servers = await storage.getAllServers();
-    // حماية البيانات الحساسة
-    const sanitizedServers = servers.map(server => ({
-      ...server,
-      // استبدال كلمة السر والمفتاح الخاص بقيمة تدل على وجودهما
-      password: server.password ? "[محمي]" : null,
-      privateKey: server.privateKey ? "[محمي]" : null,
-    }));
-    res.json(sanitizedServers);
-  } catch (error) {
-    console.error("Error fetching servers:", error);
-    res.status(500).json({ error: "خطأ في جلب بيانات الخوادم" });
-  }
-});
+deploymentRouter.get("/servers", requireAdminSecure, catchAsync(async (req: Request, res: Response) => {
+  const servers = await storage.getAllServers();
+  // حماية البيانات الحساسة
+  const sanitizedServers = servers.map(server => ({
+    ...server,
+    // استبدال كلمة السر والمفتاح الخاص بقيمة تدل على وجودهما
+    password: server.password ? "[محمي]" : null,
+    privateKey: server.privateKey ? "[محمي]" : null,
+  }));
+  res.json(sanitizedServers);
+}));
 
 // إضافة خادم جديد
 deploymentRouter.post("/servers", requireAdminSecure, 
   validateRequest({
     body: insertDeploymentServerSchema
   }),
-  async (req, res) => {
-    try {
-      const server = await storage.createServer(req.body);
-      // حماية البيانات الحساسة في الاستجابة
-      const sanitizedServer = {
-        ...server,
-        password: server.password ? "[محمي]" : null,
-        privateKey: server.privateKey ? "[محمي]" : null,
-      };
-      
-      res.status(201).json({ success: true, server: sanitizedServer });
-    } catch (error) {
-      console.error("Error creating server:", error);
-      res.status(500).json({ success: false, message: "خطأ في إنشاء الخادم" });
-    }
-  }
+  catchAsync(async (req: Request, res: Response) => {
+    const server = await storage.createServer(req.body);
+    // حماية البيانات الحساسة في الاستجابة
+    const sanitizedServer = {
+      ...server,
+      password: server.password ? "[محمي]" : null,
+      privateKey: server.privateKey ? "[محمي]" : null,
+    };
+    
+    res.status(201).json({ success: true, server: sanitizedServer });
+  })
 );
 
 // تحديث خادم موجود
-deploymentRouter.put("/servers/:id", requireAdminSecure, async (req, res) => {
-  try {
-    const id = parseInt(req.params.id, 10);
-    if (isNaN(id)) {
-      return res.status(400).json({ success: false, message: "معرف الخادم غير صالح" });
-    }
-
-    // التحقق من وجود الخادم
-    const existingServer = await storage.getServer(id);
-    if (!existingServer) {
-      return res.status(404).json({ success: false, message: "الخادم غير موجود" });
-    }
-
-    // التحقق من صحة البيانات
-    const updateSchema = insertDeploymentServerSchema.partial();
-    const validationResult = updateSchema.safeParse(req.body);
-    if (!validationResult.success) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "بيانات غير صالحة", 
-        errors: validationResult.error.errors 
-      });
-    }
-
-    // معالجة الكلمات السرية
-    // إذا كان الحقل فارغاً، استخدم القيمة السابقة
-    const updateData = { ...validationResult.data };
-    if (updateData.authType === 'password' && (!updateData.password || updateData.password === '')) {
-      updateData.password = existingServer.password;
-    }
-    if (updateData.authType === 'key' && (!updateData.privateKey || updateData.privateKey === '')) {
-      updateData.privateKey = existingServer.privateKey;
-    }
-
-    // تحديث الخادم
-    const updatedServer = await storage.updateServer(id, updateData);
-    
-    // حماية البيانات الحساسة
-    const sanitizedServer = {
-      ...updatedServer,
-      password: updatedServer.password ? "[محمي]" : null,
-      privateKey: updatedServer.privateKey ? "[محمي]" : null,
-    };
-
-    res.json({ success: true, server: sanitizedServer });
-  } catch (error) {
-    console.error("Error updating server:", error);
-    res.status(500).json({ success: false, message: "خطأ في تحديث الخادم" });
+deploymentRouter.put("/servers/:id", requireAdminSecure, catchAsync(async (req: Request, res: Response) => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) {
+    throw createValidationError(
+      ERROR_CODES.VALIDATION_FORMAT,
+      "معرف الخادم غير صالح",
+      "id",
+      req.params.id
+    );
   }
-});
+
+  // التحقق من وجود الخادم
+  const existingServer = await storage.getServer(id);
+  if (!existingServer) {
+    throw createValidationError(
+      ERROR_CODES.VALIDATION_REQUIRED,
+      "الخادم غير موجود",
+      "id",
+      id
+    );
+  }
+
+  // التحقق من صحة البيانات
+  const updateSchema = insertDeploymentServerSchema.partial();
+  const validationResult = updateSchema.safeParse(req.body);
+  if (!validationResult.success) {
+    throw createValidationError(
+      ERROR_CODES.VALIDATION_FORMAT,
+      "بيانات غير صالحة",
+      "body",
+      validationResult.error.errors
+    );
+  }
+
+  // معالجة الكلمات السرية
+  // إذا كان الحقل فارغاً، استخدم القيمة السابقة
+  const updateData = { ...validationResult.data };
+  if (updateData.authType === 'password' && (!updateData.password || updateData.password === '')) {
+    updateData.password = existingServer.password;
+  }
+  if (updateData.authType === 'key' && (!updateData.privateKey || updateData.privateKey === '')) {
+    updateData.privateKey = existingServer.privateKey;
+  }
+
+  // تحديث الخادم
+  const updatedServer = await storage.updateServer(id, updateData);
+  
+  // حماية البيانات الحساسة
+  const sanitizedServer = {
+    ...updatedServer,
+    password: updatedServer.password ? "[محمي]" : null,
+    privateKey: updatedServer.privateKey ? "[محمي]" : null,
+  };
+
+  res.json({ success: true, server: sanitizedServer });
+}));
 
 // حذف خادم
 deploymentRouter.delete("/servers/:id", requireAdminSecure, async (req, res) => {
