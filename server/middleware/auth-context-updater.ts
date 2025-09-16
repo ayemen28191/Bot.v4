@@ -29,6 +29,16 @@ export function authContextUpdaterMiddleware(req: Request, res: Response, next: 
       return;
     }
     
+    // فقط للطلبات التي تحتاج مصادقة - تجنب API calls المستمرة
+    const isAuthRoute = req.path.startsWith('/api/user') || 
+                       req.path.startsWith('/api/login') || 
+                       req.path.startsWith('/api/logout');
+    
+    if (!isAuthRoute) {
+      next();
+      return;
+    }
+    
     // التحقق من وجود مستخدم مصادق عليه
     if (req.isAuthenticated && req.isAuthenticated() && req.user) {
       // تحديث السياق الحالي بمعلومات المستخدم فقط إذا لم يكن محدثاً بالفعل
@@ -56,14 +66,14 @@ export function authContextUpdaterMiddleware(req: Request, res: Response, next: 
           res.locals.loggingContext.isAdmin = req.user.isAdmin || false;
         }
         
-        // تسجيل debug فقط عند التحديث الفعلي وفي بيئة التطوير
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`[AuthContextUpdater] Updated context for user: ${req.user.username} (ID: ${req.user.id})`);
+        // تسجيل debug فقط مرة واحدة وفي بيئة التطوير
+        if (process.env.NODE_ENV === 'development' && req.path === '/api/user') {
+          console.log(`[AuthContextUpdater] Context updated for: ${req.user.username}`);
         }
-        
-        // وضع علامة على الطلب لتجنب التحديثات المتكررة
-        (req as any).__authContextUpdated = true;
       }
+      
+      // وضع علامة على الطلب لتجنب التحديثات المتكررة
+      (req as any).__authContextUpdated = true;
     }
     
     next();

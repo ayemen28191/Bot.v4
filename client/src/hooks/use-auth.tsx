@@ -37,8 +37,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const response = await fetch("/api/user", {
           credentials: "include",
           headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
           }
         });
 
@@ -46,7 +47,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           if (response.status === 401) {
             // تسجيل هادئ للمطورين فقط
             if (process.env.NODE_ENV === 'development') {
-              console.debug('🔓 No authenticated session found (expected before login)');
+              console.debug('🔓 No authenticated session found');
             }
             return null;
           }
@@ -54,37 +55,32 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
 
         const userData = await response.json();
-        // تسجيل نجاح المصادقة فقط
-        console.log('✅ User authenticated:', userData.username);
+        // تسجيل نجاح المصادقة فقط مرة واحدة
+        if (process.env.NODE_ENV === 'development') {
+          console.log('✅ User authenticated:', userData.username);
+        }
         return userData;
       } catch (fetchError) {
         // تسجيل الأخطاء الحقيقية فقط
-        if (!(fetchError instanceof TypeError && fetchError.message.includes('fetch'))) {
-          console.error('Error fetching user data:', fetchError);
+        if (process.env.NODE_ENV === 'development') {
+          console.debug('Auth check failed:', fetchError);
         }
         return null;
       }
     },
     retry: (failureCount, error) => {
-      // إعادة المحاولة للأخطاء الشبكة لكن ليس لأخطاء المصادقة
-      if (error instanceof Error) {
-        // لا نعيد المحاولة لأخطاء المصادقة (401, 403)
-        if (error.message.includes('401') || error.message.includes('403')) {
-          console.log('🔓 Session expired or invalid, redirecting to login');
-          return false;
-        }
-        // إعادة المحاولة لأخطاء الشبكة
-        if (error.message.includes('Failed to fetch') || error instanceof TypeError) {
-          return failureCount < 3; // زيادة عدد المحاولات للشبكة
-        }
+      // لا إعادة محاولة للمصادقة المرفوضة
+      if (error instanceof Error && error.message.includes('401')) {
+        return false;
       }
-      return failureCount < 2;
+      // إعادة محاولة محدودة للأخطاء الأخرى
+      return failureCount < 1;
     },
-    staleTime: 15 * 60 * 1000, // 15 دقيقة
-    refetchInterval: false, // تعطيل الفحص التلقائي المستمر
-    refetchOnWindowFocus: false, // تعطيل التحديث عند العودة للنافذة
-    refetchOnMount: 'always', // إعادة التحميل عند تحميل المكون
-    refetchOnReconnect: true, // إعادة التحميل عند إعادة الاتصال
+    staleTime: 30 * 60 * 1000, // 30 دقيقة
+    refetchInterval: false, // منع الفحص التلقائي
+    refetchOnWindowFocus: false, // منع الفحص عند التركيز
+    refetchOnMount: false, // منع إعادة التحميل التلقائي
+    refetchOnReconnect: false, // منع الفحص عند إعادة الاتصال
     enabled: true, // التأكد من تفعيل الاستعلام
   });
 

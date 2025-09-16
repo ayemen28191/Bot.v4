@@ -10,36 +10,6 @@ interface ProtectedRouteProps extends RouteProps {
 export function ProtectedRoute({ path, component: Component }: ProtectedRouteProps) {
   const { user, isLoading, sessionChecked } = useAuth();
   const [location, setLocation] = useLocation();
-  const [redirectAttempted, setRedirectAttempted] = useState(false);
-
-  // منع إعادة التوجيه المتكررة
-  useEffect(() => {
-    // فقط إعادة التوجيه إذا:
-    // 1. انتهى التحميل
-    // 2. تم فحص الجلسة بالكامل
-    // 3. لا يوجد مستخدم
-    // 4. لسنا في صفحة المصادقة
-    // 5. لم نحاول إعادة التوجيه من قبل
-    if (!isLoading &&
-        sessionChecked &&
-        !user &&
-        location !== '/auth' &&
-        !redirectAttempted) {
-
-      console.log('🔓 No valid session, redirecting to auth page');
-      setRedirectAttempted(true);
-
-      // محو أي بيانات محلية متعلقة بالجلسة
-      try {
-        localStorage.removeItem('auth_timestamp');
-        sessionStorage.clear();
-      } catch (e) {
-        console.warn('Could not clear storage on session loss');
-      }
-
-      setLocation('/auth');
-    }
-  }, [user, isLoading, sessionChecked, location, setLocation, redirectAttempted]);
 
   // إظهار شاشة التحميل أثناء التحقق الأولي
   if (isLoading || !sessionChecked) {
@@ -52,8 +22,19 @@ export function ProtectedRoute({ path, component: Component }: ProtectedRoutePro
     );
   }
 
-  // إعادة التوجيه إلى صفحة تسجيل الدخول إذا لم يكن المستخدم مسجلاً
-  if (!user) {
+  // إعادة التوجيه البسيطة بدون حلقات
+  if (!user && location !== '/auth') {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔓 No session, redirecting to auth');
+    }
+    
+    // محو البيانات المحلية
+    try {
+      localStorage.removeItem('auth_timestamp');
+    } catch (e) {
+      // تجاهل الأخطاء
+    }
+    
     return (
       <Route path={path}>
         <Redirect to="/auth" replace />
@@ -61,9 +42,19 @@ export function ProtectedRoute({ path, component: Component }: ProtectedRoutePro
     );
   }
 
+  // عرض المكون إذا كان المستخدم مسجل الدخول
+  if (user) {
+    return (
+      <Route path={path}>
+        <Component />
+      </Route>
+    );
+  }
+
+  // الحالة الافتراضية
   return (
     <Route path={path}>
-      <Component />
+      <Redirect to="/auth" replace />
     </Route>
   );
 }

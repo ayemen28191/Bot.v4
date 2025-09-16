@@ -133,9 +133,11 @@ app.use(requestContextMiddleware);
 console.log('Setting up authentication...');
 setupAuth(app);
 
-// إعداد middleware لتحديث السياق بمعلومات المستخدم بعد المصادقة
+// إعداد middleware لتحديث السياق بمعلومات المستخدم بعد المصادقة (للطلبات المحددة فقط)
 console.log('Setting up auth context updater middleware...');
-app.use(authContextUpdaterMiddleware);
+app.use('/api/user', authContextUpdaterMiddleware);
+app.use('/api/login', authContextUpdaterMiddleware);
+app.use('/api/logout', authContextUpdaterMiddleware);
 
 async function killProcessOnPort(port: number) {
   try {
