@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
-  const { login, user, isLoading, error } = useAuth();
+  const { login, user, isLoading, error, sessionChecked } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loginPending, setLoginPending] = useState(false);
@@ -36,9 +36,6 @@ export default function AuthPage() {
 
   // Redirect if already logged in - with protection against duplication
   useEffect(() => {
-    // إضافة فحص للتأكد من اكتمال فحص الجلسة
-    const { sessionChecked } = useAuth();
-    
     if (user && !isLoading && !loginPending && !hasRedirected && sessionChecked) {
       console.log('✅ User already authenticated, redirecting to dashboard...');
       setHasRedirected(true); // Set the flag to prevent multiple redirects
@@ -50,7 +47,7 @@ export default function AuthPage() {
         setLocation("/");
       }, 100);
     }
-  }, [user, isLoading, loginPending, hasRedirected, setLocation]);
+  }, [user, isLoading, loginPending, hasRedirected, sessionChecked, setLocation]);
 
   // Listen for language changes and force re-render
   useEffect(() => {
