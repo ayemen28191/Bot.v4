@@ -18,6 +18,17 @@ import { Server as SocketIOServer } from "socket.io";
 import { logsService } from "./services/logs-service";
 // Import the debug session router
 import { debugSessionRouter } from "./routes/debug-session";
+// Import unified error handling system
+import {
+  AppError,
+  ErrorCategory,
+  ErrorSeverity,
+  createError,
+  createValidationError,
+  toErrorResponse,
+  getErrorMessage
+} from "@shared/error-types";
+import { handleDatabaseError, handleNetworkError, handleZodError } from "./middleware/global-error-handler";
 
 
 // التأكد من أن المستخدم مُسجل الدخول
@@ -179,7 +190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         severity: errorData.severity,
         userAgent: cleanedUserAgent,
         language: errorData.language,
-        url: cleanedUrl,
+        url: cleanedUrl || undefined,
         platform: errorData.platform?.substring(0, 50), // Limit platform string
         connectionType: errorData.connectionType?.substring(0, 20), // Limit connection type
         details: errorData.details ? JSON.stringify(errorData.details).substring(0, 1000) : undefined, // Limit details
@@ -202,6 +213,210 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: 'Internal server error',
         errorAr: 'خطأ داخلي في الخادم'
       });
+    }
+  });
+
+  // ===== New Error Reports API with Unified Error Handling =====
+  
+  // POST /api/error-reports - New endpoint using unified error handling system
+  app.post('/api/error-reports', errorReportRateLimit, async (req, res) => {
+    let appError: AppError | null = null;
+    
+    try {
+      // Log the error report attempt
+      await logsService.log({
+        level: 'debug',
+        source: 'api',
+        message: 'Error report submission attempt',
+        actorType: 'user',
+        actorId: req.user?.id?.toString() || 'anonymous',
+        action: 'error_report_submit',
+        result: 'processing',
+        details: JSON.stringify({
+          ip: req.ip,
+          userAgent: req.headers['user-agent'],
+          hasAuth: !!req.user
+        })
+      });
+
+      // Validate request body using Zod schema with unified error handling
+      const validationResult = enhancedErrorReportSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        // Use unified error handling for validation errors
+        appError = handleZodError(validationResult.error);
+        
+        await logsService.log({
+          level: 'warn',
+          source: 'api',
+          message: 'Error report validation failed',
+          actorType: 'user',
+          actorId: req.user?.id?.toString() || 'anonymous',
+          action: 'error_report_submit',
+          result: 'failure',
+          details: JSON.stringify({
+            validationErrors: validationResult.error.issues,
+            errorCount: validationResult.error.issues.length
+          })
+        });
+
+        return res.status(400).json(toErrorResponse(appError));
+      }
+
+      const errorData = validationResult.data;
+      
+      // Clean and process the error data (same as existing logic but with better error handling)
+      const cleanedUrl = errorData.url ? (() => {
+        try {
+          if (errorData.url.startsWith('/')) {
+            return errorData.url.split('?')[0].split('#')[0];
+          }
+          const url = new URL(errorData.url);
+          return url.pathname;
+        } catch {
+          const pathMatch = errorData.url.match(/^[^?#]+/);
+          return pathMatch ? pathMatch[0] : null;
+        }
+      })() : null;
+      
+      // Create error hash for deduplication
+      const errorHash = crypto
+        .createHash('sha256')
+        .update(`${errorData.category}:${errorData.code}:${errorData.message.substring(0, 100)}`)
+        .digest('hex');
+
+      // Clean stack trace with enhanced security
+      const cleanedStack = errorData.stack ? (() => {
+        try {
+          return errorData.stack
+            .split('\n')
+            .map(line => line.replace(/\/[^\/\s]+\/[^\/\s]+/g, '[PATH]'))
+            .slice(0, 10)
+            .join('\n');
+        } catch {
+          return '[REDACTED]';
+        }
+      })() : undefined;
+
+      // Clean user agent
+      const cleanedUserAgent = errorData.userAgent ? (() => {
+        try {
+          const match = errorData.userAgent.match(/(Chrome|Firefox|Safari|Edge)\/(\d+)/);
+          return match ? `${match[1]}/${match[2]}` : 'Unknown';
+        } catch {
+          return 'Unknown';
+        }
+      })() : undefined;
+
+      // Get authenticated user ID
+      const userId = req.isAuthenticated() && req.user ? req.user.id : undefined;
+
+      // Prepare cleaned error data for storage
+      const cleanedErrorData = {
+        errorHash,
+        category: errorData.category,
+        code: errorData.code,
+        message: errorData.message.substring(0, 500),
+        messageAr: errorData.messageAr?.substring(0, 500),
+        severity: errorData.severity,
+        userAgent: cleanedUserAgent,
+        language: errorData.language,
+        url: cleanedUrl || undefined,
+        platform: errorData.platform?.substring(0, 50),
+        connectionType: errorData.connectionType?.substring(0, 20),
+        details: errorData.details ? JSON.stringify(errorData.details).substring(0, 1000) : undefined,
+        stack: cleanedStack,
+        requestId: crypto.randomUUID(),
+        sessionId: undefined, // Privacy protection
+        userId
+      };
+
+      try {
+        // Store error report with database error handling
+        const savedReport = await storage.createOrUpdateErrorReport(cleanedErrorData);
+        
+        // Log successful storage
+        await logsService.log({
+          level: 'info',
+          source: 'api',
+          message: `Error report ${savedReport.id ? 'updated' : 'created'} successfully`,
+          actorType: 'user',
+          actorId: userId?.toString() || 'anonymous',
+          action: 'error_report_submit',
+          result: 'success',
+          details: JSON.stringify({
+            reportId: savedReport.id,
+            errorHash: errorHash.substring(0, 8),
+            category: errorData.category,
+            severity: errorData.severity,
+            isNewReport: !savedReport.count || savedReport.count === 1
+          })
+        });
+
+        // Return structured success response
+        res.status(201).json({
+          success: true,
+          message: 'Error report submitted successfully',
+          messageAr: 'تم إرسال تقرير الخطأ بنجاح',
+          data: {
+            reportId: savedReport.id,
+            hash: errorHash.substring(0, 8),
+            processed: true
+          }
+        });
+
+      } catch (dbError) {
+        // Handle database errors with unified system
+        appError = handleDatabaseError(dbError as Error);
+        
+        await logsService.log({
+          level: 'error',
+          source: 'api',
+          message: 'Database error while saving error report',
+          actorType: 'user',
+          actorId: userId?.toString() || 'anonymous',
+          action: 'error_report_submit',
+          result: 'error',
+          details: JSON.stringify({
+            errorMessage: (dbError as Error).message,
+            errorStack: (dbError as Error).stack,
+            errorHash: errorHash.substring(0, 8)
+          })
+        });
+
+        return res.status(500).json(toErrorResponse(appError));
+      }
+      
+    } catch (error) {
+      // Handle unexpected errors with unified system
+      const unexpectedError = error as Error;
+      appError = createError(
+        ErrorCategory.SYSTEM,
+        'SYSTEM_INTERNAL_ERROR',
+        'An unexpected error occurred while processing error report',
+        {
+          messageAr: 'حدث خطأ غير متوقع أثناء معالجة تقرير الخطأ',
+          severity: ErrorSeverity.HIGH,
+          userFriendly: true
+        }
+      );
+
+      await logsService.log({
+        level: 'error',
+        source: 'api',
+        message: 'Unexpected error in error reports endpoint',
+        actorType: 'user',
+        actorId: req.user?.id?.toString() || 'anonymous',
+        action: 'error_report_submit',
+        result: 'error',
+        details: JSON.stringify({
+          errorMessage: unexpectedError.message,
+          errorStack: unexpectedError.stack,
+          originalBody: req.body
+        })
+      });
+
+      return res.status(500).json(toErrorResponse(appError));
     }
   });
 
