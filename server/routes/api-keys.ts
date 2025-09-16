@@ -20,7 +20,7 @@ interface ApiKeyPlaceholder {
 
 // التحقق من أن المستخدم مسؤول
 function isAdmin(req: express.Request, res: express.Response, next: express.NextFunction) {
-  if (req.isAuthenticated() && req.user && (req.user as any).role === 'ADMIN') {
+  if (req.isAuthenticated() && req.user && req.user.isAdmin) {
     return next();
   }
   
