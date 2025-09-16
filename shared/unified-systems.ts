@@ -24,6 +24,7 @@
  */
 
 import { z } from 'zod';
+import { ErrorCategory, ErrorSeverity } from './error-types';
 
 // ============================================================================
 // CORE TYPES & INTERFACES
@@ -176,24 +177,6 @@ export type UnifiedAction =
 // ============================================================================
 // ERROR SYSTEM CONSOLIDATION
 // ============================================================================
-
-export enum ErrorCategory {
-  AUTHENTICATION = 'authentication',
-  AUTHORIZATION = 'authorization',
-  VALIDATION = 'validation',
-  NETWORK = 'network',
-  DATABASE = 'database',
-  API_LIMIT = 'api_limit',
-  SYSTEM = 'system',
-  UNKNOWN = 'unknown'
-}
-
-export enum ErrorSeverity {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
-  CRITICAL = 'critical'
-}
 
 /**
  * Unified Error Factory
@@ -386,11 +369,6 @@ export type {
   UnifiedNotification
 };
 
-export {
-  UnifiedErrorFactory,
-  ErrorCategory,
-  ErrorSeverity
-};
 
 // ============================================================================
 // VALIDATION SCHEMAS

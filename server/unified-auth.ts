@@ -20,7 +20,8 @@ import {
   getCurrentUserId,
   isCurrentUserAdmin 
 } from './unified-context';
-import { UnifiedErrorFactory, ErrorCategory } from '@shared/unified-systems';
+import { UnifiedErrorFactory } from '@shared/unified-systems';
+import { ErrorCategory } from '@shared/error-types';
 
 // ============================================================================
 // INTERFACES

@@ -17,10 +17,9 @@ import { z } from 'zod';
 import { 
   UnifiedError, 
   UnifiedErrorFactory, 
-  ErrorCategory, 
-  ErrorSeverity,
   UnifiedContext 
 } from './unified-systems';
+import { ErrorCategory, ErrorSeverity } from './error-types';
 
 // ============================================================================
 // ERROR TRANSLATION PATTERNS
@@ -613,6 +612,53 @@ if (typeof setInterval !== 'undefined') {
       }
     }
   }, 5 * 60 * 1000);
+}
+
+// ============================================================================
+// UNIFIED ERROR HANDLER CLASS
+// ============================================================================
+
+/**
+ * Main error handler class with static methods
+ * Provides a centralized interface for error handling
+ */
+export class UnifiedErrorHandler {
+  /**
+   * Handle any error with optional context
+   */
+  static handleError(error: any, context?: UnifiedContext, language: 'en' | 'ar' = 'en'): UnifiedError {
+    const processedError = processError(error, context, language);
+    
+    // Report error if needed (async, don't await)
+    if (shouldReportError(processedError)) {
+      reportErrorToServer(processedError).catch(() => {
+        // Silently ignore reporting failures
+      });
+    }
+    
+    return processedError;
+  }
+
+  /**
+   * Process error without reporting
+   */
+  static processError(error: any, context?: UnifiedContext, language: 'en' | 'ar' = 'en'): UnifiedError {
+    return processError(error, context, language);
+  }
+
+  /**
+   * Get user-friendly error message
+   */
+  static getUserFriendlyMessage(error: UnifiedError, language: 'en' | 'ar' = 'en'): string {
+    return getUserFriendlyMessage(error, language);
+  }
+
+  /**
+   * Format error for display
+   */
+  static formatError(error: UnifiedError, language: 'en' | 'ar' = 'en') {
+    return formatErrorForDisplay(error, language);
+  }
 }
 
 // ============================================================================
