@@ -671,16 +671,13 @@ class LogsService {
 
   // إشعار جميع المستمعين بسجل جديد
   private notifyNewLog(log: SystemLog): void {
-    // تأخير صغير للتأكد من اكتمال حفظ البيانات
-    setTimeout(() => {
-      this.newLogCallbacks.forEach(callback => {
-        try {
-          callback(log);
-        } catch (error) {
-          console.error('[LogsService] Error in new log callback:', error);
-        }
-      });
-    }, 50); // تأخير 50ms
+    this.newLogCallbacks.forEach(callback => {
+      try {
+        callback(log);
+      } catch (error) {
+        console.error('[LogsService] Error in new log callback:', error);
+      }
+    });
   }
 }
 

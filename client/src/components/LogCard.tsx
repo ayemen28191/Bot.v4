@@ -434,10 +434,9 @@ export function LogCard({ log, onClick, isSelected, onSearch }: LogCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  // تحسين معالجة البيانات
-  const levelStyle = useMemo(() => getLevelStyle(log.level), [log.level]);
-  const systemInfo = useMemo(() => parseAdvancedSystemInfo(log.meta), [log.meta]);
-  const sourceColor = useMemo(() => generateAdvancedColor(log.source), [log.source]);
+  const levelStyle = getLevelStyle(log.level);
+  const systemInfo = parseAdvancedSystemInfo(log.meta);
+  const sourceColor = generateAdvancedColor(log.source);
 
   // Animation effects
   useEffect(() => {
@@ -466,35 +465,30 @@ export function LogCard({ log, onClick, isSelected, onSearch }: LogCardProps) {
     }
   };
 
-  const formatTime = useMemo(() => {
-    const date = new Date(log.timestamp);
+  const formatTime = (timestamp: string) => {
+    const date = new Date(timestamp);
     return {
       time: date.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
       date: date.toLocaleDateString('ar-SA', { month: 'short', day: 'numeric' }),
       full: date.toLocaleString('ar-SA')
     };
-  }, [log.timestamp]);
+  };
 
-  const timeInfo = formatTime;
-  const actorDisplayName = useMemo(() => 
-    log.actorDisplayName || log.userDisplayName || log.username || log.source
-  , [log.actorDisplayName, log.userDisplayName, log.username, log.source]);
-  
-  const isUserAction = useMemo(() => 
-    log.actorType === 'user' || 
-    Boolean(log.userId) || 
-    Boolean(log.username) || 
-    Boolean(log.userDisplayName) ||
-    (log.source === 'signal-logger' && log.meta && 
-     (() => {
-       try {
-         const metaData = typeof log.meta === 'string' ? JSON.parse(log.meta) : log.meta;
-         return metaData?.context?.userId || metaData?.userId;
-       } catch {
-         return false;
-       }
-     })())
-  , [log.actorType, log.userId, log.username, log.userDisplayName, log.source, log.meta]);
+  const timeInfo = formatTime(log.timestamp);
+  const actorDisplayName = log.actorDisplayName || log.userDisplayName || log.username || log.source;
+  const isUserAction = log.actorType === 'user' || 
+                     Boolean(log.userId) || 
+                     Boolean(log.username) || 
+                     Boolean(log.userDisplayName) ||
+                     (log.source === 'signal-logger' && log.meta && 
+                      (() => {
+                        try {
+                          const metaData = typeof log.meta === 'string' ? JSON.parse(log.meta) : log.meta;
+                          return metaData?.context?.userId || metaData?.userId;
+                        } catch {
+                          return false;
+                        }
+                      })());
 
   return (
     <Card 
