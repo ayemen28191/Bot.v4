@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef } from 'react';
-import { Settings, DollarSign, Bitcoin, LineChart, Clock, AlertTriangle, Globe, BarChart, MessageCircle, ChevronDown, AlertCircle, Bell, BarChart2, Timer, History, Lock, Loader2, X, Users, Bot, WifiOff, RefreshCw, Grid } from 'lucide-react';
+import { Settings, DollarSign, Bitcoin, LineChart, Clock, AlertTriangle, Globe, BarChart, MessageCircle, ChevronDown, AlertCircle, Bell, BarChart2, Timer, History, Lock, Loader2, X, Users, Bot, WifiOff, RefreshCw, Grid, BarChart3, LayoutDashboard } from 'lucide-react';
 import { Link } from 'wouter';
 import { SignalIndicator } from '@/features/trading';
 import { SignalType } from '@/features/trading/SignalIndicator';
@@ -132,7 +132,7 @@ export default function TradingSignalPage() {
   // استدعاء مكون الctoast والمصادقة
   const { toast } = useToast();
   const { user } = useAuth();
-  
+
   // استخدام مكون التحقق من الاتصال - تكرار الفحص كل دقيقتين لتقليل الطلبات المُلغاة
   const { 
     isOnline, 
@@ -141,29 +141,29 @@ export default function TradingSignalPage() {
     resetState: resetConnectionState,
     lastCheckTime
   } = useConnection('/api/test/health', 120000);
-  
+
   // حالة وضع عدم الاتصال للتطبيق
   const [isOfflineMode, setIsOfflineMode] = useState<boolean>(() => {
     // تفضيل استخدام التخزين المحلي لتذكر تفضيلات المستخدم
     return localStorage.getItem('offline_mode') === 'enabled';
   });
-  
+
   // حالة عرض خطأ الاتصال
   const [showConnectionError, setShowConnectionError] = useState(false);
-  
+
   // حالة عرض تنبيه للمستخدم
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
-  
+
   // دالة لتفعيل وضع عدم الاتصال
   const enableOfflineMode = useCallback(() => {
     console.log(t('offline_mode_enabled_trading_page'));
     setIsOfflineMode(true);
     localStorage.setItem('offline_mode', 'enabled');
-    
+
     // إخفاء خطأ الاتصال
     setShowConnectionError(false);
-    
+
     // إظهار إشعار للمستخدم
     toast({
       title: t('offline_mode_enabled_title'),
@@ -172,11 +172,11 @@ export default function TradingSignalPage() {
       duration: 5000
     });
   }, [toast]);
-  
+
   // إضافة متابعة لخطأ WebSocket في بيئة HTTPS
   useEffect(() => {
     const wsSecurityError = 'SecurityError: Failed to construct \'WebSocket\': An insecure WebSocket connection may not be initiated from a page loaded over HTTPS';
-    
+
     // مراقبة أخطاء WebSocket في وحدة التحكم
     const originalError = console.error;
     console.error = function(...args) {
@@ -190,12 +190,12 @@ export default function TradingSignalPage() {
       }
       originalError.apply(console, args);
     };
-    
+
     return () => {
       console.error = originalError;
     };
   }, [isOfflineMode, enableOfflineMode]);
-  
+
   // تتبع حالة الاتصال ووضع عدم الاتصال
   useEffect(() => {
     // لا نعرض خطأ الاتصال في وضع عدم الاتصال
@@ -203,7 +203,7 @@ export default function TradingSignalPage() {
       setShowConnectionError(false);
       return;
     }
-    
+
     // إذا كانت نتيجة الفحص تشير إلى عدم وجود اتصال ومرت 5 ثوانٍ على الفحص
     if (!isOnline && !isChecking && lastCheckTime && Date.now() - lastCheckTime > 5000) {
       setShowConnectionError(true);
@@ -211,16 +211,16 @@ export default function TradingSignalPage() {
       setShowConnectionError(false);
     }
   }, [isOnline, isChecking, isOfflineMode, lastCheckTime]);
-  
+
   // دالة لتعطيل وضع عدم الاتصال
   const disableOfflineMode = useCallback(() => {
     console.log(t('offline_mode_disabled_trading_page'));
     setIsOfflineMode(false);
     localStorage.removeItem('offline_mode');
-    
+
     // إعادة تهيئة حالة الاتصال
     resetConnectionState();
-    
+
     // إعادة فحص الاتصال مباشرة
     checkConnection().then(isConnected => {
       if (isConnected) {
@@ -245,7 +245,7 @@ export default function TradingSignalPage() {
   const handleRetryConnection = useCallback(async () => {
     return await checkConnection();
   }, [checkConnection]);
-  
+
   // دالة مساعدة لاسترجاع السعر المخزن محليًا
   const getCachedPrice = (symbol: string): number | null => {
     try {
@@ -262,7 +262,7 @@ export default function TradingSignalPage() {
     }
     return null;
   };
-  
+
   // دالة لإنشاء أسعار افتراضية معقولة للأزواج المختلفة في حالة عدم وجود سعر مخزن
   const getDefaultPriceForSymbol = (symbol: string): number => {
     // قيم افتراضية محدثة للأزواج الشائعة (تم تحديثها في مارس 2025)
@@ -281,12 +281,12 @@ export default function TradingSignalPage() {
       'GOOGL': 175.80,
       'AMZN': 182.90
     };
-    
+
     // إذا كان الزوج معروفًا، أعد السعر الافتراضي المقابل له
     if (symbol in defaultPrices) {
       return defaultPrices[symbol];
     }
-    
+
     // للأزواج غير المعروفة، إرجاع قيمة معقولة بناءً على نوع الزوج
     if (symbol.includes('/USDT') || symbol.includes('-USD')) {
       return 2.50; // ازواج العملات المشفرة الأخرى
@@ -296,7 +296,7 @@ export default function TradingSignalPage() {
       return 1.1050; // لأزواج الفوركس الأخرى
     }
   };
-  
+
   // إضافة دالة لتحديث المكون عند تغيير اللغة
   const [, setForceUpdateFlag] = useState(0);
   const forceUpdate = () => setForceUpdateFlag(prev => prev + 1);
@@ -334,7 +334,7 @@ export default function TradingSignalPage() {
   const [selectedTimeFrame, setSelectedTimeFrame] = useState<TimeFrame>('1M');
   const [isMarketOpen, setIsMarketOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // استخدام خطاف الخريطة الحرارية
   const { 
     data: heatmapData, 
@@ -347,7 +347,7 @@ export default function TradingSignalPage() {
     refreshInterval: 300000, // تحديث كل 5 دقائق
     offlineMode: isOfflineMode
   });
-  
+
   // حالة الخريطة الحرارية
   const [showHeatmap, setShowHeatmap] = useState(false);
 
@@ -363,11 +363,11 @@ export default function TradingSignalPage() {
     supportedMarkets: ['forex', 'stocks', 'crypto'] as MarketType[]
   });
 
-  // تصفية الأزواج التداولية حسب النوع
-  const [activePairType, setActivePairType] = useState<MarketType>('forex');
-
   // حالة القائمة المنسدلة للمنصات
   const [isPlatformDropdownOpen, setIsPlatformDropdownOpen] = useState(false);
+
+  // تصفية الأزواج التداولية حسب النوع
+  const [activePairType, setActivePairType] = useState<MarketType>('forex');
 
   // تغيير نوع الزوج النشط وتحديث الزوج المحدد إذا لزم الأمر
   const handleChangePairType = (type: MarketType) => {
@@ -593,36 +593,29 @@ export default function TradingSignalPage() {
     { symbol: 'AMZN', name: t('AMZN'), type: 'stocks' as MarketType },
   ], [currentLanguage]);
 
-  // متغيرات للعداد التنازلي
-  const [cooldownTime, setCooldownTime] = useState<number>(() => {
+  // متغيرات لتتبع الإشارات السابقة
+  const [previousSignals, setPreviousSignals] = useState<Array<{
+    timestamp: number;
+    symbol: string;
+    timeframe: TimeFrame;
+    signal: SignalType;
+    probability: number;
+    analysis?: MarketAnalysis;
+  }>>(() => {
     try {
-      const savedEndTime = localStorage.getItem('signalCooldownEndTime');
-      if (savedEndTime) {
-        const remainingTime = Math.ceil((parseInt(savedEndTime) - Date.now()) / 1000);
-        return remainingTime > 0 ? remainingTime : 0;
-      }
+      const storedSignals = localStorage.getItem('previousSignals');
+      return storedSignals ? JSON.parse(storedSignals) : [];
     } catch (e) {
-      console.error('Error loading cooldown time:', e);
+      console.error('Error loading previous signals:', e);
+      return [];
     }
-    return 0;
   });
 
-  const [isCooldown, setIsCooldown] = useState<boolean>(() => {
-    return cooldownTime > 0;
-  });
+  // متغير لتفعيل/تعطيل عرض الإشارات السابقة
+  const [showPreviousSignals, setShowPreviousSignals] = useState(false);
 
-  // تعريف المؤشرات الفنية وأوزانها لحساب الإشارة
-  const technicalIndicators = {
-    rsi: { weight: 20 }, // مؤشر القوة النسبية
-    macd: { weight: 20 }, // تقارب وتباعد المتوسطات المتحركة
-    ema: { weight: 15 }, // المتوسط المتحرك الأسي
-    bb: { weight: 15 }, // نطاقات بولينجر
-    stoch: { weight: 15 }, // مؤشر ستوكاستيك
-    adx: { weight: 15 }, // مؤشر الاتجاه المتوسط
-  };
-
-  // هذه واجهة تحليل السوق تم نقلها إلى أعلى الملف
-  // لذلك نحن نحذفها هنا لتجنب التكرار
+  // عدد الإشارات السابقة التي يتم عرضها كحد أقصى
+  const maxPreviousSignals = 5;
 
   // دالة مساعدة لتحديد عدد المنازل العشرية المناسبة لكل زوج تداول
   const getPricePrecision = (symbol: string): number => {
@@ -656,7 +649,7 @@ export default function TradingSignalPage() {
       const url = `/api/market-analysis?symbol=${encodeURIComponent(pair)}&timeframe=${timeframe}&marketType=${selectedPair.type}`;
       const response = await retryFetch(url, 3, 1500);
       const analysisData = await response.json();
-      
+
       console.log(t('market_analysis_response'), analysisData);
 
       if (!analysisData || analysisData.error) {
@@ -669,17 +662,17 @@ export default function TradingSignalPage() {
         'sell': 'DOWN',
         'wait': 'WAIT'
       };
-      
+
       // طباعة الإشارة المستلمة للتصحيح
       console.log(t('signal_received_from_server'), analysisData.signal);
       console.log(t('signal_type_received'), typeof analysisData.signal);
-      
+
       // معالجة محسنة للإشارة - تحويل الإشارة إلى نص سفلي والتحقق من القيمة
       const serverSignal = String(analysisData.signal).toLowerCase().trim();
       console.log(t('signal_after_processing'), serverSignal);
-      
+
       let finalSignal: SignalType = 'WAIT';
-      
+
       if (serverSignal === 'buy') {
         finalSignal = 'UP';
         console.log(t('signal_converted_to_up'));
@@ -690,9 +683,18 @@ export default function TradingSignalPage() {
         console.log(t('signal_no_match_using_wait'));
       }
 
+      // تحويل بيانات التحليل إلى تنسيق MarketAnalysis المطلوب
+      const analysis: MarketAnalysis = {
+        trend: analysisData.trend || 'neutral',
+        strength: analysisData.strength || 50,
+        volatility: analysisData.volatility || 30,
+        support: analysisData.support || (currentPrice ? parseFloat((currentPrice * 0.99).toFixed(getPricePrecision(pair))) : 0),
+        resistance: analysisData.resistance || (currentPrice ? parseFloat((currentPrice * 1.01).toFixed(getPricePrecision(pair))) : 0)
+      };
+
       // تحويل المؤشرات إلى التنسيق المطلوب للواجهة
       const indicators: Record<string, { value: number; signal: 'buy' | 'sell' | 'neutral' }> = {};
-      
+
       if (analysisData.indicators) {
         Object.entries(analysisData.indicators).forEach(([key, indicator]: [string, any]) => {
           indicators[key] = {
@@ -706,15 +708,6 @@ export default function TradingSignalPage() {
       if (currentPrice) {
         localStorage.setItem(`lastPrice_${pair}`, currentPrice.toString());
       }
-
-      // تحويل بيانات التحليل إلى تنسيق MarketAnalysis المطلوب
-      const analysis: MarketAnalysis = {
-        trend: analysisData.trend || 'neutral',
-        strength: analysisData.strength || 50,
-        volatility: analysisData.volatility || 30,
-        support: analysisData.support || (currentPrice ? parseFloat((currentPrice * 0.99).toFixed(getPricePrecision(pair))) : 0),
-        resistance: analysisData.resistance || (currentPrice ? parseFloat((currentPrice * 1.01).toFixed(getPricePrecision(pair))) : 0)
-      };
 
       console.log('نتائج التحليل من البيانات الحقيقية:', {
         signal: finalSignal,
@@ -731,7 +724,7 @@ export default function TradingSignalPage() {
       };
     } catch (error) {
       console.error('خطأ في تحليل السوق:', error);
-      
+
       // في حالة الخطأ، نعيد الإشارة المحايدة مع رسالة الخطأ
       setAlertMessage(`خطأ في تحليل السوق: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
       setShowAlert(true);
@@ -766,31 +759,6 @@ export default function TradingSignalPage() {
   const [marketAnalysis, setMarketAnalysis] = useState<MarketAnalysis | null>(null);
   const [indicatorResults, setIndicatorResults] = useState<Record<string, { value: number; signal: 'buy' | 'sell' | 'neutral' }> | null>(null);
 
-  // مصفوفة لتخزين الإشارات السابقة
-  const [previousSignals, setPreviousSignals] = useState<Array<{
-    timestamp: number;
-    symbol: string;
-    timeframe: TimeFrame;
-    signal: SignalType;
-    probability: number;
-    analysis?: MarketAnalysis;
-  }>>(() => {
-    try {
-      const storedSignals = localStorage.getItem('previousSignals');
-      return storedSignals ? JSON.parse(storedSignals) : [];
-    } catch (e) {
-      console.error('Error loading previous signals:', e);
-      return [];
-    }
-  });
-
-  // متغير لتفعيل/تعطيل عرض الإشارات السابقة
-  const [showPreviousSignals, setShowPreviousSignals] = useState(false);
-
-  // عدد الإشارات السابقة التي يتم عرضها كحد أقصى
-  const maxPreviousSignals = 5;
-
-  // وظيفة للحصول على سعر الزوج الحالي
   // دالة مساعدة لإعادة المحاولة
   const retryFetch = async (url: string, maxRetries = 3, delay = 1000, options?: RequestInit): Promise<Response> => {
     let lastError;
@@ -840,11 +808,11 @@ export default function TradingSignalPage() {
 
       // إضافة معلمة timestamp لتجنب التخزين المؤقت
       const url = `/api/current-price?symbol=${encodeURIComponent(symbol)}&t=${Date.now()}`;
-      
+
       // استخدام آلية إعادة المحاولة مع حد زمني
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 7000); // حد زمني 7 ثواني
-      
+
       try {
         // استخدام آلية إعادة المحاولة
         const response = await retryFetch(url, 3, 1500, { signal: controller.signal });
@@ -854,7 +822,7 @@ export default function TradingSignalPage() {
         // تحسين التحقق من صحة السعر
         if (!data || typeof data.price !== 'number' || isNaN(data.price) || data.price <= 0) {
           console.error('تم استلام سعر غير صالح:', data);
-          
+
           // محاولة استخدام السعر المخزن في حالة فشل استرداد سعر جديد
           const cachedPrice = getCachedPrice(symbol);
           if (cachedPrice !== null) {
@@ -865,7 +833,7 @@ export default function TradingSignalPage() {
             });
             return cachedPrice;
           }
-          
+
           toast({
             title: t('data_analysis_error_title'),
             description: t('data_analysis_error_desc'),
@@ -883,15 +851,15 @@ export default function TradingSignalPage() {
         }));
 
         return data.price;
-        
+
       } catch (innerError) {
         clearTimeout(timeoutId);
         throw innerError; // رمي الخطأ ليتم التقاطه في كتلة الخطأ الخارجية
       }
-      
+
     } catch (error) {
       console.error('خطأ في جلب سعر الزوج:', error);
-      
+
       // في حالة الخطأ، تحقق من وجود بيانات مخزنة محليًا
       const cachedPrice = getCachedPrice(symbol);
       if (cachedPrice !== null) {
@@ -901,15 +869,15 @@ export default function TradingSignalPage() {
           description: t('cached_data_loaded_desc'),
           variant: "default",
         });
-        
+
         // هذا قد يكون مؤشرًا على مشكلة في الاتصال
         if (!showConnectionError && !isOfflineMode) {
           setShowConnectionError(true);
         }
-        
+
         return cachedPrice;
       }
-      
+
       toast({
         title: t('local_mode_switch_title'),
         description: t('updating_price_data_desc'),
@@ -937,7 +905,7 @@ export default function TradingSignalPage() {
     const analysisTime = new Date();
     const hourOfDay = analysisTime.getHours();
     const dayOfWeek = analysisTime.getDay();
-    
+
     // معاملات خاصة تعتمد على الوقت لزيادة واقعية التوقعات
     // تقلبات السوق أعلى بشكل عام في بداية أو نهاية اليوم التداولي
     const timeFactors = {
@@ -951,7 +919,7 @@ export default function TradingSignalPage() {
         if (hourOfDay < 20) return 1.2; // إغلاق السوق الأمريكي
         return 0.9; // وقت هادئ نسبيًا
       })(),
-      
+
       // عامل اليوم يتراوح بين 0.9 و 1.1 اعتمادًا على يوم الأسبوع
       // تقلبات أعلى يوم الاثنين (بداية الأسبوع) والجمعة (نهاية الأسبوع)
       dayFactor: (() => {
@@ -963,7 +931,7 @@ export default function TradingSignalPage() {
 
     // استخدام التقلبات التاريخية الحقيقية
     let baseVolatility: number = 0.01; // قيمة افتراضية أولية
-    
+
     // التحقق إذا كان الزوج موجودًا في بيانات التقلب التاريخية
     const historicalVolatility = HISTORICAL_VOLATILITY as Record<string, number>;
     if (Object.prototype.hasOwnProperty.call(historicalVolatility, selectedPair.symbol)) {
@@ -982,7 +950,7 @@ export default function TradingSignalPage() {
         } else {
           baseVolatility = VOLATILITY_FACTORS.forex.cross;
         }
-        
+
       } else if (selectedPair.type === 'crypto') {
         // تصنيف العملات المشفرة بشكل أكثر دقة
         if (selectedPair.symbol.includes('BTC')) {
@@ -992,7 +960,7 @@ export default function TradingSignalPage() {
         } else {
           baseVolatility = VOLATILITY_FACTORS.crypto.alt;
         }
-        
+
       } else if (selectedPair.type === 'stocks') {
         // تصنيف الأسهم بشكل أكثر دقة
         if (['AAPL', 'MSFT', 'GOOGL', 'AMZN'].includes(selectedPair.symbol)) {
@@ -1004,7 +972,7 @@ export default function TradingSignalPage() {
         // قيمة افتراضية للأنواع الأخرى
         baseVolatility = 0.01; // 1% تقلب افتراضي
       }
-      
+
       console.log(`استخدام تقلب تقديري لـ ${selectedPair.symbol}: ${baseVolatility * 100}%`);
     }
 
@@ -1027,10 +995,10 @@ export default function TradingSignalPage() {
 
     // حساب التقلب النهائي مع دمج جميع العوامل
     const volatility = baseVolatility * timeframeMultiplier * timeFactors.timeFactor * timeFactors.dayFactor;
-    
+
     // حساب نطاق التغير المتوقع بناءً على السعر الحالي والتقلب المحسوب
     let expectedChange = currentPrice * volatility;
-    
+
     console.log('التغير المتوقع بعد تحسين العوامل:', expectedChange);
 
     // تحسين: إضافة التناسق بدلاً من العشوائية
@@ -1038,16 +1006,16 @@ export default function TradingSignalPage() {
     const priceSeed = parseInt(currentPrice.toString().replace('.', '').substring(0, 4));
     const timeframeSeed = timeframe.charCodeAt(0) + (timeframe.length > 1 ? timeframe.charCodeAt(1) : 0);
     const timeSeed = (hourOfDay * 60 + analysisTime.getMinutes()) / 1440;
-    
+
     // إنشاء عامل متناسق بدلاً من العامل العشوائي
     const consistencyFactor = (priceSeed % 20) / 100 + 0.9 + // عامل ثابت من السعر (0.9-1.1)
                              Math.sin(timeframeSeed * timeSeed * Math.PI) * 0.1; // عامل متغير (±0.1)
-    
+
     // حساب السعر المستهدف مع مراعاة الاتجاه والمتغيرات
     let targetPrice: number;
     if (signal === 'UP') {
       targetPrice = currentPrice + (expectedChange * consistencyFactor);
-      
+
       // تحسين إضافي: إضافة عوامل دعم ومقاومة لتتناسب مع واقع السوق
       // إذا كان لدينا معلومات عن مستويات الدعم والمقاومة
       if (marketAnalysis) {
@@ -1057,10 +1025,10 @@ export default function TradingSignalPage() {
           targetPrice = resistance - (resistance - currentPrice) * 0.1;
         }
       }
-      
+
     } else if (signal === 'DOWN') {
       targetPrice = currentPrice - (expectedChange * consistencyFactor);
-      
+
       // إضافة عوامل الدعم والمقاومة للإشارات الهبوطية
       if (marketAnalysis) {
         const support = marketAnalysis.support;
@@ -1069,7 +1037,7 @@ export default function TradingSignalPage() {
           targetPrice = support + (currentPrice - support) * 0.1;
         }
       }
-      
+
     } else {
       return currentPrice; // إذا كانت الإشارة WAIT
     }
@@ -1079,7 +1047,7 @@ export default function TradingSignalPage() {
     const maxChangePercent = targetRange / 100; // الحد الأقصى للتغير بالنسبة المئوية
     const maxChange = currentPrice * maxChangePercent;
     const changeAmount = Math.abs(targetPrice - currentPrice);
-    
+
     if (changeAmount > maxChange) {
       // إذا كان التغيير كبيرًا جدًا، قم بتحديده بالحد الأقصى المناسب
       targetPrice = signal === 'UP' 
@@ -1093,6 +1061,34 @@ export default function TradingSignalPage() {
 
     console.log('السعر المستهدف النهائي (محسّن):', finalPrice);
     return finalPrice;
+  };
+
+  // متغيرات لتتبع الإشارة الحالية
+  const [cooldownTime, setCooldownTime] = useState<number>(() => {
+    try {
+      const savedEndTime = localStorage.getItem('signalCooldownEndTime');
+      if (savedEndTime) {
+        const remainingTime = Math.ceil((parseInt(savedEndTime) - Date.now()) / 1000);
+        return remainingTime > 0 ? remainingTime : 0;
+      }
+    } catch (e) {
+      console.error('Error loading cooldown time:', e);
+    }
+    return 0;
+  });
+
+  const [isCooldown, setIsCooldown] = useState<boolean>(() => {
+    return cooldownTime > 0;
+  });
+
+  // تعريف المؤشرات الفنية وأوزانها لحساب الإشارة
+  const technicalIndicators = {
+    rsi: { weight: 20 }, // مؤشر القوة النسبية
+    macd: { weight: 20 }, // تقارب وتباعد المتوسطات المتحركة
+    ema: { weight: 15 }, // المتوسط المتحرك الأسي
+    bb: { weight: 15 }, // نطاقات بولينجر
+    stoch: { weight: 15 }, // مؤشر ستوكاستيك
+    adx: { weight: 15 }, // مؤشر الاتجاه المتوسط
   };
 
   // وظيفة الحصول على إشارة جديدة
@@ -1147,14 +1143,14 @@ export default function TradingSignalPage() {
       // الحصول على نتائج التحليل
       const analysisResults = await analyzeMarket(selectedPair.symbol, selectedTimeFrame);
       console.log('نتائج التحليل المستلمة:', analysisResults);
-      
+
       // طباعة الإشارة المستلمة للتصحيح
       console.log('نوع الإشارة المستلمة:', typeof analysisResults.signal);
       console.log('قيمة الإشارة قبل المعالجة:', analysisResults.signal);
-      
+
       // التأكد من معالجة الإشارة بشكل صحيح قبل تعيينها
       let finalSignal: SignalType = 'WAIT';
-      
+
       if (analysisResults.signal === 'UP' || analysisResults.signal === 'DOWN') {
           // الإشارة مناسبة، استخدمها كما هي
           finalSignal = analysisResults.signal;
@@ -1165,13 +1161,13 @@ export default function TradingSignalPage() {
               'sell': 'DOWN',
               'wait': 'WAIT'
           };
-          
+
           const normalizedSignal = String(analysisResults.signal).toLowerCase().trim();
           console.log('الإشارة المعالجة:', normalizedSignal);
-          
+
           finalSignal = signalMap[normalizedSignal] || 'WAIT';
       }
-      
+
       console.log('الإشارة النهائية بعد المعالجة:', finalSignal);
 
       // تحديث الحالة بالقيم المحسوبة
@@ -1221,11 +1217,11 @@ export default function TradingSignalPage() {
 
     } catch (error) {
       console.error('خطأ في الحصول على الإشارة:', error);
-      
+
       // تحديد نوع الخطأ وعرض رسالة مناسبة
       let errorTitle = 'تحليل السوق جاري';
       let errorDescription = 'نقوم بتحديث تحليلات السوق. يمكنك المحاولة مرة أخرى بعد قليل.';
-      
+
       // إذا كان الخطأ متعلق بالشبكة أو الاتصال
       if (error instanceof Error) {
         if (error.message.includes('network') || error.message.includes('اتصال') || error.message.includes('connection')) {
@@ -1233,7 +1229,7 @@ export default function TradingSignalPage() {
           errorDescription = 'نحن نعمل على تحديث بيانات الأسعار والتحليلات. يمكنك المحاولة مرة أخرى بعد قليل.';
         }
       }
-      
+
       toast({
         title: errorTitle,
         description: errorDescription,
@@ -1362,10 +1358,10 @@ export default function TradingSignalPage() {
     // مستمع حدث تفعيل وضع عدم الاتصال من موفر WebSocket
     const handleEnableOfflineMode = (event: CustomEvent) => {
       console.log('تم استلام حدث تفعيل وضع عدم الاتصال:', event.detail);
-      
+
       // تفعيل وضع عدم الاتصال
       enableOfflineMode();
-      
+
       // عرض سبب تفعيل وضع عدم الاتصال إذا كان متاحًا
       if (event.detail?.reason) {
         const reasons: Record<string, string> = {
@@ -1374,9 +1370,9 @@ export default function TradingSignalPage() {
           'api_limit_exceeded': 'تم تجاوز حد استخدام API',
           'connection_timeout': 'انتهت مهلة الاتصال'
         };
-        
+
         const reasonText = reasons[event.detail.reason] || 'سبب غير معروف';
-        
+
         toast({
           title: t('offline_mode_enabled_title'),
           description: `${t('offline_mode_activation_reason')} ${reasonText}. ${t('offline_mode_enabled_desc')}`,
@@ -1385,16 +1381,16 @@ export default function TradingSignalPage() {
         });
       }
     };
-    
+
     // إضافة مستمع الحدث
     window.addEventListener('enableOfflineMode', handleEnableOfflineMode as EventListener);
-    
+
     // التحقق من حالة وضع عدم الاتصال المخزنة
     const storedOfflineMode = localStorage.getItem('offline_mode');
     if (storedOfflineMode === 'enabled') {
       setIsOfflineMode(true);
     }
-    
+
     return () => {
       // إزالة مستمع الحدث عند تفريغ المكون
       window.removeEventListener('enableOfflineMode', handleEnableOfflineMode as EventListener);
@@ -1635,7 +1631,7 @@ export default function TradingSignalPage() {
           />
         </div>
       )}
-      
+
       {/* شريط التنقل العلوي مع الشعار */}
       <header className="fixed top-0 left-0 right-0 flex justify-between items-center p-3 border-b border-border backdrop-blur-md z-50 shadow-md bg-background/90">
         <div className="logo flex items-center">
@@ -1699,7 +1695,7 @@ export default function TradingSignalPage() {
           />
         </div>
       )}
-      
+
       <main className="flex-1 p-3 mt-16 flex flex-col items-center">
         {/* قسم الخريطة الحرارية للاحتمالية */}
         {showHeatmap && (
@@ -2118,9 +2114,12 @@ export default function TradingSignalPage() {
       <footer className="fixed bottom-0 left-0 right-0 bg-background/90 backdrop-blur-md border-t border-border p-2">
         <div className="max-w-lg mx-auto flex justify-around items-center">
           {user?.isAdmin ? (
-            <Link href="/admin" className="flex flex-col items-center min-w-[4rem] text-muted-foreground hover:text-primary">
-              <Users className="h-5 w-5" />
-              <span className="text-[10px] mt-1 font-medium">{t('users')}</span>
+            <Link
+              href="/admin"
+              className="flex flex-col items-center justify-center py-2 px-1 rounded-lg transition-colors hover:bg-accent"
+            >
+              <LayoutDashboard className="h-5 w-5 mb-1" />
+              <span className="text-xs">{t('admin')}</span>
             </Link>
           ) : (
             <Link href="/bot-info" className="flex flex-col items-center min-w-[4rem] text-muted-foreground hover:text-primary">
