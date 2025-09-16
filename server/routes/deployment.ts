@@ -4,7 +4,7 @@ import { insertDeploymentServerSchema } from "@shared/schema";
 import { DeploymentService } from "../services/deployment-service";
 import { z } from "zod";
 import { validateRequest } from "../middleware/validate-request";
-import { requireAdmin, getCurrentUser } from "../middleware/auth-middleware";
+import { requireAdminSecure, getCurrentUser } from "../middleware/auth-middleware";
 import * as SessionData from "express-session";
 
 // إضافة تعريف لجلسة المستخدم
@@ -22,7 +22,7 @@ export const deploymentRouter = express.Router();
 
 
 // جلب جميع الخوادم
-deploymentRouter.get("/servers", requireAdmin({ language: 'ar', requireDatabaseCheck: true, returnJson: false }), async (req, res) => {
+deploymentRouter.get("/servers", requireAdminSecure, async (req, res) => {
   try {
     const servers = await storage.getAllServers();
     // حماية البيانات الحساسة
@@ -40,7 +40,7 @@ deploymentRouter.get("/servers", requireAdmin({ language: 'ar', requireDatabaseC
 });
 
 // إضافة خادم جديد
-deploymentRouter.post("/servers", requireAdmin({ language: 'ar', requireDatabaseCheck: true, returnJson: false }), 
+deploymentRouter.post("/servers", requireAdminSecure, 
   validateRequest({
     body: insertDeploymentServerSchema
   }),
@@ -63,7 +63,7 @@ deploymentRouter.post("/servers", requireAdmin({ language: 'ar', requireDatabase
 );
 
 // تحديث خادم موجود
-deploymentRouter.put("/servers/:id", requireAdmin({ language: 'ar', requireDatabaseCheck: true, returnJson: false }), async (req, res) => {
+deploymentRouter.put("/servers/:id", requireAdminSecure, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) {
@@ -115,7 +115,7 @@ deploymentRouter.put("/servers/:id", requireAdmin({ language: 'ar', requireDatab
 });
 
 // حذف خادم
-deploymentRouter.delete("/servers/:id", requireAdmin({ language: 'ar', requireDatabaseCheck: true, returnJson: false }), async (req, res) => {
+deploymentRouter.delete("/servers/:id", requireAdminSecure, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) {
@@ -137,7 +137,7 @@ deploymentRouter.delete("/servers/:id", requireAdmin({ language: 'ar', requireDa
 });
 
 // اختبار الاتصال بالخادم
-deploymentRouter.post("/test-connection/:id", requireAdmin({ language: 'ar', requireDatabaseCheck: true, returnJson: false }), async (req, res) => {
+deploymentRouter.post("/test-connection/:id", requireAdminSecure, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) {
@@ -166,7 +166,7 @@ deploymentRouter.post("/test-connection/:id", requireAdmin({ language: 'ar', req
 });
 
 // نشر التطبيق إلى خادم محدد
-deploymentRouter.post("/deploy/:id", requireAdmin({ language: 'ar', requireDatabaseCheck: true, returnJson: false }), async (req, res) => {
+deploymentRouter.post("/deploy/:id", requireAdminSecure, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) {
@@ -207,7 +207,7 @@ deploymentRouter.post("/deploy/:id", requireAdmin({ language: 'ar', requireDatab
 });
 
 // جلب سجلات النشر
-deploymentRouter.get("/logs", requireAdmin({ language: 'ar', requireDatabaseCheck: true, returnJson: false }), async (req, res) => {
+deploymentRouter.get("/logs", requireAdminSecure, async (req, res) => {
   try {
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
     const logs = await storage.getAllLogs(limit);
@@ -219,7 +219,7 @@ deploymentRouter.get("/logs", requireAdmin({ language: 'ar', requireDatabaseChec
 });
 
 // جلب سجلات النشر لخادم محدد
-deploymentRouter.get("/servers/:id/logs", requireAdmin({ language: 'ar', requireDatabaseCheck: true, returnJson: false }), async (req, res) => {
+deploymentRouter.get("/servers/:id/logs", requireAdminSecure, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) {
@@ -236,7 +236,7 @@ deploymentRouter.get("/servers/:id/logs", requireAdmin({ language: 'ar', require
 });
 
 // حذف جميع سجلات النشر
-deploymentRouter.delete("/logs", requireAdmin({ language: 'ar', requireDatabaseCheck: true, returnJson: false }), async (req, res) => {
+deploymentRouter.delete("/logs", requireAdminSecure, async (req, res) => {
   try {
     await storage.clearAllLogs();
     res.json({ success: true, message: "تم حذف جميع سجلات النشر بنجاح" });

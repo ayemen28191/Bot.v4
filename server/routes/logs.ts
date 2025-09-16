@@ -3,7 +3,7 @@ import { z } from "zod";
 import { storage } from "../storage";
 import { logsService } from "../services/logs-service";
 import { insertSystemLogSchema, insertNotificationSettingSchema } from "@shared/schema";
-import { requireAdmin } from "../middleware/auth-middleware";
+import { requireAdminAR } from "../middleware/auth-middleware";
 
 const router = express.Router();
 
@@ -19,7 +19,7 @@ const getLogsQuerySchema = z.object({
 // ========================= مسارات السجلات =========================
 
 // جلب السجلات مع فلترة (للمشرفين فقط)
-router.get('/logs', requireAdmin({ language: 'ar', returnJson: true }), async (req, res) => {
+router.get('/logs', requireAdminAR, async (req, res) => {
   try {
     const validation = getLogsQuerySchema.safeParse(req.query);
 
@@ -41,7 +41,7 @@ router.get('/logs', requireAdmin({ language: 'ar', returnJson: true }), async (r
 });
 
 // إحصائيات السجلات (للمشرفين فقط)
-router.get('/logs/stats', requireAdmin({ language: 'ar', returnJson: true }), async (req, res) => {
+router.get('/logs/stats', requireAdminAR, async (req, res) => {
   try {
     const stats = await logsService.getLogStats();
     res.json(stats);
@@ -52,7 +52,7 @@ router.get('/logs/stats', requireAdmin({ language: 'ar', returnJson: true }), as
 });
 
 // إحصائيات محسنة مع العدادات التراكمية (للمشرفين فقط)
-router.get('/logs/enhanced-stats', requireAdmin({ language: 'ar', returnJson: true }), async (req, res) => {
+router.get('/logs/enhanced-stats', requireAdminAR, async (req, res) => {
   try {
     // جلب الإحصائيات الأساسية
     const basicStats = await logsService.getLogStats();
@@ -189,7 +189,7 @@ router.get('/logs/enhanced-stats', requireAdmin({ language: 'ar', returnJson: tr
 });
 
 // إحصائيات العدادات التراكمية للمستخدمين (للمشرفين فقط)
-router.get('/logs/user-counters', requireAdmin({ language: 'ar', returnJson: true }), async (req, res) => {
+router.get('/logs/user-counters', requireAdminAR, async (req, res) => {
   try {
     const { userId, actions, period = 'daily', limit = 100 } = req.query;
     
@@ -223,7 +223,7 @@ router.get('/logs/user-counters', requireAdmin({ language: 'ar', returnJson: tru
 });
 
 // إنشاء سجل جديد (للمشرفين فقط)
-router.post('/logs', requireAdmin({ language: 'ar', returnJson: true }), async (req, res) => {
+router.post('/logs', requireAdminAR, async (req, res) => {
   try {
     const validation = insertSystemLogSchema.safeParse(req.body);
 
@@ -245,7 +245,7 @@ router.post('/logs', requireAdmin({ language: 'ar', returnJson: true }), async (
 });
 
 // مسح السجلات القديمة (للمشرفين فقط)
-router.delete('/logs/old', requireAdmin({ language: 'ar', returnJson: true }), async (req, res) => {
+router.delete('/logs/old', requireAdminAR, async (req, res) => {
   try {
     const { daysOld = 30 } = req.body;
 
@@ -267,7 +267,7 @@ router.delete('/logs/old', requireAdmin({ language: 'ar', returnJson: true }), a
 });
 
 // حذف جميع السجلات (للمشرفين فقط)
-router.delete('/logs', requireAdmin({ language: 'ar', returnJson: true }), async (req, res) => {
+router.delete('/logs', requireAdminAR, async (req, res) => {
   try {
     // حذف جميع السجلات من قاعدة البيانات
     const deletedCount = await storage.clearAllSystemLogs();
@@ -327,7 +327,7 @@ function redactSensitiveFields(setting: any) {
 }
 
 // جلب جميع إعدادات الإشعارات (للمشرفين فقط)
-router.get('/notifications', requireAdmin({ language: 'ar', returnJson: true }), async (req, res) => {
+router.get('/notifications', requireAdminAR, async (req, res) => {
   try {
     const settings = await storage.getAllNotificationSettings();
 
@@ -342,7 +342,7 @@ router.get('/notifications', requireAdmin({ language: 'ar', returnJson: true }),
 });
 
 // جلب إعداد إشعار واحد (للمشرفين فقط)
-router.get('/notifications/:id', requireAdmin({ language: 'ar', returnJson: true }), async (req, res) => {
+router.get('/notifications/:id', requireAdminAR, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
 
@@ -367,7 +367,7 @@ router.get('/notifications/:id', requireAdmin({ language: 'ar', returnJson: true
 });
 
 // إنشاء إعداد إشعار جديد (للمشرفين فقط)
-router.post('/notifications', requireAdmin({ language: 'ar', returnJson: true }), async (req, res) => {
+router.post('/notifications', requireAdminAR, async (req, res) => {
   try {
     const validation = insertNotificationSettingSchema.safeParse(req.body);
 
@@ -398,7 +398,7 @@ router.post('/notifications', requireAdmin({ language: 'ar', returnJson: true })
 });
 
 // تحديث إعداد إشعار (للمشرفين فقط)
-router.put('/notifications/:id', requireAdmin({ language: 'ar', returnJson: true }), async (req, res) => {
+router.put('/notifications/:id', requireAdminAR, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
 
@@ -425,7 +425,7 @@ router.put('/notifications/:id', requireAdmin({ language: 'ar', returnJson: true
 });
 
 // حذف إعداد إشعار (للمشرفين فقط)
-router.delete('/notifications/:id', requireAdmin({ language: 'ar', returnJson: true }), async (req, res) => {
+router.delete('/notifications/:id', requireAdminAR, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
 
@@ -449,7 +449,7 @@ router.delete('/notifications/:id', requireAdmin({ language: 'ar', returnJson: t
 });
 
 // اختبار إشعار (للمشرفين فقط)
-router.post('/notifications/:id/test', requireAdmin({ language: 'ar', returnJson: true }), async (req, res) => {
+router.post('/notifications/:id/test', requireAdminAR, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
 

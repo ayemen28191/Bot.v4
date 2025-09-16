@@ -430,43 +430,92 @@ export function checkUserPermission(user: any, permission: 'admin' | 'user' = 'u
   return true; // مستخدم عادي
 }
 
-// ===================== Shortcuts شائعة الاستخدام =====================
+// ===================== نظام Shortcuts الموحد =====================
 
 /**
- * Middleware للمشرف مع فحص قاعدة البيانات (للحالات الحساسة)
- * يُستخدم عادة في endpoints الحساسة مثل إدارة الخوادم
+ * ======================== Admin Middlewares ========================
+ * تمثل أكثر الأنماط استخداماً في المشروع
  */
-export const requireAdminDB = requireAdmin({ 
+
+/**
+ * المشرف - النمط القياسي (الأكثر استخداماً)
+ * يُستخدم في: logs.ts, api-keys.ts, update.ts
+ * Pattern: requireAdmin({ language: 'ar', returnJson: true })
+ */
+export const requireAdminAR = requireAdmin({ 
+  language: 'ar', 
+  returnJson: true 
+});
+
+/**
+ * المشرف - النمط القياسي بالإنجليزية
+ * Pattern: requireAdmin({ language: 'en', returnJson: true })
+ */
+export const requireAdminEN = requireAdmin({ 
+  language: 'en', 
+  returnJson: true 
+});
+
+/**
+ * المشرف الآمن - للعمليات الحساسة (فحص قاعدة البيانات)
+ * يُستخدم في: deployment.ts
+ * Pattern: requireAdmin({ language: 'ar', requireDatabaseCheck: true, returnJson: false })
+ */
+export const requireAdminSecure = requireAdmin({ 
   language: 'ar', 
   requireDatabaseCheck: true, 
   returnJson: false 
 });
 
 /**
- * Middleware للمشرف العادي (أسرع، بدون فحص قاعدة البيانات)
- * يُستخدم في معظم admin endpoints
+ * المشرف الآمن مع JSON response
+ * للـ APIs الحساسة التي تحتاج فحص قاعدة البيانات
  */
-export const requireAdminFast = requireAdmin({ 
+export const requireAdminSecureJSON = requireAdmin({ 
   language: 'ar', 
+  requireDatabaseCheck: true, 
   returnJson: true 
 });
 
 /**
- * Middleware للمستخدم العادي مع رسائل بالعربية
+ * ======================== User Middlewares ========================
+ */
+
+/**
+ * المستخدم العادي مع رسائل بالعربية
  */
 export const requireUserAR = requireUser({ 
   language: 'ar' 
 });
 
 /**
- * Middleware للمستخدم العادي مع رسائل بالإنجليزية
+ * المستخدم العادي مع رسائل بالإنجليزية  
+ * يُستخدم في: proxy.ts
  */
 export const requireUserEN = requireUser({ 
   language: 'en' 
 });
 
+/**
+ * ======================== Backwards Compatibility ========================
+ * للحفاظ على التوافق مع الكود القديم
+ */
+
+/**
+ * @deprecated استخدم requireAdminSecure بدلاً منها
+ * Middleware للمشرف مع فحص قاعدة البيانات (للحالات الحساسة)
+ */
+export const requireAdminDB = requireAdminSecure;
+
+/**
+ * @deprecated استخدم requireAdminAR بدلاً منها
+ * Middleware للمشرف العادي (أسرع، بدون فحص قاعدة البيانات)
+ */
+export const requireAdminFast = requireAdminAR;
+
 // تصدير دوال مساعدة إضافية للتوافق مع الكود القديم
 export const authMiddleware = {
+  // Core functions
   isAuthenticated,
   isAdmin,
   requireUser,
@@ -474,11 +523,18 @@ export const authMiddleware = {
   requirePermission,
   getCurrentUser,
   checkUserPermission,
-  // Shortcuts الجديدة
-  requireAdminDB,
-  requireAdminFast,
+  
+  // Unified shortcuts system
+  requireAdminAR,
+  requireAdminEN, 
+  requireAdminSecure,
+  requireAdminSecureJSON,
   requireUserAR,
-  requireUserEN
+  requireUserEN,
+  
+  // Legacy shortcuts (deprecated but maintained for compatibility)
+  requireAdminDB: requireAdminSecure,
+  requireAdminFast: requireAdminAR
 };
 
 export default authMiddleware;

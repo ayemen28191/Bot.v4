@@ -2,12 +2,12 @@
 import express from 'express';
 import axios, { AxiosError } from 'axios';
 import { logsService } from '../services/logs-service';
-import { requireUser } from '../middleware/auth-middleware';
+import { requireUserEN } from '../middleware/auth-middleware';
 
 const proxyRouter = express.Router();
 
 // واجهة للطلبات الخارجية مع تجاوز CORS
-proxyRouter.post('/fetch', requireUser({ language: 'en' }), async (req, res) => {
+proxyRouter.post('/fetch', requireUserEN, async (req, res) => {
   try {
     const { url, method = 'GET', headers = {}, data } = req.body;
 
@@ -100,7 +100,7 @@ proxyRouter.post('/fetch', requireUser({ language: 'en' }), async (req, res) => 
 });
 
 // وكيل خاص لواجهات التداول
-proxyRouter.get('/market-data/:provider/:symbol', requireUser({ language: 'en' }), async (req, res) => {
+proxyRouter.get('/market-data/:provider/:symbol', requireUserEN, async (req, res) => {
   try {
     const { provider, symbol } = req.params;
     const { apiKey } = req.query;

@@ -5,7 +5,7 @@ import { promisify } from 'util';
 import path from 'path';
 import fs from 'fs';
 import { logsService } from '../services/logs-service';
-import { requireAdmin, requireAdminFast } from '../middleware/auth-middleware';
+import { requireAdminAR } from '../middleware/auth-middleware';
 
 export const updateRouter = express.Router();
 
@@ -70,7 +70,7 @@ updateRouter.get('/system-info', async (req, res) => {
 });
 
 // طلب تحديث النظام
-updateRouter.post('/run-update', requireAdmin({ language: 'ar', returnJson: true }), async (req, res) => {
+updateRouter.post('/run-update', requireAdminAR, async (req, res) => {
   try {
     await logsService.logInfo('update', `System update initiated by admin: ${req.user!.username}`, {
       action: 'system_update_started',

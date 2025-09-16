@@ -3,7 +3,7 @@ import axios from 'axios';
 import { storage } from '../storage';
 import { ConfigKey } from '../../shared/schema';
 import { logsService } from '../services/logs-service';
-import { requireAdmin, requireAdminFast } from '../middleware/auth-middleware';
+import { requireAdminAR } from '../middleware/auth-middleware';
 
 // إنشاء جهاز التوجيه لإدارة مفاتيح API
 export const apiKeysRouter = express.Router();
@@ -430,7 +430,7 @@ apiKeysRouter.get('/test/:key', async (req, res) => {
 // ثانياً: المسارات الخاصة بالمشرفين فقط
 
 // الحصول على جميع مفاتيح API (للمشرفين فقط)
-apiKeysRouter.get('/', requireAdmin({ language: 'ar', returnJson: true }), async (req, res) => {
+apiKeysRouter.get('/', requireAdminAR, async (req, res) => {
   try {
     const keys = await storage.getAllConfigKeys();
     
@@ -460,7 +460,7 @@ apiKeysRouter.get('/', requireAdmin({ language: 'ar', returnJson: true }), async
 });
 
 // إنشاء أو تحديث مفتاح API (للمشرفين فقط)
-apiKeysRouter.post('/', requireAdmin({ language: 'ar', returnJson: true }), async (req, res) => {
+apiKeysRouter.post('/', requireAdminAR, async (req, res) => {
   try {
     const { key, value, description, isSecret = true } = req.body;
     
@@ -483,7 +483,7 @@ apiKeysRouter.post('/', requireAdmin({ language: 'ar', returnJson: true }), asyn
 });
 
 // حذف مفتاح API (للمشرفين فقط)
-apiKeysRouter.delete('/:key', requireAdmin({ language: 'ar', returnJson: true }), async (req, res) => {
+apiKeysRouter.delete('/:key', requireAdminAR, async (req, res) => {
   try {
     const keyName = req.params.key;
     
@@ -505,7 +505,7 @@ apiKeysRouter.delete('/:key', requireAdmin({ language: 'ar', returnJson: true })
 
 // الحصول على مفتاح API محدد (للمشرفين فقط)
 // ملاحظة: يجب أن يكون هذا المسار آخر مسار لأنه يتعامل مع المعلمة المتغيرة :key
-apiKeysRouter.get('/:key', requireAdmin({ language: 'ar', returnJson: true }), async (req, res) => {
+apiKeysRouter.get('/:key', requireAdminAR, async (req, res) => {
   try {
     const keyName = req.params.key;
     const keyData = await storage.getConfigKey(keyName);
