@@ -105,13 +105,16 @@ export function setupAuth(app: Express) {
     store: storage.sessionStore,
     cookie: {
       secure: env.NODE_ENV === 'production', // آمن في الإنتاج فقط
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 أيام بدلاً من يوم واحد
+      maxAge: 24 * 60 * 60 * 1000, // 24 ساعة - توازن بين الأمان والراحة
       sameSite: 'lax',
       httpOnly: true // منع الوصول من JavaScript لأمان إضافي
     },
     // إضافة إعدادات لتحسين استقرار الجلسة
     rolling: true, // تجديد الجلسة مع كل طلب
-    name: 'binar.sid' // اسم مخصص لملف تعريف الارتباط
+    name: 'binar.sid', // اسم مخصص لملف تعريف الارتباط
+    // إضافة إعدادات للاستقرار
+    proxy: true, // للعمل مع Replit proxy
+    unset: 'keep' // الاحتفاظ بالجلسة حتى لو لم تتغير
   };
 
   console.log('Session settings configured:', {

@@ -24,14 +24,13 @@ export function useSessionMonitor() {
       document.addEventListener(event, updateActivity, true);
     });
 
-    // فحص دوري للجلسة
+    // فحص دوري للجلسة - أقل تكراراً
     const sessionCheck = setInterval(() => {
       const timeSinceActive = Date.now() - lastActiveTime.current;
-      const twentyMinutes = 20 * 60 * 1000;
-      const fiveMinutes = 5 * 60 * 1000;
+      const thirtyMinutes = 30 * 60 * 1000;
 
-      // تحذير قبل انتهاء الجلسة بـ 5 دقائق
-      if (timeSinceActive > twentyMinutes && !warningShown.current) {
+      // تحذير قبل انتهاء الجلسة بـ 10 دقائق
+      if (timeSinceActive > thirtyMinutes && !warningShown.current) {
         warningShown.current = true;
         toast({
           title: "⚠️ تحذير الجلسة",
@@ -41,18 +40,21 @@ export function useSessionMonitor() {
         });
       }
 
-      // فحص صحة الجلسة كل 10 دقائق
-      if (timeSinceActive % (10 * 60 * 1000) < 5000) {
+      // فحص صحة الجلسة كل 20 دقيقة فقط
+      if (timeSinceActive % (20 * 60 * 1000) < 60000) {
         fetch('/api/user', { 
           credentials: 'include',
           headers: {
             'Cache-Control': 'no-cache'
           }
         }).catch(error => {
-          console.warn('Session validation failed:', error);
+          // تجاهل الأخطاء الصامتة
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('Session validation failed:', error);
+          }
         });
       }
-    }, 30000); // فحص كل 30 ثانية
+    }, 60000); // فحص كل دقيقة بدلاً من 30 ثانية
 
     return () => {
       events.forEach(event => {

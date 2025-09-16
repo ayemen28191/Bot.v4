@@ -8,20 +8,27 @@ interface ProtectedRouteProps extends RouteProps {
 }
 
 export function ProtectedRoute({ path, component: Component }: ProtectedRouteProps) {
-  const { user, isLoading } = useAuth();
-  const [hasChecked, setHasChecked] = useState(false);
+  const { user, isLoading, sessionChecked } = useAuth();
   const [location, setLocation] = useLocation();
+  const [redirectAttempted, setRedirectAttempted] = useState(false);
 
+  // منع إعادة التوجيه المتكررة
   useEffect(() => {
-    if (!isLoading) {
-      setHasChecked(true);
-    }
-  }, [isLoading]);
-
-  // منع إعادة التوجيه إذا كنا بالفعل في صفحة تسجيل الدخول
-  useEffect(() => {
-    if (!isLoading && !user && hasChecked && location !== '/auth') {
-      console.log('🔓 Session lost or expired, redirecting to auth page');
+    // فقط إعادة التوجيه إذا:
+    // 1. انتهى التحميل
+    // 2. تم فحص الجلسة بالكامل
+    // 3. لا يوجد مستخدم
+    // 4. لسنا في صفحة المصادقة
+    // 5. لم نحاول إعادة التوجيه من قبل
+    if (!isLoading && 
+        sessionChecked && 
+        !user && 
+        location !== '/auth' && 
+        !redirectAttempted) {
+      
+      console.log('🔓 No valid session, redirecting to auth page');
+      setRedirectAttempted(true);
+      
       // محو أي بيانات محلية متعلقة بالجلسة
       try {
         localStorage.removeItem('auth_timestamp');
@@ -29,12 +36,13 @@ export function ProtectedRoute({ path, component: Component }: ProtectedRoutePro
       } catch (e) {
         console.warn('Could not clear storage on session loss');
       }
+      
       setLocation('/auth');
     }
-  }, [user, isLoading, hasChecked, location, setLocation]);
+  }, [user, isLoading, sessionChecked, location, setLocation, redirectAttempted]);
 
   // إظهار شاشة التحميل أثناء التحقق الأولي
-  if (isLoading || !hasChecked) {
+  if (isLoading || !sessionChecked) {
     return (
       <Route path={path}>
         <div className="flex items-center justify-center min-h-screen">

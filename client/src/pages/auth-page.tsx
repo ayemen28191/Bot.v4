@@ -36,12 +36,19 @@ export default function AuthPage() {
 
   // Redirect if already logged in - with protection against duplication
   useEffect(() => {
-    if (user && !isLoading && !loginPending && !hasRedirected) {
+    // إضافة فحص للتأكد من اكتمال فحص الجلسة
+    const { sessionChecked } = useAuth();
+    
+    if (user && !isLoading && !loginPending && !hasRedirected && sessionChecked) {
       console.log('✅ User already authenticated, redirecting to dashboard...');
       setHasRedirected(true); // Set the flag to prevent multiple redirects
-      // استخدام replace لمنع إعادة التحميل
-      window.history.replaceState(null, '', '/');
-      setLocation("/");
+      
+      // تأخير بسيط لضمان استقرار الحالة
+      setTimeout(() => {
+        // استخدام replace لمنع إعادة التحميل
+        window.history.replaceState(null, '', '/');
+        setLocation("/");
+      }, 100);
     }
   }, [user, isLoading, loginPending, hasRedirected, setLocation]);
 
