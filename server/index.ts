@@ -12,6 +12,7 @@ import env, { initConfigKeys } from './env'; // استيراد ملف البيئ
 import { storage } from './storage'; // استيراد واجهة التخزين للوصول إلى قاعدة البيانات
 import { requestContextMiddleware } from './middleware/request-context'; // استيراد وسائط السياق الجديد
 import { loggingContextMiddleware } from './middleware/logging-context'; // استيراد وسائط السياق القديم للتوافق
+import { authContextUpdaterMiddleware } from './middleware/auth-context-updater'; // استيراد وسائط تحديث السياق بعد المصادقة
 
 // إنشاء بديل لـ __dirname في بيئة ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -131,6 +132,10 @@ app.use(requestContextMiddleware);
 // إعداد نظام المصادقة
 console.log('Setting up authentication...');
 setupAuth(app);
+
+// إعداد middleware لتحديث السياق بمعلومات المستخدم بعد المصادقة
+console.log('Setting up auth context updater middleware...');
+app.use(authContextUpdaterMiddleware);
 
 async function killProcessOnPort(port: number) {
   try {

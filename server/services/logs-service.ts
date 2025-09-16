@@ -91,7 +91,19 @@ class LogsService {
     const combinedTrackingId = this.generateCombinedTrackingId(requestId, sessionId);
 
     // حساب العدادات التراكمية قبل إنشاء السجل
-    const userId = logData.userId ?? context?.userId;
+    // محاولة الحصول على userId من مصادر متعددة بالترتيب:
+    // 1. من logData مباشرة
+    // 2. من req.user إذا كان res متاحاً ومصادق عليه
+    // 3. من context كـ fallback
+    let userId = logData.userId;
+    if (!userId && res && (res as any).req?.user) {
+      const reqUser = (res as any).req.user;
+      userId = reqUser.id;
+      console.log(`[LogsService] Retrieved userId from req.user: ${userId} (${reqUser.username})`);
+    }
+    if (!userId) {
+      userId = context?.userId;
+    }
     // استخراج العمل من logData.action مباشرة أو من meta إذا تم تمريره كـ JSON
     let action = logData.action;
     if (!action && logData.meta) {
@@ -104,13 +116,30 @@ class LogsService {
     }
     const cumulativeCounters = await this.calculateCumulativeCounters(userId || null, action || undefined);
 
+    // محاولة الحصول على معلومات المستخدم الإضافية من req.user إذا كان متاحاً
+    let username = logData.username ?? context?.username;
+    let userDisplayName = logData.userDisplayName ?? context?.userDisplayName;
+    let userAvatar = logData.userAvatar;
+    
+    if (!username && res && (res as any).req?.user) {
+      const reqUser = (res as any).req.user;
+      username = reqUser.username;
+      userDisplayName = reqUser.displayName || reqUser.username;
+      console.log(`[LogsService] Retrieved user info from req.user: ${username}`);
+    }
+    
+    // إعداد userAvatar باستخدام username المحدث
+    if (!userAvatar && username) {
+      userAvatar = this.generateUserColor(username);
+    }
+
     const newLog: InsertSystemLog = {
       ...logData,
-      // استخدام القيم من السياق كـ fallback إذا لم تكن موجودة في logData
+      // استخدام القيم المحدثة مع fallback إلى السياق
       userId,
-      username: logData.username ?? context?.username,
-      userDisplayName: logData.userDisplayName ?? context?.userDisplayName,
-      userAvatar: logData.userAvatar ?? (context?.username ? this.generateUserColor(context.username) : undefined),
+      username,
+      userDisplayName,
+      userAvatar,
       // إضافة معرفات التتبع من السياق
       requestId,
       sessionId,
