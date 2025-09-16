@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { BottomNavigation } from '@/components';
 
 export default function SettingsPage() {
   const { user, logout } = useAuth();
@@ -132,12 +133,12 @@ export default function SettingsPage() {
 
   const handleLanguageChange = (newLang: string) => {
     console.log('🔧 Settings: Language change requested:', newLang);
-    
+
     setLanguageState(newLang);
-    
+
     // Use the improved changeLanguage function
     changeLanguage(newLang, true);
-    
+
     // Save to database if user is logged in
     if (user) {
       saveUserSettingsMutation.mutate(newLang);
@@ -148,7 +149,7 @@ export default function SettingsPage() {
         setShowSuccess(false);
       }, 3000);
     }
-    
+
     console.log('✅ Settings: Language changed to:', newLang);
   };
 
@@ -157,7 +158,7 @@ export default function SettingsPage() {
     setTheme(newTheme);
     // Apply theme immediately using the new system - this handles both localStorage and database saving
     changeTheme(newTheme, !!user); // Save to DB only if user is logged in
-    
+
     // Show success message for local feedback
     setShowSuccess(true);
     setTimeout(() => {
@@ -177,13 +178,13 @@ export default function SettingsPage() {
       notifications,
       timezone,
     }));
-    
+
     // Language and theme are now saved automatically when changed
     setShowSuccess(true);
     setTimeout(() => {
       setShowSuccess(false);
     }, 3000);
-    
+
     window.dispatchEvent(new Event('storage'));
   };
 
@@ -389,7 +390,7 @@ export default function SettingsPage() {
           </div>
 
           <button
-            className={`w-full py-3 rounded-xl font-bold text-base shadow-lg transition duration-150 transform hover:translate-y-[-2px] active:translate-y-[1px] ${
+            className={`w-full py-3 rounded-xl font-bold text-base shadow-lg transition-all duration-150 transform hover:translate-y-[-2px] active:translate-y-[1px] ${
               saveUserSettingsMutation.isPending
                 ? 'bg-gray-600 cursor-not-allowed'
                 : 'bg-yellow-400 hover:bg-yellow-500 text-black'
@@ -418,43 +419,7 @@ export default function SettingsPage() {
         </div>
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 border-t border-gray-700/50 bg-gray-900/90 backdrop-blur-md z-50 pt-1.5 pb-2 mobile-navbar">
-        <div className="flex justify-around items-center max-w-lg mx-auto">
-          {user?.isAdmin ? (
-            <Link href="/admin" className="flex flex-col items-center text-gray-400 hover:text-yellow-400 mobile-nav-item">
-              <Users className="h-5 w-5" />
-              <span className="text-[10px] mt-1 font-medium">{t('users')}</span>
-            </Link>
-          ) : (
-            <Link href="/bot-info" className="flex flex-col items-center text-gray-400 hover:text-yellow-400 mobile-nav-item">
-              <Bot className="h-5 w-5" />
-              <span className="text-[10px] mt-1 font-medium">{t('bot_info')}</span>
-            </Link>
-          )}
-
-          <Link href="/indicators" className="flex flex-col items-center text-gray-400 hover:text-yellow-400 mobile-nav-item">
-            <BarChart className="h-5 w-5" />
-            <span className="text-[10px] mt-1 font-medium">{t('indicators')}</span>
-          </Link>
-
-          <Link href="/" className="flex flex-col items-center text-gray-400 hover:text-yellow-400 mobile-nav-item">
-            <div className="relative p-3 bg-yellow-400 text-black rounded-full -mt-5 shadow-lg border-4 border-gray-900/90">
-              <DollarSign className="h-6 w-6" />
-            </div>
-            <span className="text-[10px] mt-1 font-medium">{t('signal')}</span>
-          </Link>
-
-          <Link href="/group-chat" className="flex flex-col items-center text-gray-400 hover:text-yellow-400 mobile-nav-item">
-            <MessageCircle className="h-5 w-5" />
-            <span className="text-[10px] mt-1 font-medium">{t('group_chats')}</span>
-          </Link>
-
-          <Link href="/settings" className="flex flex-col items-center text-yellow-400 mobile-nav-item active">
-            <Settings className="h-5 w-5" />
-            <span className="text-[10px] mt-1 font-medium">{t('settings')}</span>
-          </Link>
-        </div>
-      </footer>
+      <BottomNavigation />
 
       <div className="h-16"></div>
     </div>

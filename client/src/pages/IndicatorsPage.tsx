@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
-import { ArrowLeft, Settings, LineChart, BarChart, DollarSign, MessageCircle, TrendingUp, TrendingDown, ChevronsUp, ChevronsDown, Activity, RefreshCw, Users, Bot } from 'lucide-react';
+import { ArrowLeft, Settings, BarChart, DollarSign, MessageCircle, TrendingUp, TrendingDown, ChevronsUp, ChevronsDown, Activity, RefreshCw, Users, Bot } from 'lucide-react';
 import { useTimezone } from '@/hooks/use-timezone';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAuth } from '@/hooks/use-auth';
+import { BottomNavigation } from '@/components';
 
 interface Indicator {
   id: string;
@@ -57,9 +58,9 @@ export default function IndicatorsPage() {
 
     for (let i = 0; i < length; i++) {
       // تغيير الاتجاه بناءً على نوع الإشارة
-      const randomFactor = signal === 'buy' 
+      const randomFactor = signal === 'buy'
         ? Math.random() * 10 - 3  // اتجاه تصاعدي مع تذبذبات
-        : (signal === 'sell' 
+        : (signal === 'sell'
           ? Math.random() * 10 - 7  // اتجاه تنازلي مع تذبذبات
           : Math.random() * 6 - 3); // تذبذب محايد
 
@@ -255,8 +256,8 @@ export default function IndicatorsPage() {
     };
   }, []);
 
-  const filteredIndicators = activeTab === 'all' 
-    ? indicators 
+  const filteredIndicators = activeTab === 'all'
+    ? indicators
     : indicators.filter(indicator => indicator.type === activeTab);
 
   const getSignalColor = (signal: string) => {
@@ -338,32 +339,32 @@ export default function IndicatorsPage() {
                         <AreaChart data={indicator.chartData}>
                           <defs>
                             <linearGradient id={`chart-gradient-${indicator.id}`} x1="0" y1="0" x2="0" y2="1">
-                              <stop 
-                                offset="5%" 
-                                stopColor={indicator.signal === 'buy' ? 'hsl(var(--success))' : (indicator.signal === 'sell' ? 'hsl(var(--destructive))' : 'hsl(var(--warning))')} 
+                              <stop
+                                offset="5%"
+                                stopColor={indicator.signal === 'buy' ? 'hsl(var(--success))' : (indicator.signal === 'sell' ? 'hsl(var(--destructive))' : 'hsl(var(--warning))')}
                                 stopOpacity={0.8}
                               />
-                              <stop 
-                                offset="95%" 
-                                stopColor={indicator.signal === 'buy' ? 'hsl(var(--success))' : (indicator.signal === 'sell' ? 'hsl(var(--destructive))' : 'hsl(var(--warning))')} 
+                              <stop
+                                offset="95%"
+                                stopColor={indicator.signal === 'buy' ? 'hsl(var(--success))' : (indicator.signal === 'sell' ? 'hsl(var(--destructive))' : 'hsl(var(--warning))')}
                                 stopOpacity={0}
                               />
                             </linearGradient>
                           </defs>
-                          <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: 'hsl(var(--card))', 
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: 'hsl(var(--card))',
                               border: '1px solid hsl(var(--border))',
                               borderRadius: '6px',
                               color: 'hsl(var(--card-foreground))'
-                            }} 
+                            }}
                           />
-                          <Area 
-                            type="monotone" 
-                            dataKey="value" 
-                            stroke={indicator.signal === 'buy' ? 'hsl(var(--success))' : (indicator.signal === 'sell' ? 'hsl(var(--destructive))' : 'hsl(var(--warning))')} 
-                            fillOpacity={1} 
-                            fill={`url(#chart-gradient-${indicator.id})`} 
+                          <Area
+                            type="monotone"
+                            dataKey="value"
+                            stroke={indicator.signal === 'buy' ? 'hsl(var(--success))' : (indicator.signal === 'sell' ? 'hsl(var(--destructive))' : 'hsl(var(--warning))')}
+                            fillOpacity={1}
+                            fill={`url(#chart-gradient-${indicator.id})`}
                           />
                           <XAxis dataKey="time" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
                         </AreaChart>
@@ -378,12 +379,12 @@ export default function IndicatorsPage() {
                         <span className="font-medium">{Number(indicator.strengthValue).toFixed(1)}%</span>
                       </div>
                       <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                        <div 
+                        <div
                           className={`h-full transition-all ${
-                            indicator.signal === 'buy' 
-                              ? 'bg-gradient-to-r from-green-500 to-green-400' 
-                              : indicator.signal === 'sell' 
-                                ? 'bg-gradient-to-r from-red-500 to-red-400' 
+                            indicator.signal === 'buy'
+                              ? 'bg-gradient-to-r from-green-500 to-green-400'
+                              : indicator.signal === 'sell'
+                                ? 'bg-gradient-to-r from-red-500 to-red-400'
                                 : 'bg-gradient-to-r from-yellow-400 to-yellow-300'
                           }`}
                           style={{ width: `${indicator.strengthValue}%` }}
@@ -405,9 +406,9 @@ export default function IndicatorsPage() {
                 </div>
               </CardContent>
               <CardFooter className="py-2 px-6">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   className="text-xs w-full text-muted-foreground hover:text-foreground hover:bg-muted/60"
                   onClick={() => {
                     toast({
@@ -424,43 +425,7 @@ export default function IndicatorsPage() {
         </div>
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 border-t border-border/50 bg-background/90 backdrop-blur-md z-50 pt-1.5 pb-2 mobile-navbar">
-        <div className="flex justify-around items-center max-w-lg mx-auto">
-          {user?.isAdmin ? (
-            <Link href="/admin" className="flex flex-col items-center text-muted-foreground hover:text-primary mobile-nav-item">
-              <Users className="h-5 w-5" />
-              <span className="text-[10px] mt-1 font-medium">{t('users')}</span>
-            </Link>
-          ) : (
-            <Link href="/bot-info" className="flex flex-col items-center text-muted-foreground hover:text-primary mobile-nav-item">
-              <Bot className="h-5 w-5" />
-              <span className="text-[10px] mt-1 font-medium">{t('bot_info')}</span>
-            </Link>
-          )}
-
-          <Link href="/indicators" className="flex flex-col items-center text-primary mobile-nav-item active">
-            <BarChart className="h-5 w-5" />
-            <span className="text-[10px] mt-1 font-medium">{t('indicators')}</span>
-          </Link>
-
-          <Link href="/" className="flex flex-col items-center text-muted-foreground hover:text-primary mobile-nav-item">
-            <div className="relative p-3 bg-primary text-primary-foreground rounded-full -mt-5 shadow-lg border-4 border-background/90">
-              <DollarSign className="h-6 w-6" />
-            </div>
-            <span className="text-[10px] mt-1 font-medium">{t('signal')}</span>
-          </Link>
-
-          <Link href="/group-chat" className="flex flex-col items-center text-muted-foreground hover:text-primary mobile-nav-item">
-            <MessageCircle className="h-5 w-5" />
-            <span className="text-[10px] mt-1 font-medium">{t('group_chats')}</span>
-          </Link>
-
-          <Link href="/settings" className="flex flex-col items-center text-muted-foreground hover:text-primary mobile-nav-item">
-            <Settings className="h-5 w-5" />
-            <span className="text-[10px] mt-1 font-medium">{t('settings')}</span>
-          </Link>
-        </div>
-      </footer>
+      <BottomNavigation activeTab="indicators" />
     </div>
   );
 }

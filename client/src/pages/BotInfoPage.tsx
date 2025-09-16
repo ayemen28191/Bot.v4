@@ -2,6 +2,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { t } from "@/lib/i18n";
 import { ArrowLeft, BarChart, Bot, DollarSign, MessageCircle, Settings, Users } from "lucide-react";
 import { Link } from "wouter";
+import { BottomNavigation } from '@/components';
 
 export default function BotInfoPage() {
   const { user } = useAuth();
@@ -62,36 +63,7 @@ export default function BotInfoPage() {
       </main>
 
       {/* شريط التنقل السفلي */}
-      <footer className="fixed bottom-0 left-0 right-0 border-t border-border bg-background/90 backdrop-blur-md z-50 pt-1.5 pb-2 mobile-navbar">
-        <div className="flex justify-around items-center max-w-lg mx-auto">
-          <Link href="/bot-info" className="flex flex-col items-center text-primary mobile-nav-item active">
-            <Bot className="h-5 w-5" />
-            <span className="text-[10px] mt-1 font-medium">{t('bot_info')}</span>
-          </Link>
-
-          <Link href="/indicators" className="flex flex-col items-center text-muted-foreground hover:text-primary mobile-nav-item transition-colors">
-            <BarChart className="h-5 w-5" />
-            <span className="text-[10px] mt-1 font-medium">{t('indicators')}</span>
-          </Link>
-
-          <Link href="/" className="flex flex-col items-center text-muted-foreground hover:text-primary mobile-nav-item transition-colors">
-            <div className="relative p-3 bg-primary text-primary-foreground rounded-full -mt-5 shadow-lg border-4 border-background/90">
-              <DollarSign className="h-6 w-6" />
-            </div>
-            <span className="text-[10px] mt-1 font-medium">{t('signal')}</span>
-          </Link>
-
-          <Link href="/group-chat" className="flex flex-col items-center text-muted-foreground hover:text-primary mobile-nav-item transition-colors">
-            <MessageCircle className="h-5 w-5" />
-            <span className="text-[10px] mt-1 font-medium">{t('group_chats')}</span>
-          </Link>
-
-          <Link href="/settings" className="flex flex-col items-center text-muted-foreground hover:text-primary mobile-nav-item transition-colors">
-            <Settings className="h-5 w-5" />
-            <span className="text-[10px] mt-1 font-medium">{t('settings')}</span>
-          </Link>
-        </div>
-      </footer>
+      <BottomNavigation activeTab="bot-info" />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef, useState, useEffect } from 'react';
 import { Settings, DollarSign, Bitcoin, LineChart, Clock, AlertTriangle, Globe, BarChart, MessageCircle, ChevronDown, AlertCircle, Bell, BarChart2, Timer, History, Lock, Loader2, X, Users, Bot, WifiOff, RefreshCw, Grid, BarChart3, LayoutDashboard } from 'lucide-react';
 import { Link } from 'wouter';
 import { SignalIndicator } from '@/features/trading';
@@ -16,12 +16,12 @@ import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Progress } from '@/components/ui/progress';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
 import React, { ReactNode } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import ConnectionError from '@/components/ConnectionError';
 import useConnection from '@/hooks/use-connection';
 import { useHeatmap } from '@/hooks/use-heatmap';
+import { BottomNavigation } from '@/components';
 
 // أنواع الأسواق والأزواج التداولية
 type MarketType = 'forex' | 'crypto' | 'stocks';
@@ -2111,46 +2111,7 @@ export default function TradingSignalPage() {
       </main>
 
       {/* شريط التنقل السفلي */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-background/90 backdrop-blur-md border-t border-border p-2">
-        <div className="max-w-lg mx-auto flex justify-around items-center">
-          {user?.isAdmin ? (
-            <Link
-              href="/admin"
-              className="flex flex-col items-center justify-center py-2 px-1 rounded-lg transition-colors hover:bg-accent"
-            >
-              <LayoutDashboard className="h-5 w-5 mb-1" />
-              <span className="text-xs">{t('admin')}</span>
-            </Link>
-          ) : (
-            <Link href="/bot-info" className="flex flex-col items-center min-w-[4rem] text-muted-foreground hover:text-primary">
-              <Bot className="h-5 w-5" />
-              <span className="text-[10px] mt-1 font-medium">{t('bot_info')}</span>
-            </Link>
-          )}
-
-          <Link href="/indicators" className="flex flex-col items-center min-w-[4rem] text-muted-foreground hover:text-primary">
-            <BarChart2 className="h-5 w-5" />
-            <span className="text-[10px] mt-1 font-medium">{t('indicators')}</span>
-          </Link>
-
-          <Link href="/" className="flex flex-col items-center min-w-[4rem] text-primary">
-            <div className="relative p-3 bg-primary text-primary-foreground rounded-full -mt-5 shadow-lg border-4 border-background/90">
-              <DollarSign className="h-6 w-6" />
-            </div>
-            <span className="text-[10px] mt-1 font-medium">{t('signal')}</span>
-          </Link>
-
-          <Link href="/group-chat" className="flex flex-col items-center min-w-[4rem] text-muted-foreground hover:text-primary">
-            <MessageCircle className="h-5 w-5" />
-            <span className="text-[10px] mt-1 font-medium">{t('chat')}</span>
-          </Link>
-
-          <Link href="/settings" className="flex flex-col items-center min-w-[4rem] text-muted-foreground hover:text-primary">
-            <Settings className="h-5 w-5" />
-            <span className="text-[10px] mt-1 font-medium">{t('settings')}</span>
-          </Link>
-        </div>
-      </footer>
+      <BottomNavigation activeTab="trading" />
 
       {/* مساحة في الأسفل لتجنب التداخل مع الشريط المثبت */}
       <div className="h-16"></div>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'wouter';
-import { ArrowLeft, User, Camera, Send, Users, Settings, File, Clock, LineChart, BarChart, DollarSign, MessageCircle, Bell, ArrowDownToLine, ArrowUpFromLine, Bot } from 'lucide-react';
+import { ArrowLeft, User, Camera, Send, Users, Settings, File, Clock, BarChart, DollarSign, MessageCircle, Bell, ArrowDownToLine, ArrowUpFromLine, Bot } from 'lucide-react';
 import { useStore } from '@/store/chatStore';
 import { t } from '@/lib/i18n';
 import NotificationService from '@/lib/notifications';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Message } from '@/types';
 import { useAuth } from '@/hooks/use-auth';
+import { BottomNavigation } from '@/components';
 
 interface UserProfile {
   name: string;
@@ -15,16 +16,16 @@ interface UserProfile {
 }
 
 export default function ChatPage() {
-  const { 
-    messages, 
-    sendMessage, 
-    initializeWebSocket, 
-    isConnected, 
+  const {
+    messages,
+    sendMessage,
+    initializeWebSocket,
+    isConnected,
     isOfflineMode,
     enableOfflineMode,
     disableOfflineMode,
     onlineUsers,
-    clearMessages 
+    clearMessages
   } = useStore();
   const { user } = useAuth();
   const [newMessage, setNewMessage] = useState('');
@@ -51,7 +52,7 @@ export default function ChatPage() {
   useEffect(() => {
     localStorage.setItem('current_user', userProfile.name);
   }, [userProfile.name]);
-  
+
   // التحقق من حالة إذن الإشعارات عند تحميل الصفحة
   useEffect(() => {
     if ('Notification' in window) {
@@ -115,7 +116,7 @@ export default function ChatPage() {
       scrollToBottom();
     }
   }, [messages]);
-  
+
   // استعادة التمرير التلقائي عند النقر على زر الإرسال
   useEffect(() => {
     if (!newMessage) {
@@ -139,7 +140,7 @@ export default function ChatPage() {
     localStorage.setItem('userProfile', JSON.stringify(newProfile));
     setIsProfileDialogOpen(false);
   };
-  
+
   // تصدير المحادثة كملف JSON
   const exportChatHistory = () => {
     try {
@@ -150,26 +151,26 @@ export default function ChatPage() {
         userName: userProfile.name,
         messages: messages
       };
-      
+
       // تحويل الكائن إلى سلسلة JSON
       const jsonString = JSON.stringify(exportData, null, 2);
-      
+
       // إنشاء blob وتحميل الملف
       const blob = new Blob([jsonString], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      
+
       // تعيين اسم ملف ديناميكي مع التاريخ الحالي
       const date = new Date();
       const fileName = `chat_history_${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}.json`;
-      
+
       a.href = url;
       a.download = fileName;
       a.click();
-      
+
       // تنظيف
       URL.revokeObjectURL(url);
-      
+
       // إظهار رسالة نجاح
       toast({
         title: t('export_success'),
@@ -184,39 +185,39 @@ export default function ChatPage() {
       });
     }
   };
-  
+
   // استيراد المحادثة من ملف JSON
   const importChatHistory = (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
       const file = event.target.files?.[0];
       if (!file) return;
-      
+
       const reader = new FileReader();
-      
+
       reader.onload = (e) => {
         try {
           const contents = e.target?.result as string;
           if (!contents) throw new Error(t('read_content_failed'));
-          
+
           const importData = JSON.parse(contents);
-          
+
           // التحقق من صحة الملف المستورد
           if (!importData.version || !importData.messages || !Array.isArray(importData.messages)) {
             throw new Error(t('invalid_file_format'));
           }
-          
+
           // استخدام البيانات المستوردة (يمكن دمجها أو استبدالها بالبيانات الحالية)
           const importedMessages = importData.messages as Message[];
-          
+
           // دمج الرسائل المستوردة مع الرسائل الحالية (إذا اختار المستخدم ذلك)
           // أو استخدام المستوردة فقط حسب الاختيار المطلوب
           clearMessages(); // مسح الرسائل الحالية
-          
+
           // إضافة كل رسالة من الرسائل المستوردة
           importedMessages.forEach(msg => {
             sendMessage(msg.text, msg.sender, msg.avatar);
           });
-          
+
           // عرض رسالة نجاح
           toast({
             title: t('import_success'),
@@ -231,7 +232,7 @@ export default function ChatPage() {
           });
         }
       };
-      
+
       reader.onerror = () => {
         toast({
           title: t('import_error'),
@@ -239,7 +240,7 @@ export default function ChatPage() {
           variant: 'destructive',
         });
       };
-      
+
       reader.readAsText(file);
     } catch (error) {
       console.error(t('error_importing_chat'), error);
@@ -275,13 +276,13 @@ export default function ChatPage() {
     setUserProfile(newProfile);
     localStorage.setItem('userProfile', JSON.stringify(newProfile));
   };
-  
+
   // دالة لطلب إذن بإرسال الإشعارات
   const requestNotificationsPermission = async () => {
     try {
       const permissionResult = await NotificationService.requestPermission();
       setNotificationsPermission(Notification.permission as 'granted' | 'denied' | 'default');
-      
+
       if (permissionResult) {
         toast({
           title: t('notifications_enabled'),
@@ -303,7 +304,7 @@ export default function ChatPage() {
       });
     }
   };
-  
+
   // التعامل مع تمكين وضع عدم الاتصال
   const handleToggleOfflineMode = () => {
     try {
@@ -383,7 +384,7 @@ export default function ChatPage() {
       >
         <div className="max-w-2xl mx-auto space-y-4">
           {/* تم إخفاء رسالة حالة الاتصال لأننا نستخدم محاكاة محلية */}
-          
+
           {messages.map((message) => (
             <div
               key={message.id}
@@ -456,8 +457,8 @@ export default function ChatPage() {
               </>
             )}
           </div>
-          <Button 
-            size="sm" 
+          <Button
+            size="sm"
             variant="outline"
             onClick={handleToggleOfflineMode}
             className={`text-xs border-gray-600 text-white ${
@@ -477,8 +478,8 @@ export default function ChatPage() {
               <Bell className="h-4 w-4 text-yellow-400" />
               <span>{t('enable_notifications') || 'تمكين إشعارات الرسائل الجديدة؟'}</span>
             </div>
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               variant="outline"
               onClick={requestNotificationsPermission}
               className="text-xs bg-muted hover:bg-muted/80 border-border text-foreground"
@@ -545,7 +546,7 @@ export default function ChatPage() {
                 onChange={(e) => setTempName(e.target.value)}
                 className="w-full bg-muted border border-border rounded-lg py-2 px-3 text-foreground text-center focus:outline-none focus:border-yellow-400"
               />
-              
+
               {/* أزرار تصدير واستيراد المحادثة */}
               <div className="flex flex-col gap-2 w-full mt-3">
                 <button
@@ -555,7 +556,7 @@ export default function ChatPage() {
                   <ArrowDownToLine className="h-4 w-4 text-yellow-400" />
                   <span>{t('export_chat') || 'تصدير المحادثة'}</span>
                 </button>
-                
+
                 <label className="w-full py-2 px-3 rounded-lg bg-gray-700 border border-gray-600 hover:bg-gray-600 flex items-center justify-center gap-2 text-sm cursor-pointer">
                   <ArrowUpFromLine className="h-4 w-4 text-yellow-400" />
                   <span>{t('import_chat') || 'استيراد المحادثة'}</span>
@@ -585,46 +586,12 @@ export default function ChatPage() {
           </div>
         </div>
       )}
-      
+
       {/* شريط التنقل السفلي */}
-      <footer className="fixed bottom-16 left-0 right-0 border-t border-border/50 bg-background/90 backdrop-blur-md z-40 pt-1.5 pb-2 mobile-navbar">
-        <div className="flex justify-around items-center max-w-lg mx-auto">
-          {user?.isAdmin ? (
-            <Link href="/admin" className="flex flex-col items-center text-gray-400 hover:text-yellow-400 mobile-nav-item">
-              <Users className="h-5 w-5" />
-              <span className="text-[10px] mt-1 font-medium">{t('users')}</span>
-            </Link>
-          ) : (
-            <Link href="/bot-info" className="flex flex-col items-center text-gray-400 hover:text-yellow-400 mobile-nav-item">
-              <Bot className="h-5 w-5" />
-              <span className="text-[10px] mt-1 font-medium">{t('bot_info')}</span>
-            </Link>
-          )}
+      <div className="pb-16">
+        <BottomNavigation activeTab="chat" />
+      </div>
 
-          <Link href="/indicators" className="flex flex-col items-center text-gray-400 hover:text-yellow-400 mobile-nav-item">
-            <BarChart className="h-5 w-5" />
-            <span className="text-[10px] mt-1 font-medium">{t('indicators')}</span>
-          </Link>
-
-          <Link href="/" className="flex flex-col items-center text-gray-400 hover:text-yellow-400 mobile-nav-item">
-            <div className="relative p-3 bg-yellow-400 text-black rounded-full -mt-5 shadow-lg border-4 border-background/90">
-              <DollarSign className="h-6 w-6" />
-            </div>
-            <span className="text-[10px] mt-1 font-medium">{t('signal')}</span>
-          </Link>
-
-          <Link href="/group-chat" className="flex flex-col items-center text-yellow-400 mobile-nav-item active">
-            <MessageCircle className="h-5 w-5" />
-            <span className="text-[10px] mt-1 font-medium">{t('group_chats')}</span>
-          </Link>
-
-          <Link href="/settings" className="flex flex-col items-center text-gray-400 hover:text-yellow-400 mobile-nav-item">
-            <Settings className="h-5 w-5" />
-            <span className="text-[10px] mt-1 font-medium">{t('settings')}</span>
-          </Link>
-        </div>
-      </footer>
-      
       <div className="h-16"></div>
     </div>
   );

@@ -11,5 +11,5 @@ export { default as Header } from './Header';
 
 // مكونات عامة أخرى
 export { default as OfflineModeNotice } from './OfflineModeNotice';
-export { default as SystemUpdater } from './SystemUpdater';
+export { default as BottomNavigation } from './BottomNavigation';s SystemUpdater } from './SystemUpdater';
 export { default as ErrorTranslator } from './ErrorTranslator';
