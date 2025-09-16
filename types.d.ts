@@ -92,9 +92,35 @@ declare module 'sqlite3' {
 declare module 'connect-sqlite3' {
   import session from 'express-session';
   
+  interface SQLiteStoreOptions {
+    db?: string;
+    dir?: string;
+    table?: string;
+    concurrentDB?: boolean;
+    ttl?: number;
+  }
+  
   export default function(session: typeof import('express-session')): {
-    new(options?: any): session.Store;
+    new(options?: SQLiteStoreOptions): session.Store;
   };
+}
+
+declare module 'geoip-lite' {
+  interface GeoIpResult {
+    range: [number, number];
+    country: string;
+    region: string;
+    eu: "0" | "1";
+    timezone: string;
+    city: string;
+    ll: [number, number];
+    metro: number;
+    area: number;
+  }
+  
+  export function lookup(ip: string): GeoIpResult | null;
+  export function startWatchingDataUpdate(): void;
+  export function stopWatchingDataUpdate(): void;
 }
 
 declare module 'ssh2' {

@@ -4,7 +4,7 @@ import path from "path";
 import fs from "fs";
 import sqlite3, { Database as SQLiteDatabase } from "sqlite3";
 import { UAParser } from "ua-parser-js";
-// @ts-ignore - geoip-lite doesn't have TypeScript declarations
+// @ts-expect-error - geoip-lite has no official TypeScript types but has custom declaration in types.d.ts
 import geoip from "geoip-lite";
 import {
   users, type User, type InsertUser,
@@ -19,11 +19,182 @@ import {
 } from "@shared/schema";
 import env from "./env";
 
-// تجاوز التحقق من النوع لتسهيل استخدام sqlite3
-// @ts-ignore
+// @ts-expect-error - connect-sqlite3 has no official TypeScript types but has custom declaration in types.d.ts
 import connectSqlite3 from "connect-sqlite3";
-// @ts-ignore
 const SQLiteStore = connectSqlite3(session);
+
+// SQLite row interfaces for type safety
+interface SQLiteUserRow {
+  id: number;
+  username: string;
+  password: string;
+  display_name: string;
+  email: string;
+  is_admin: number;
+  preferred_language: string;
+  preferred_theme: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface SQLiteConfigKeyRow {
+  id: number;
+  key: string;
+  value: string;
+  provider?: string;
+  description?: string;
+  is_secret: number;
+  last_used_at?: string;
+  failed_until?: string;
+  usage_today: number;
+  daily_quota?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+interface SQLiteDeploymentServerRow {
+  id: number;
+  name: string;
+  host: string;
+  port: number;
+  username: string;
+  auth_type: string;
+  password?: string;
+  private_key?: string;
+  deploy_path: string;
+  is_active: number;
+  environment: string;
+  last_deployment?: string;
+  commands?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface SQLiteDeploymentLogRow {
+  id: number;
+  server_id: number;
+  status: string;
+  message?: string;
+  details?: string;
+  start_time: string;
+  end_time?: string;
+  user_id?: number;
+  created_at: string;
+}
+
+interface SQLiteSystemLogRow {
+  id: number;
+  timestamp: string;
+  level: string;
+  source: string;
+  message: string;
+  meta?: string;
+  request_id?: string;
+  session_id?: string;
+  combined_tracking_id?: string;
+  actor_type?: string;
+  actor_id?: string;
+  actor_display_name?: string;
+  action?: string;
+  result?: string;
+  details?: string;
+  previous_total?: number;
+  daily_total?: number;
+  monthly_total?: number;
+  user_id?: number;
+  username?: string;
+  user_display_name?: string;
+  user_avatar?: string;
+  created_at: string;
+}
+
+interface SQLiteNotificationSettingRow {
+  id: number;
+  type: string;
+  name: string;
+  is_enabled: number;
+  webhook_url?: string;
+  chat_id?: string;
+  alert_levels: string;
+  threshold: number;
+  cooldown_minutes: number;
+  created_at: string;
+  updated_at: string;
+}
+
+interface SQLiteSignalLogRow {
+  id: number;
+  user_id?: number;
+  username?: string;
+  request_id?: string;
+  session_id?: string;
+  symbol: string;
+  market_type: string;
+  timeframe: string;
+  platform?: string;
+  status: string;
+  signal?: string;
+  probability?: string;
+  current_price?: string;
+  price_source?: string;
+  error_code?: string;
+  error_message?: string;
+  analysis_data?: string;
+  indicators?: string;
+  execution_time?: number;
+  api_keys_used?: string;
+  request_ip?: string;
+  user_agent?: string;
+  market_open?: number;
+  offline_mode: number;
+  cache_used: number;
+  requested_at: string;
+  completed_at?: string;
+  created_at: string;
+}
+
+interface SQLiteUserCounterRow {
+  id: number;
+  user_id?: number;
+  normalized_user_id: number;
+  action: string;
+  date: string;
+  period: string;
+  count: number;
+  last_updated: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface SQLiteErrorReportRow {
+  id: number;
+  error_hash: string;
+  category: string;
+  code: string;
+  message: string;
+  message_ar?: string;
+  severity: string;
+  count: number;
+  user_agent?: string;
+  language?: string;
+  url?: string;
+  platform?: string;
+  connection_type?: string;
+  details?: string;
+  stack?: string;
+  request_id?: string;
+  session_id?: string;
+  user_id?: number;
+  first_reported_at: string;
+  last_reported_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// SQLite callback types
+type SQLiteCallback = (this: sqlite3.RunResult, err: Error | null) => void;
+type SQLiteRowCallback<T> = (err: Error | null, row: T | undefined) => void;
+type SQLiteRowsCallback<T> = (err: Error | null, rows: T[]) => void;
 
 export interface IStorage {
   // User methods
@@ -617,7 +788,7 @@ export class DatabaseStorage implements IStorage {
 
   async getUser(id: number): Promise<User | undefined> {
     return new Promise<User | undefined>((resolve, reject) => {
-      sqliteDb.get('SELECT * FROM users WHERE id = ?', [id], (err, row: any) => {
+      sqliteDb.get('SELECT * FROM users WHERE id = ?', [id], (err: Error | null, row: SQLiteUserRow | undefined) => {
         if (err) {
           console.error('Error getting user by ID:', err);
           reject(err);
@@ -647,7 +818,7 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     return new Promise<User | undefined>((resolve, reject) => {
-      sqliteDb.get('SELECT * FROM users WHERE username = ?', [username], (err, row: any) => {
+      sqliteDb.get('SELECT * FROM users WHERE username = ?', [username], (err: Error | null, row: SQLiteUserRow | undefined) => {
         if (err) {
           console.error('Error getting user by username:', err);
           reject(err);
@@ -849,7 +1020,7 @@ export class DatabaseStorage implements IStorage {
 
   async getAllUsers(): Promise<User[]> {
     return new Promise<User[]>((resolve, reject) => {
-      sqliteDb.all('SELECT * FROM users', (err, rows: any[]) => {
+      sqliteDb.all('SELECT * FROM users', (err: Error | null, rows: SQLiteUserRow[]) => {
         if (err) {
           console.error('Error getting all users:', err);
           reject(err);
@@ -877,7 +1048,7 @@ export class DatabaseStorage implements IStorage {
 
   async getConfigKey(key: string): Promise<ConfigKey | undefined> {
     return new Promise<ConfigKey | undefined>((resolve, reject) => {
-      sqliteDb.get('SELECT * FROM config_keys WHERE key = ?', [key], (err, row: any) => {
+      sqliteDb.get('SELECT * FROM config_keys WHERE key = ?', [key], (err: Error | null, row: SQLiteConfigKeyRow | undefined) => {
         if (err) {
           console.error('Error getting config key:', err);
           reject(err);
@@ -909,7 +1080,7 @@ export class DatabaseStorage implements IStorage {
 
   async getAllConfigKeys(): Promise<ConfigKey[]> {
     return new Promise<ConfigKey[]>((resolve, reject) => {
-      sqliteDb.all('SELECT * FROM config_keys', (err, rows: any[]) => {
+      sqliteDb.all('SELECT * FROM config_keys', (err: Error | null, rows: SQLiteConfigKeyRow[]) => {
         if (err) {
           console.error('Error getting all config keys:', err);
           reject(err);
@@ -1021,7 +1192,7 @@ export class DatabaseStorage implements IStorage {
 
   async getServer(id: number): Promise<DeploymentServer | undefined> {
     return new Promise<DeploymentServer | undefined>((resolve, reject) => {
-      sqliteDb.get('SELECT * FROM deployment_servers WHERE id = ?', [id], (err, row: any) => {
+      sqliteDb.get('SELECT * FROM deployment_servers WHERE id = ?', [id], (err: Error | null, row: SQLiteDeploymentServerRow | undefined) => {
         if (err) {
           console.error('Error getting deployment server by ID:', err);
           reject(err);
@@ -1056,7 +1227,7 @@ export class DatabaseStorage implements IStorage {
 
   async getAllServers(): Promise<DeploymentServer[]> {
     return new Promise<DeploymentServer[]>((resolve, reject) => {
-      sqliteDb.all('SELECT * FROM deployment_servers ORDER BY name', (err, rows: any[]) => {
+      sqliteDb.all('SELECT * FROM deployment_servers ORDER BY name', (err: Error | null, rows: SQLiteDeploymentServerRow[]) => {
         if (err) {
           console.error('Error getting all deployment servers:', err);
           reject(err);
@@ -1087,7 +1258,7 @@ export class DatabaseStorage implements IStorage {
 
   async getActiveServers(): Promise<DeploymentServer[]> {
     return new Promise<DeploymentServer[]>((resolve, reject) => {
-      sqliteDb.all('SELECT * FROM deployment_servers WHERE is_active = 1 ORDER BY name', (err, rows: any[]) => {
+      sqliteDb.all('SELECT * FROM deployment_servers WHERE is_active = 1 ORDER BY name', (err: Error | null, rows: SQLiteDeploymentServerRow[]) => {
         if (err) {
           console.error('Error getting active deployment servers:', err);
           reject(err);
@@ -1295,7 +1466,7 @@ export class DatabaseStorage implements IStorage {
 
   async getLog(id: number): Promise<DeploymentLog | undefined> {
     return new Promise<DeploymentLog | undefined>((resolve, reject) => {
-      sqliteDb.get('SELECT * FROM deployment_logs WHERE id = ?', [id], (err, row: any) => {
+      sqliteDb.get('SELECT * FROM deployment_logs WHERE id = ?', [id], (err: Error | null, row: SQLiteDeploymentLogRow | undefined) => {
         if (err) {
           console.error('Error getting deployment log by ID:', err);
           reject(err);
@@ -1738,12 +1909,12 @@ export class DatabaseStorage implements IStorage {
 
   async getLogsCount(): Promise<number> {
     return new Promise<number>((resolve, reject) => {
-      sqliteDb.get('SELECT COUNT(*) as count FROM system_logs', [], (err, row: any) => {
+      sqliteDb.get('SELECT COUNT(*) as count FROM system_logs', [], (err: Error | null, row: { count: number } | undefined) => {
         if (err) {
           console.error('Error getting logs count:', err);
           reject(err);
         } else {
-          resolve(row.count || 0);
+          resolve(row?.count || 0);
         }
       });
     });
@@ -1751,7 +1922,7 @@ export class DatabaseStorage implements IStorage {
 
   async getLogsCountByLevel(): Promise<Record<string, number>> {
     return new Promise<Record<string, number>>((resolve, reject) => {
-      sqliteDb.all('SELECT level, COUNT(*) as count FROM system_logs GROUP BY level', [], (err, rows: any[]) => {
+      sqliteDb.all('SELECT level, COUNT(*) as count FROM system_logs GROUP BY level', [], (err: Error | null, rows: { level: string; count: number }[]) => {
         if (err) {
           console.error('Error getting logs count by level:', err);
           reject(err);
@@ -1768,7 +1939,7 @@ export class DatabaseStorage implements IStorage {
 
   async getLogsCountBySource(): Promise<Record<string, number>> {
     return new Promise<Record<string, number>>((resolve, reject) => {
-      sqliteDb.all('SELECT source, COUNT(*) as count FROM system_logs GROUP BY source', [], (err, rows: any[]) => {
+      sqliteDb.all('SELECT source, COUNT(*) as count FROM system_logs GROUP BY source', [], (err: Error | null, rows: { source: string; count: number }[]) => {
         if (err) {
           console.error('Error getting logs count by source:', err);
           reject(err);
@@ -1823,7 +1994,7 @@ export class DatabaseStorage implements IStorage {
 
   async getNotificationSetting(id: number): Promise<NotificationSetting | undefined> {
     return new Promise<NotificationSetting | undefined>((resolve, reject) => {
-      sqliteDb.get('SELECT * FROM notification_settings WHERE id = ?', [id], (err, row: any) => {
+      sqliteDb.get('SELECT * FROM notification_settings WHERE id = ?', [id], (err: Error | null, row: SQLiteNotificationSettingRow | undefined) => {
         if (err) {
           console.error('Error getting notification setting:', err);
           reject(err);
@@ -1836,8 +2007,8 @@ export class DatabaseStorage implements IStorage {
               type: row.type,
               name: row.name,
               isEnabled: !!row.is_enabled,
-              webhookUrl: row.webhook_url,
-              chatId: row.chat_id,
+              webhookUrl: row.webhook_url ?? null,
+              chatId: row.chat_id ?? null,
               alertLevels: row.alert_levels,
               threshold: row.threshold,
               cooldownMinutes: row.cooldown_minutes,
@@ -1853,7 +2024,7 @@ export class DatabaseStorage implements IStorage {
 
   async getAllNotificationSettings(): Promise<NotificationSetting[]> {
     return new Promise<NotificationSetting[]>((resolve, reject) => {
-      sqliteDb.all('SELECT * FROM notification_settings ORDER BY created_at DESC', [], (err, rows: any[]) => {
+      sqliteDb.all('SELECT * FROM notification_settings ORDER BY created_at DESC', [], (err: Error | null, rows: SQLiteNotificationSettingRow[]) => {
         if (err) {
           console.error('Error getting all notification settings:', err);
           reject(err);
@@ -1863,8 +2034,8 @@ export class DatabaseStorage implements IStorage {
             type: row.type,
             name: row.name,
             isEnabled: !!row.is_enabled,
-            webhookUrl: row.webhook_url,
-            chatId: row.chat_id,
+            webhookUrl: row.webhook_url ?? null,
+            chatId: row.chat_id ?? null,
             alertLevels: row.alert_levels,
             threshold: row.threshold,
             cooldownMinutes: row.cooldown_minutes,
@@ -2155,7 +2326,7 @@ export class DatabaseStorage implements IStorage {
 
   async getSignalLog(id: number): Promise<SignalLog | undefined> {
     return new Promise<SignalLog | undefined>((resolve, reject) => {
-      sqliteDb.get('SELECT * FROM signal_logs WHERE id = ?', [id], (err, row: any) => {
+      sqliteDb.get('SELECT * FROM signal_logs WHERE id = ?', [id], (err: Error | null, row: SQLiteSignalLogRow | undefined) => {
         if (err) {
           console.error('Error getting signal log by ID:', err);
           reject(err);
@@ -2165,32 +2336,32 @@ export class DatabaseStorage implements IStorage {
           } else {
             const log: SignalLog = {
               id: row.id,
-              userId: row.user_id,
-              username: row.username,
-              requestId: row.request_id,
+              userId: row.user_id ?? null,
+              username: row.username ?? null,
+              requestId: row.request_id ?? null,
               symbol: row.symbol,
               marketType: row.market_type,
               timeframe: row.timeframe,
-              platform: row.platform,
+              platform: row.platform ?? null,
               status: row.status,
-              signal: row.signal,
-              probability: row.probability,
-              currentPrice: row.current_price,
-              priceSource: row.price_source,
-              errorCode: row.error_code,
-              errorMessage: row.error_message,
-              analysisData: row.analysis_data,
-              indicators: row.indicators,
-              executionTime: row.execution_time,
-              apiKeysUsed: row.api_keys_used,
-              requestIp: row.request_ip,
-              userAgent: row.user_agent,
-              sessionId: row.session_id,
+              signal: row.signal ?? null,
+              probability: row.probability ?? null,
+              currentPrice: row.current_price ?? null,
+              priceSource: row.price_source ?? null,
+              errorCode: row.error_code ?? null,
+              errorMessage: row.error_message ?? null,
+              analysisData: row.analysis_data ?? null,
+              indicators: row.indicators ?? null,
+              executionTime: row.execution_time ?? null,
+              apiKeysUsed: row.api_keys_used ?? null,
+              requestIp: row.request_ip ?? null,
+              userAgent: row.user_agent ?? null,
+              sessionId: row.session_id ?? null,
               marketOpen: !!row.market_open,
               offlineMode: !!row.offline_mode,
               cacheUsed: !!row.cache_used,
               requestedAt: row.requested_at,
-              completedAt: row.completed_at,
+              completedAt: row.completed_at ?? null,
               createdAt: row.created_at
             };
             resolve(log);
@@ -2979,7 +3150,7 @@ export class DatabaseStorage implements IStorage {
 
   async getErrorReport(id: number): Promise<ErrorReport | undefined> {
     return new Promise<ErrorReport | undefined>((resolve, reject) => {
-      sqliteDb.get('SELECT * FROM error_reports WHERE id = ?', [id], (err, row: any) => {
+      sqliteDb.get('SELECT * FROM error_reports WHERE id = ?', [id], (err: Error | null, row: SQLiteErrorReportRow | undefined) => {
         if (err) {
           console.error('Error getting error report by ID:', err);
           reject(err);
@@ -2992,7 +3163,7 @@ export class DatabaseStorage implements IStorage {
 
   async getErrorReportByHash(errorHash: string): Promise<ErrorReport | undefined> {
     return new Promise<ErrorReport | undefined>((resolve, reject) => {
-      sqliteDb.get('SELECT * FROM error_reports WHERE error_hash = ?', [errorHash], (err, row: any) => {
+      sqliteDb.get('SELECT * FROM error_reports WHERE error_hash = ?', [errorHash], (err: Error | null, row: SQLiteErrorReportRow | undefined) => {
         if (err) {
           console.error('Error getting error report by hash:', err);
           reject(err);
