@@ -78,7 +78,7 @@ export function changeTheme(newTheme: Theme, saveToDatabase: boolean = true) {
   // حفظ في localStorage للمستخدمين غير المسجلين
   if (!isUserAuthenticated || !saveToDatabase) {
     try {
-      const settings = safeGetLocalStorage<{theme?: Theme, [key: string]: any}>('settings', {});
+      const settings = safeGetLocalStorage('settings', {});
       settings.theme = newTheme;
       safeSetLocalStorage('settings', settings);
       console.log('Theme saved to localStorage');

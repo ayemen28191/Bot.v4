@@ -106,10 +106,8 @@ class SignalLogger {
         marketType: requestData.marketType,
         platform: requestData.platform,
         action: 'signal_request',
-        actorType: 'user',
         userId: requestData.userId,
-        username: requestData.username,
-        actorDisplayName: requestData.username
+        username: requestData.username
       }, requestData.userId);
 
       console.log(`[SignalLogger] Started request: ${requestId} for ${requestData.symbol}`);
@@ -196,8 +194,7 @@ class SignalLogger {
         result: 'success',
         actorType: 'user',
         userId: activeRequest.data.userId,
-        username: activeRequest.data.username,
-        actorDisplayName: activeRequest.data.username
+        username: activeRequest.data.username
       }, activeRequest.data.userId || undefined);
 
       // إزالة من الطلبات النشطة
@@ -279,8 +276,7 @@ class SignalLogger {
         result: 'failed',
         actorType: 'user',
         userId: activeRequest.data.userId,
-        username: activeRequest.data.username,
-        actorDisplayName: activeRequest.data.username
+        username: activeRequest.data.username
       }, activeRequest.data.userId || undefined);
 
       // إزالة من الطلبات النشطة
@@ -688,16 +684,13 @@ class SignalLogger {
 
   // إشعار جميع المستمعين بإشارة جديدة
   private notifyNewSignal(signal: SignalLog): void {
-    // تأخير صغير للتأكد من اكتمال حفظ البيانات
-    setTimeout(() => {
-      this.newSignalCallbacks.forEach(callback => {
-        try {
-          callback(signal);
-        } catch (error) {
-          console.error('[SignalLogger] Error in new signal callback:', error);
-        }
-      });
-    }, 100); // تأخير 100ms
+    this.newSignalCallbacks.forEach(callback => {
+      try {
+        callback(signal);
+      } catch (error) {
+        console.error('[SignalLogger] Error in new signal callback:', error);
+      }
+    });
   }
 }
 
