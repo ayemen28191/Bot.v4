@@ -163,7 +163,7 @@ export default function EnhancedLogMonitorPage() {
     async function connectWebSocket() {
       try {
         const { io } = await import('socket.io-client');
-        
+
         socket = io({
           transports: ['websocket', 'polling'],
           reconnection: true,
@@ -187,7 +187,7 @@ export default function EnhancedLogMonitorPage() {
           setLogs(prev => {
             const exists = prev.find(log => log.id === normalizedLog.id);
             if (exists) return prev;
-            
+
             return [normalizedLog, ...prev].slice(0, 1000);
           });
         });
@@ -252,7 +252,7 @@ export default function EnhancedLogMonitorPage() {
     a.download = `logs_${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    
+
     toast({
       title: t('logs_downloaded'),
       description: t('logs_downloaded_desc'),
@@ -312,7 +312,7 @@ export default function EnhancedLogMonitorPage() {
       setSelectedSource(filters.source);
     }
     // يمكن إضافة فلترة المستخدمين لاحقاً إذا لزم الأمر
-    
+
     // إظهار toast للإشارة للفلترة
     toast({
       title: t('stats_updated'),
@@ -327,9 +327,9 @@ export default function EnhancedLogMonitorPage() {
     if (selectedLevel) activeFilters.push(`${selectedLevel}`);
     if (selectedSource) activeFilters.push(`${selectedSource}`);
     if (searchTerm) activeFilters.push(`"${searchTerm}"`);
-    
+
     const filterText = activeFilters.length > 0 ? ` (${activeFilters.join(' • ')})` : '';
-    
+
     switch (selectedTab) {
       case 'user':
         return `سجلات المستخدمين النشطة${filterText}`;
@@ -429,7 +429,7 @@ export default function EnhancedLogMonitorPage() {
             <span>{getTabTitle()}</span>
           </h3>
         </div>
-        
+
         {/* السجلات بدون تمرير منفصل - تتحرك مع الصفحة طبيعياً */}
         <div className="space-y-2 sm:space-y-3 xl:space-y-2">
           {filteredLogs.length === 0 ? (
@@ -496,7 +496,7 @@ export default function EnhancedLogMonitorPage() {
               )}
             </DialogTitle>
           </DialogHeader>
-          
+
           {selectedLog && (
             <ScrollArea className="max-h-[60vh] pr-4">
               <div className="space-y-6">
@@ -532,14 +532,14 @@ export default function EnhancedLogMonitorPage() {
                       {selectedLog.level.toUpperCase()}
                     </div>
                   </div>
-                  
+
                   <div className="p-3 bg-muted/30 rounded-lg border border-border/30">
                     <div className="text-sm font-medium text-muted-foreground mb-1">المصدر</div>
                     <div className="font-semibold text-foreground" data-testid="log-details-source">
                       {selectedLog.source}
                     </div>
                   </div>
-                  
+
                   {/* نوع الحدث */}
                   {selectedLog.action && (
                     <div className="p-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-lg border border-blue-200/50 dark:border-blue-800/50">
@@ -549,7 +549,7 @@ export default function EnhancedLogMonitorPage() {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* النتيجة */}
                   {selectedLog.result && (
                     <div className={`p-3 rounded-lg border ${
@@ -571,7 +571,7 @@ export default function EnhancedLogMonitorPage() {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* المستخدم أو النظام */}
                   {(selectedLog.actorDisplayName || selectedLog.userDisplayName || selectedLog.username) && (
                     <div className="p-3 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-lg border border-emerald-200/50 dark:border-emerald-800/50">
@@ -583,7 +583,7 @@ export default function EnhancedLogMonitorPage() {
                       </div>
                     </div>
                   )}
-                  
+
                   <div className="p-3 bg-muted/30 rounded-lg border border-border/30">
                     <div className="text-sm font-medium text-muted-foreground mb-1">الوقت</div>
                     <div className="font-semibold text-foreground text-sm" data-testid="log-details-time">
@@ -594,7 +594,7 @@ export default function EnhancedLogMonitorPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* تفاصيل إضافية من الحقل الجديد */}
                 {selectedLog.details && (
                   <div className="space-y-2">
