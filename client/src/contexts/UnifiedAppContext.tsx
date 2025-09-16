@@ -20,6 +20,7 @@ import { createContext, useContext, useReducer, useEffect, ReactNode, useCallbac
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { safeGetLocalStorage, safeSetLocalStorage } from '@/lib/storage-utils';
 import {
   UnifiedAppState,
   UnifiedAction,
@@ -32,6 +33,13 @@ import {
   Theme,
   User
 } from '@shared/unified-systems';
+
+// Interface for localStorage settings
+interface StorageSettings {
+  theme?: Theme;
+  language?: string;
+  [key: string]: any;
+}
 
 // ============================================================================
 // INITIAL STATE
@@ -179,10 +187,11 @@ function unifiedAppReducer(state: UnifiedAppState, action: UnifiedAction): Unifi
       };
 
     case 'SET_FEATURE_STATE':
+      const currentFeatureState = state[action.payload.feature as keyof UnifiedAppState];
       return {
         ...state,
         [action.payload.feature]: {
-          ...state[action.payload.feature as keyof UnifiedAppState],
+          ...(typeof currentFeatureState === 'object' && currentFeatureState !== null ? currentFeatureState : {}),
           ...action.payload.state
         }
       };
@@ -670,9 +679,9 @@ export function UnifiedAppProvider({ children }: UnifiedAppProviderProps) {
     } else {
       // Save to localStorage for non-authenticated users
       try {
-        const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+        const settings = safeGetLocalStorage<StorageSettings>('settings', {});
         settings.theme = theme;
-        localStorage.setItem('settings', JSON.stringify(settings));
+        safeSetLocalStorage('settings', settings);
       } catch (error) {
         console.error('Failed to save theme to localStorage:', error);
       }
@@ -756,7 +765,7 @@ export function UnifiedAppProvider({ children }: UnifiedAppProviderProps) {
   const initialize = useCallback(async () => {
     // Load saved preferences
     try {
-      const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+      const settings = safeGetLocalStorage<StorageSettings>('settings', {});
       if (settings.theme) {
         dispatch({ type: 'SET_THEME', payload: settings.theme });
       }

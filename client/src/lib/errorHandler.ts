@@ -14,6 +14,7 @@ import {
   ERROR_CODES,
   ERROR_MESSAGES
 } from '@shared/error-types';
+import { safeGetLocalStorageString, safeSetLocalStorageString, safeRemoveLocalStorage } from '@/lib/storage-utils';
 
 // =============================================================================
 // تهيئة معالج الأخطاء
@@ -247,20 +248,20 @@ window.addEventListener('online', () => {
   console.log('🌐 Connection restored');
   
   // إعادة تحميل الصفحة إذا كان هناك انقطاع طويل
-  const lastOffline = localStorage.getItem('last_offline_time');
+  const lastOffline = safeGetLocalStorageString('last_offline_time');
   if (lastOffline) {
     const offlineTime = Date.now() - parseInt(lastOffline);
     if (offlineTime > 30000) { // 30 ثانية
       console.log('🔄 Long offline period detected, reloading...');
       window.location.reload();
     }
-    localStorage.removeItem('last_offline_time');
+    safeRemoveLocalStorage('last_offline_time');
   }
 });
 
 window.addEventListener('offline', () => {
   console.log('📱 Connection lost');
-  localStorage.setItem('last_offline_time', Date.now().toString());
+  safeSetLocalStorageString('last_offline_time', Date.now().toString());
 });
 
 // =============================================================================

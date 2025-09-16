@@ -2,6 +2,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { Redirect, Route, RouteProps, useLocation } from "wouter";
 import { useEffect, useState } from "react";
+import { safeRemoveLocalStorage } from '@/lib/storage-utils';
 
 interface ProtectedRouteProps extends RouteProps {
   component: React.ComponentType;
@@ -29,11 +30,7 @@ export function ProtectedRoute({ path, component: Component }: ProtectedRoutePro
     }
     
     // محو البيانات المحلية
-    try {
-      localStorage.removeItem('auth_timestamp');
-    } catch (e) {
-      // تجاهل الأخطاء
-    }
+    safeRemoveLocalStorage('auth_timestamp');
     
     return (
       <Route path={path}>

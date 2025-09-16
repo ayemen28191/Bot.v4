@@ -7,6 +7,7 @@ import {
   createValidationError,
   ERROR_CODES
 } from '@shared/error-types';
+import { safeGetLocalStorageString } from '@/lib/storage-utils';
 
 type UnauthorizedBehavior = "throw" | "returnNull";
 
@@ -276,8 +277,8 @@ export function getWebSocketUrl(path: string = '/ws'): string {
 
   try {
     // التحقق إذا كان وضع عدم الاتصال مفعل بالفعل
-    const isOfflineMode = localStorage.getItem('offlineMode') === 'enabled' || 
-                          localStorage.getItem('offline_mode') === 'enabled';
+    const isOfflineMode = safeGetLocalStorageString('offlineMode') === 'enabled' || 
+                          safeGetLocalStorageString('offline_mode') === 'enabled';
 
     if (isOfflineMode) {
       console.log('🔄 وضع عدم الاتصال مفعل، تجاهل WebSocket');

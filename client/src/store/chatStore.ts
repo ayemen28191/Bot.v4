@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { Message } from '@/types';
 import NotificationService from '@/lib/notifications';
 import { getWebSocketUrl } from '@/lib/queryClient';
+import { safeGetLocalStorage, safeSetLocalStorage, safeRemoveLocalStorage, safeGetLocalStorageString, safeSetLocalStorageString } from '@/lib/storage-utils';
 
 // تحديد حجم المخزن المؤقت (كم عدد الرسائل التي سيتم تخزينها بحد أقصى)
 const MAX_CACHED_MESSAGES = 100;
@@ -42,7 +43,7 @@ const saveToLocalStorage = <T>(key: string, data: T, version: string = '1.0.0'):
       timestamp: Date.now(),
       version
     };
-    localStorage.setItem(key, JSON.stringify(cachedData));
+    safeSetLocalStorage(key, cachedData);
     return true;
   } catch (error) {
     console.error(`Error saving data (${key}):`, error);
@@ -53,7 +54,7 @@ const saveToLocalStorage = <T>(key: string, data: T, version: string = '1.0.0'):
 // دالة مساعدة لاسترجاع البيانات من التخزين المحلي مع التحقق من الصلاحية
 const getFromLocalStorage = <T>(key: string, defaultValue: T, ttl: number = CACHE_EXPIRY): T => {
   try {
-    const savedData = localStorage.getItem(key);
+    const savedData = safeGetLocalStorageString(key);
     if (!savedData) return defaultValue;
 
     const parsed = JSON.parse(savedData) as CachedData<T>;
@@ -61,7 +62,7 @@ const getFromLocalStorage = <T>(key: string, defaultValue: T, ttl: number = CACH
     // التحقق من صلاحية البيانات
     const isValid = Date.now() - parsed.timestamp < ttl;
     if (!isValid) {
-      localStorage.removeItem(key);
+      safeRemoveLocalStorage(key);
       return defaultValue;
     }
 
@@ -82,15 +83,15 @@ export const useStore = create<ChatState>((set, get) => {
     
     // تفعيل الحماية المبكرة فوراً
     if (isSecure && isReplitApp) {
-      const currentOfflineState = localStorage.getItem('offlineMode') === 'enabled' ||
-                                  localStorage.getItem('offline_mode') === 'enabled' ||
-                                  localStorage.getItem('replit_https_protection') === 'enabled';
+      const currentOfflineState = safeGetLocalStorageString('offlineMode') === 'enabled' ||
+                                  safeGetLocalStorageString('offline_mode') === 'enabled' ||
+                                  safeGetLocalStorageString('replit_https_protection') === 'enabled';
       
       if (!currentOfflineState) {
         console.log('🛡️ تفعيل الحماية المبكرة من حلقة إعادة التحميل');
         console.log('ℹ️ This protection prevents WebSocket issues in HTTPS environment - normal behavior');
-        localStorage.setItem('offline_mode', 'enabled');
-        localStorage.setItem('replit_https_protection', 'enabled');
+        safeSetLocalStorageString('offline_mode', 'enabled');
+        safeSetLocalStorageString('replit_https_protection', 'enabled');
       }
     }
 
@@ -110,7 +111,7 @@ export const useStore = create<ChatState>((set, get) => {
         if (typeof window === 'undefined') return [];
 
         // التحقق إذا كان وضع عدم الاتصال مفعل مسبقا
-        const offlineMode = localStorage.getItem('offline_mode') === 'enabled';
+        const offlineMode = safeGetLocalStorageString('offline_mode') === 'enabled';
 
         // محاولة قراءة البيانات بالتنسيق الجديد أولاً
         const messagesData = getFromLocalStorage<Message[]>('chat_data', []);
@@ -119,7 +120,7 @@ export const useStore = create<ChatState>((set, get) => {
         }
 
         // الرجوع للتنسيق القديم كاحتياط
-        const saved = localStorage.getItem('chat_messages');
+        const saved = safeGetLocalStorageString('chat_messages');
         if (saved) {
           const parsedMessages = JSON.parse(saved);
           // حفظ البيانات بالتنسيق الجديد للاستخدام في المستقبل
@@ -138,8 +139,8 @@ export const useStore = create<ChatState>((set, get) => {
     onlineUsers: 1000,
     // قراءة حالة وضع عدم الاتصال من التخزين المحلي
     isOfflineMode: typeof window !== 'undefined' && (
-      localStorage.getItem('offlineMode') === 'enabled' ||
-      localStorage.getItem('offline_mode') === 'enabled'
+      safeGetLocalStorageString('offlineMode') === 'enabled' ||
+      safeGetLocalStorageString('offline_mode') === 'enabled'
     ),
     pendingMessages: [],
     lastSyncTimestamp: null,
@@ -158,7 +159,7 @@ export const useStore = create<ChatState>((set, get) => {
 
         // حفظ الرسائل في التخزين المحلي بكلا التنسيقين
         try {
-          localStorage.setItem('chat_messages', JSON.stringify(newMessages));
+          safeSetLocalStorage('chat_messages', newMessages);
           saveToLocalStorage('chat_data', newMessages);
         } catch (error) {
           console.warn('Failed to save messages to local storage:', error);
@@ -166,7 +167,7 @@ export const useStore = create<ChatState>((set, get) => {
 
         // إرسال إشعار للمستخدم إذا كانت الرسالة من شخص آخر (ليست رسالة المستخدم نفسه)
         try {
-          const currentUser = localStorage.getItem('current_user');
+          const currentUser = safeGetLocalStorageString('current_user');
           const isSelfMessage = currentUser && message.sender === currentUser;
 
           // إرسال إشعار فقط إذا كانت الرسالة من شخص آخر وليست من نفس المستخدم
@@ -394,7 +395,7 @@ export const useStore = create<ChatState>((set, get) => {
 
         // حفظ الرسائل في التخزين المحلي (بالتنسيق القديم والجديد)
         try {
-          localStorage.setItem('chat_messages', JSON.stringify(newMessages));
+          safeSetLocalStorage('chat_messages', newMessages);
           saveToLocalStorage('chat_data', newMessages);
         } catch (storageError) {
           console.warn('Failed to save messages to local storage:', storageError);
@@ -423,7 +424,7 @@ export const useStore = create<ChatState>((set, get) => {
             set(state => {
               const newMessages = [...state.messages, autoResponse];
               try {
-                localStorage.setItem('chat_messages', JSON.stringify(newMessages));
+                safeSetLocalStorage('chat_messages', newMessages);
                 saveToLocalStorage('chat_data', newMessages);
               } catch (error) {
                 console.warn('Failed to save auto-reply to local storage:', error);
@@ -459,7 +460,7 @@ export const useStore = create<ChatState>((set, get) => {
         }
 
         // إعادة تعيين عداد المحاولات الفاشلة
-        localStorage.removeItem('ws_failed_attempts');
+        safeRemoveLocalStorage('ws_failed_attempts');
 
         // تخزين الرسائل الحالية قبل تمكين وضع عدم الاتصال
         const messages = get().messages;
@@ -493,7 +494,7 @@ export const useStore = create<ChatState>((set, get) => {
         }
 
         // تخزين حالة وضع عدم الاتصال
-        localStorage.setItem('offlineMode', 'enabled');
+        safeSetLocalStorageString('offlineMode', 'enabled');
       } catch (error) {
         console.error('Error enabling offline mode:', error);
       }
@@ -506,9 +507,9 @@ export const useStore = create<ChatState>((set, get) => {
 
         set({ isOfflineMode: false });
         // إزالة كلا المفتاحين للتوافق مع الإصدارات السابقة
-        localStorage.removeItem('offlineMode');
-        localStorage.removeItem('offline_mode');
-        localStorage.removeItem('ws_failed_attempts');
+        safeRemoveLocalStorage('offlineMode');
+        safeRemoveLocalStorage('offline_mode');
+        safeRemoveLocalStorage('ws_failed_attempts');
 
         // إظهار إشعار للمستخدم
         try {
@@ -590,7 +591,7 @@ export const useStore = create<ChatState>((set, get) => {
         // تحديث وقت آخر مزامنة وحفظه
         const syncTime = Date.now();
         set({ lastSyncTimestamp: syncTime, pendingMessages: [] });
-        localStorage.setItem('last_sync_timestamp', syncTime.toString());
+        safeSetLocalStorageString('last_sync_timestamp', syncTime.toString());
 
         console.log('Messages synced successfully');
 
@@ -607,8 +608,8 @@ export const useStore = create<ChatState>((set, get) => {
         if (typeof window === 'undefined') return;
 
         set({ messages: [] });
-        localStorage.removeItem('chat_messages');
-        localStorage.removeItem('chat_data');
+        safeRemoveLocalStorage('chat_messages');
+        safeRemoveLocalStorage('chat_data');
         console.log('All messages cleared from cache');
       } catch (error) {
         console.error('Error clearing messages:', error);

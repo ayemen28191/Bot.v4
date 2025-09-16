@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Message } from '@/types';
 import { useAuth } from '@/hooks/use-auth';
 import { BottomNavigation } from '@/components';
+import { safeGetLocalStorageString, safeSetLocalStorageString, safeSetLocalStorage } from '@/lib/storage-utils';
 
 interface UserProfile {
   name: string;
@@ -38,7 +39,7 @@ export default function ChatPage() {
   const { toast } = useToast();
 
   const [userProfile, setUserProfile] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem('userProfile');
+    const saved = safeGetLocalStorageString('userProfile');
     return saved ? JSON.parse(saved) : {
       name: t('new_user'),
       avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${Math.random()}`
@@ -50,7 +51,7 @@ export default function ChatPage() {
 
   // حفظ اسم المستخدم الحالي في التخزين المحلي للتحقق مما إذا كانت الرسائل الواردة من نفس المستخدم
   useEffect(() => {
-    localStorage.setItem('current_user', userProfile.name);
+    safeSetLocalStorageString('current_user', userProfile.name);
   }, [userProfile.name]);
 
   // التحقق من حالة إذن الإشعارات عند تحميل الصفحة
@@ -137,7 +138,7 @@ export default function ChatPage() {
       name: tempName
     };
     setUserProfile(newProfile);
-    localStorage.setItem('userProfile', JSON.stringify(newProfile));
+    safeSetLocalStorage('userProfile', newProfile);
     setIsProfileDialogOpen(false);
   };
 
@@ -262,7 +263,7 @@ export default function ChatPage() {
           avatar: reader.result as string
         };
         setUserProfile(newProfile);
-        localStorage.setItem('userProfile', JSON.stringify(newProfile));
+        safeSetLocalStorage('userProfile', newProfile);
       };
       reader.readAsDataURL(file);
     }
@@ -274,7 +275,7 @@ export default function ChatPage() {
       avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${Math.random()}`
     };
     setUserProfile(newProfile);
-    localStorage.setItem('userProfile', JSON.stringify(newProfile));
+    safeSetLocalStorage('userProfile', newProfile);
   };
 
   // دالة لطلب إذن بإرسال الإشعارات

@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { safeGetLocalStorageString, safeSetLocalStorageString } from '@/lib/storage-utils';
 
 export type Direction = 'ltr' | 'rtl';
 export type Language = 'en' | 'ar';
@@ -53,8 +54,8 @@ function getStoredConfig(): DirectionConfig {
   }
 
   try {
-    const storedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY) as Language;
-    const storedDirection = localStorage.getItem(DIRECTION_STORAGE_KEY) as Direction;
+    const storedLanguage = safeGetLocalStorageString(LANGUAGE_STORAGE_KEY) as Language;
+    const storedDirection = safeGetLocalStorageString(DIRECTION_STORAGE_KEY) as Direction;
     
     // If we have stored language, derive direction from it
     if (storedLanguage && ['en', 'ar'].includes(storedLanguage)) {
@@ -98,8 +99,8 @@ function applyToDocument(config: DirectionConfig): void {
   
   // Store preferences
   try {
-    localStorage.setItem(DIRECTION_STORAGE_KEY, direction);
-    localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+    safeSetLocalStorageString(DIRECTION_STORAGE_KEY, direction);
+    safeSetLocalStorageString(LANGUAGE_STORAGE_KEY, language);
   } catch (error) {
     console.warn('Error storing direction/language preferences:', error);
   }

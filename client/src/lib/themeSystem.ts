@@ -1,6 +1,7 @@
 // نظام السمات متعدد المصادر مشابه لنظام i18n
 import { z } from "zod";
 import { type User } from "@shared/schema";
+import { safeGetLocalStorageString, safeSetLocalStorage, safeGetLocalStorage } from "./storage-utils";
 
 export type Theme = 'light' | 'dark' | 'system';
 
@@ -23,7 +24,7 @@ export function getCurrentTheme(user?: User | null): Theme {
   // أولوية 2: إذا كان المستخدم غير مسجل، استخدم localStorage
   if (!user) {
     try {
-      const savedSettings = localStorage.getItem('settings');
+      const savedSettings = safeGetLocalStorageString('settings');
       if (savedSettings) {
         const settings = JSON.parse(savedSettings);
         if (settings.theme && supportedThemes.includes(settings.theme)) {
@@ -77,10 +78,9 @@ export function changeTheme(newTheme: Theme, saveToDatabase: boolean = true) {
   // حفظ في localStorage للمستخدمين غير المسجلين
   if (!isUserAuthenticated || !saveToDatabase) {
     try {
-      const savedSettings = localStorage.getItem('settings') || '{}';
-      const settings = JSON.parse(savedSettings);
+      const settings = safeGetLocalStorage('settings', {});
       settings.theme = newTheme;
-      localStorage.setItem('settings', JSON.stringify(settings));
+      safeSetLocalStorage('settings', settings);
       console.log('Theme saved to localStorage');
     } catch (e) {
       console.error('Error saving theme to localStorage:', e);

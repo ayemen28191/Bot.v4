@@ -8,13 +8,14 @@ import { useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { BottomNavigation } from '@/components';
+import { safeGetLocalStorageString, safeSetLocalStorage } from '@/lib/storage-utils';
 
 export default function SettingsPage() {
   const { user, logout } = useAuth();
   const { toast } = useToast();
   const [notifications, setNotifications] = useState(() => {
     try {
-      const savedSettings = localStorage.getItem('settings');
+      const savedSettings = safeGetLocalStorageString('settings');
       if (savedSettings) {
         const settings = JSON.parse(savedSettings);
         return settings.notifications !== undefined ? settings.notifications : true;
@@ -29,7 +30,7 @@ export default function SettingsPage() {
 
   const [timezone, setTimezone] = useState(() => {
     try {
-      const savedSettings = localStorage.getItem('settings');
+      const savedSettings = safeGetLocalStorageString('settings');
       if (savedSettings) {
         const settings = JSON.parse(savedSettings);
         return settings.timezone || 'auto';
@@ -174,10 +175,10 @@ export default function SettingsPage() {
 
   const saveSettings = () => {
     // Save general settings to localStorage (notifications, timezone)
-    localStorage.setItem('settings', JSON.stringify({
+    safeSetLocalStorage('settings', {
       notifications,
       timezone,
-    }));
+    });
 
     // Language and theme are now saved automatically when changed
     setShowSuccess(true);

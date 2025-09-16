@@ -5,6 +5,7 @@ import { getCurrentLanguage } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { useAdminCheck } from '@/hooks/use-admin-check';
+import { safeGetLocalStorage, safeSetLocalStorage } from '@/lib/storage-utils';
 
 // Components
 import { AdminSidebar, AdminBottomNav } from '@/features/admin';
@@ -37,8 +38,7 @@ export function AdminLayout({
   // Sidebar state management
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('admin-sidebar-collapsed');
-      return saved ? JSON.parse(saved) : false;
+      return safeGetLocalStorage('admin-sidebar-collapsed', false);
     }
     return false;
   });
@@ -48,7 +48,7 @@ export function AdminLayout({
 
   // Save sidebar state to localStorage
   useEffect(() => {
-    localStorage.setItem('admin-sidebar-collapsed', JSON.stringify(sidebarCollapsed));
+    safeSetLocalStorage('admin-sidebar-collapsed', sidebarCollapsed);
   }, [sidebarCollapsed]);
 
   // Close mobile menu on route change

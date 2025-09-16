@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { safeGetLocalStorage } from '@/lib/storage-utils';
 
 // استخدام نفس أسماء المناطق الزمنية المستخدمة في صفحة الإعدادات
 export const DEFAULT_TIMEZONE = 'auto';
@@ -7,29 +8,14 @@ export const DEFAULT_TIMEZONE = 'auto';
 export function useTimezone() {
   // تحميل المنطقة الزمنية من التخزين المحلي
   const [timezone, setTimezone] = useState<string>(() => {
-    try {
-      const savedSettings = localStorage.getItem('settings');
-      if (savedSettings) {
-        const settings = JSON.parse(savedSettings);
-        return settings.timezone || DEFAULT_TIMEZONE;
-      }
-    } catch (e) {
-      console.error('Error loading timezone from local storage:', e);
-    }
-    return DEFAULT_TIMEZONE;
+    const settings = safeGetLocalStorage('settings', {});
+    return settings.timezone || DEFAULT_TIMEZONE;
   });
 
   // استخدام useCallback لتحسين الأداء وتجنب التحديثات غير الضرورية
   const loadTimezoneFromStorage = useCallback(() => {
-    try {
-      const savedSettings = localStorage.getItem('settings');
-      if (savedSettings) {
-        const settings = JSON.parse(savedSettings);
-        setTimezone(settings.timezone || DEFAULT_TIMEZONE);
-      }
-    } catch (e) {
-      console.error('Error handling storage change event:', e);
-    }
+    const settings = safeGetLocalStorage('settings', {});
+    setTimezone(settings.timezone || DEFAULT_TIMEZONE);
   }, []);
 
   // مراقبة تغييرات التخزين المحلي في نافذة أخرى

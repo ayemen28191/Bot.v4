@@ -3,6 +3,7 @@ import App from "./App";
 import "./styles/common.css";
 import { initializeLanguageSystem, getCurrentLanguage } from "./lib/i18n";
 import { initializeDefaultTheme, setupSystemThemeListener } from "./lib/themeSystem";
+import { safeSetLocalStorageString } from "./lib/storage-utils";
 import './lib/errorHandler';
 
 // تهيئة مبكرة للغة قبل بدء التطبيق
@@ -93,8 +94,8 @@ async function initializeApp() {
 
           // تفعيل وضع عدم الاتصال تلقائياً
           try {
-            localStorage.setItem('offline_mode', 'enabled');
-            localStorage.setItem('offline_reason', 'websocket_security_error');
+            safeSetLocalStorageString('offline_mode', 'enabled');
+            safeSetLocalStorageString('offline_reason', 'websocket_security_error');
 
             // إرسال إشعار للمستخدم
             const event = new CustomEvent('websocketError', {
@@ -111,8 +112,8 @@ async function initializeApp() {
 
       // تحديث إعدادات الاتصال تلقائياً في بيئة HTTPS الاتصال مسبقاً في بيئة HTTPS
       try {
-        localStorage.setItem('offline_mode', 'enabled');
-        localStorage.setItem('offline_reason', 'https_environment');
+        safeSetLocalStorageString('offline_mode', 'enabled');
+        safeSetLocalStorageString('offline_reason', 'https_environment');
         console.log('✅ Offline mode pre-enabled for HTTPS environment');
       } catch (e) {
         console.warn('Could not pre-enable offline mode');

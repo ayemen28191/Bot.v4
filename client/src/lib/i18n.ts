@@ -2312,7 +2312,7 @@ let translationCache: { [key: string]: string } = {};
 export function getBrowserLanguage(): string {
   if (typeof window !== 'undefined') {
     // Check saved language first
-    const savedLang = localStorage.getItem('language');
+    const savedLang = safeGetLocalStorageString('language');
     if (savedLang && ['ar', 'en', 'hi'].includes(savedLang)) {
       return savedLang;
     }
@@ -2444,7 +2444,7 @@ export const getCurrentLanguage = (user?: any): string => {
   }
 
   // Priority 3: check old localStorage
-  const storedLang = safeGetLocalStorageString('language', null);
+  const storedLang = safeGetLocalStorageString('language', '');
   if (storedLang && translations[storedLang]) {
     return storedLang;
   }
@@ -2501,15 +2501,15 @@ export const changeLanguage = (newLanguage: string, saveToStorage: boolean = tru
     // Save to localStorage if requested
     if (saveToStorage) {
       try {
-        const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+        const settings = safeGetLocalStorage('settings', {});
         settings.language = newLanguage;
-        localStorage.setItem('settings', JSON.stringify(settings));
-        localStorage.setItem('language', newLanguage);
+        safeSetLocalStorage('settings', settings);
+        safeSetLocalStorageString('language', newLanguage);
         console.log('💾 Language saved to localStorage:', newLanguage);
       } catch (error) {
         console.error('❌ Error saving language to localStorage:', error);
-        localStorage.setItem('settings', JSON.stringify({ language: newLanguage }));
-        localStorage.setItem('language', newLanguage);
+        safeSetLocalStorage('settings', { language: newLanguage });
+        safeSetLocalStorageString('language', newLanguage);
       }
     }
 
@@ -2542,13 +2542,13 @@ export const initializeLanguageSystem = (user?: any) => {
     
     if (shouldSaveToStorage) {
       try {
-        const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+        const settings = safeGetLocalStorage('settings', {});
         if (!settings.language || user.preferredLanguage !== settings.language) {
           settings.language = lang;
-          localStorage.setItem('settings', JSON.stringify(settings));
+          safeSetLocalStorage('settings', settings);
         }
       } catch {
-        localStorage.setItem('settings', JSON.stringify({ language: lang }));
+        safeSetLocalStorage('settings', { language: lang });
       }
     }
 
@@ -2576,12 +2576,12 @@ export const clearLanguageOnLogout = () => {
   if (typeof window !== 'undefined') {
     try {
       // Clear language from settings
-      const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+      const settings = safeGetLocalStorage('settings', {});
       delete settings.language;
-      localStorage.setItem('settings', JSON.stringify(settings));
+      safeSetLocalStorage('settings', settings);
       
       // Clear old language storage
-      localStorage.removeItem('language');
+      safeRemoveLocalStorage('language');
       
       // Reset to English
       changeLanguage('en', false);
@@ -2648,10 +2648,10 @@ export const setUserLanguage = (userPreferredLang: string | null) => {
   if (typeof window !== 'undefined' && userPreferredLang) {
     try {
       // Update settings with user's preferred language
-      const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+      const settings = safeGetLocalStorage('settings', {});
       settings.language = userPreferredLang;
-      localStorage.setItem('settings', JSON.stringify(settings));
-      localStorage.setItem('language', userPreferredLang);
+      safeSetLocalStorage('settings', settings);
+      safeSetLocalStorageString('language', userPreferredLang);
       
       // Update current language
       currentLanguage = userPreferredLang;
@@ -2721,12 +2721,12 @@ export const getUserPreferredLanguage = (userPreferredLang?: string | null): str
   // Priority 2: Saved in localStorage
   if (typeof window !== 'undefined') {
     try {
-      const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+      const settings = safeGetLocalStorage('settings', {});
       if (settings.language && translations[settings.language]) {
         return settings.language;
       }
       
-      const storedLang = localStorage.getItem('language');
+      const storedLang = safeGetLocalStorageString('language');
       if (storedLang && translations[storedLang]) {
         return storedLang;
       }

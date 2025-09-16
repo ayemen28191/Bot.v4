@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { HeatmapData, HeatmapCell } from '@/features/trading/ProbabilityHeatmap';
 import { getQueryFn } from '@/lib/queryClient';
 import { t } from '@/lib/i18n';
+import { safeGetLocalStorage, safeSetLocalStorage, safeGetLocalStorageString } from '@/lib/storage-utils';
 
 // استدعاء بيانات الخريطة الحرارية من API
 const fetchHeatmapData = async (): Promise<HeatmapData> => {
@@ -85,21 +86,21 @@ export function useHeatmap({
       const currentTime = Date.now();
 
       // تخزين البيانات الرئيسية
-      localStorage.setItem('heatmap_data', JSON.stringify({
+      safeSetLocalStorage('heatmap_data', {
         data: heatmapData,
         timestamp: currentTime
-      }));
+      });
 
       // تخزين نسخة احتياطية - تحديث كل 24 ساعة فقط لتوفير مساحة التخزين
-      const backupData = localStorage.getItem('heatmap_backup_data');
+      const backupData = safeGetLocalStorageString('heatmap_backup_data');
       const shouldUpdateBackup = !backupData || 
                                (backupData && JSON.parse(backupData).timestamp < (currentTime - 24 * 60 * 60 * 1000));
 
       if (shouldUpdateBackup) {
-        localStorage.setItem('heatmap_backup_data', JSON.stringify({
+        safeSetLocalStorage('heatmap_backup_data', {
           data: heatmapData,
           timestamp: currentTime
-        }));
+        });
         console.log(t('backup_data_updated_log'));
       }
 
@@ -109,7 +110,7 @@ export function useHeatmap({
         forexPairs.forEach(pair => {
           const pairData = heatmapData.forex.filter(cell => cell.symbol === pair);
           if (pairData.length > 0) {
-            localStorage.setItem(`heatmap_${pair.replace('/', '_')}`, JSON.stringify({
+            safeSetLocalStorage(`heatmap_${pair.replace('/', '_')}`, {
               data: {
                 forex: pairData,
                 crypto: [],
@@ -117,7 +118,7 @@ export function useHeatmap({
                 lastUpdate: currentTime
               },
               timestamp: currentTime
-            }));
+            });
           }
         });
       }
@@ -127,7 +128,7 @@ export function useHeatmap({
         cryptoPairs.forEach(pair => {
           const pairData = heatmapData.crypto.filter(cell => cell.symbol === pair);
           if (pairData.length > 0) {
-            localStorage.setItem(`heatmap_${pair.replace('/', '_')}`, JSON.stringify({
+            safeSetLocalStorage(`heatmap_${pair.replace('/', '_')}`, {
               data: {
                 forex: [],
                 crypto: pairData,
@@ -135,7 +136,7 @@ export function useHeatmap({
                 lastUpdate: currentTime
               },
               timestamp: currentTime
-            }));
+            });
           }
         });
       }
@@ -159,7 +160,7 @@ export function useHeatmap({
   const getCachedData = useCallback((): HeatmapData | null => {
     try {
       // أولاً نحاول الحصول على البيانات من مفتاح التخزين الرئيسي
-      const cachedItem = localStorage.getItem('heatmap_data');
+      const cachedItem = safeGetLocalStorageString('heatmap_data');
 
       if (cachedItem) {
         const { data, timestamp } = JSON.parse(cachedItem);
@@ -176,7 +177,7 @@ export function useHeatmap({
       const commonPairs = ['EUR/USD', 'BTC/USD', 'ETH/USD', 'USD/JPY'];
       for (const pair of commonPairs) {
         const pairKey = `heatmap_${pair.replace('/', '_')}`;
-        const pairData = localStorage.getItem(pairKey);
+        const pairData = safeGetLocalStorageString(pairKey);
 
         if (pairData) {
           try {
@@ -194,7 +195,7 @@ export function useHeatmap({
       }
 
       // محاولة استرداد البيانات الاحتياطية للحالات الطارئة
-      const backupData = localStorage.getItem('heatmap_backup_data');
+      const backupData = safeGetLocalStorageString('heatmap_backup_data');
       if (backupData && offlineMode) {
         try {
           const { data } = JSON.parse(backupData);

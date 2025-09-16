@@ -5,6 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
+import { safeSetLocalStorageString } from '@/lib/storage-utils';
 
 interface MarketClosedAlertProps {
   nextOpenTime: string;
@@ -389,7 +390,7 @@ export default function MarketClosedAlert({ nextOpenTime, nextCloseTime, marketT
           <div className="mt-2 text-center">
             <button 
               onClick={() => {
-                localStorage.setItem('marketAlerts', 'enabled');
+                safeSetLocalStorageString('marketAlerts', 'enabled');
                 setShowNotificationBadge(false);
                 // إظهار رسالة تأكيد
                 const event = new CustomEvent('showToast', { 

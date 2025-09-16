@@ -13,6 +13,7 @@ import { Loader2, Eye, EyeOff, Shield, User, Lock, CheckCircle } from "lucide-re
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { t, getCurrentLanguage, setLanguage } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { safeSetLocalStorageString } from '@/lib/storage-utils';
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
@@ -67,12 +68,8 @@ export default function AuthPage() {
         }
         
         // تفعيل وضع عدم الاتصال إذا كان هناك مشاكل في الشبكة
-        try {
-          localStorage.setItem('offline_mode', 'enabled');
-          localStorage.setItem('offline_reason', 'https_mixed_content');
-        } catch (e) {
-          // تجاهل الأخطاء الصامتة
-        }
+        safeSetLocalStorageString('offline_mode', 'enabled');
+        safeSetLocalStorageString('offline_reason', 'https_mixed_content');
       }
     };
 

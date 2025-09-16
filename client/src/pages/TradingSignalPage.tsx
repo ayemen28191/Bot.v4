@@ -301,10 +301,10 @@ export default function TradingSignalPage() {
   // نسمح باستخدام أي لغة من اللغات المدعومة
   useEffect(() => {
     // تهيئة اللغة الافتراضية إذا لم تكن موجودة
-    if (!localStorage.getItem('language')) {
+    if (!safeGetLocalStorageString('language')) {
       const browserLang = navigator.language.split('-')[0];
       const supportedLangs = ['ar', 'en', 'hi'];
-      localStorage.setItem('language', supportedLangs.includes(browserLang) ? browserLang : 'ar');
+      safeSetLocalStorageString('language', supportedLangs.includes(browserLang) ? browserLang : 'ar');
     }
 
     // إضافة مستمع لتغييرات اللغة
@@ -1373,7 +1373,7 @@ export default function TradingSignalPage() {
     window.addEventListener('enableOfflineMode', handleEnableOfflineMode as EventListener);
 
     // التحقق من حالة وضع عدم الاتصال المخزنة
-    const storedOfflineMode = localStorage.getItem('offline_mode');
+    const storedOfflineMode = safeGetLocalStorageString('offline_mode');
     if (storedOfflineMode === 'enabled') {
       setIsOfflineMode(true);
     }

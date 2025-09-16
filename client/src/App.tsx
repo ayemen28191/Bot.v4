@@ -12,6 +12,7 @@ import { ProtectedAdminRoute } from "@/lib/protected-admin-route";
 import { useStore as useChatStore } from './store/chatStore';
 import { useToast } from '@/hooks/use-toast';
 import { useSessionMonitor } from '@/hooks/use-session-monitor';
+import { safeSetLocalStorageString } from '@/lib/storage-utils';
 
 // التحميل المتأخر للصفحات
 const TradingSignalPage = lazy(() => import('@/pages/TradingSignalPage'));
@@ -48,7 +49,7 @@ function HTTPSHandler() {
       if (isSecure && isReplitApp && !isOfflineMode) {
         console.log('🚫 منع حلقة إعادة التحميل: تفعيل وضع الحماية المبكر');
         enableOfflineMode();
-        localStorage.setItem('replit_https_protection', 'enabled');
+        safeSetLocalStorageString('replit_https_protection', 'enabled');
       }
 
       // **ثانياً**: منع Vite من إعادة تحميل الصفحة عند فشل WebSocket
