@@ -1,0 +1,55 @@
+ حاسس انك بتسوي غلط وكتابك بدون فهم وعشوائية
+
+Technical data updated for 1758051204083_58iwiisek
+[SignalLogger] Technical data updated for 1758051204083_58iwiisek
+[SignalLogger] Technical data updated for 1758051204083_58iwiisek
+[SignalLogger] Technical data updated for 1758051204083_58iwiisek
+[SignalLogger] Technical data updated for 1758051204083_58iwiisek
+[LogsService] Calculated cumulative counters for user null, action signal_success: previous=0, daily=1, monthly=1
+[LogsService] Logged: info - signal-logger - إشارة ناجحة: EUR/USD -> sell
+[SignalLogger] Success: 1758051204083_58iwiisek -> sell (1023ms)
+[analyzeMarket] تم الانتهاء من معالجة الطلب: 1758051204083_58iwiisek
+تم تحليل السوق بنجاح للرمز EUR/USD, الإشارة: sell
+Fetching all users...
+[LogsService] Calculated cumulative counters for user null, action admin_access_granted: previous=0, daily=1, monthly=1
+[LogsService] Logged: info - auth - Admin access granted for user: admin
+[LogsService] Calculated cumulative counters for user null, action admin_access_granted: previous=0, daily=1, monthly=1
+[LogsService] Logged: info - auth - Admin access granted for user: admin
+7:33:31 PM [vite] Pre-transform error: /home/runner/workspace/client/src/components/LogCard.tsx: Unexpected token, expected ":" (750:9)
+
+748 | </div>
+749 | </div>
+
+750 | )}
+| ^
+751 |
+752 | {/* Action Footer Enhanced */}
+753 | <div className="flex items-center justify-between pt-3 border-t border-border/30">
+
+Just now
+
+Scroll to latest
+
+WE
+
+wekev17995
+Assistant saved your work
+Assistant
+3 minutes ago
+أعتذر عن الخطأ في الكود. أرى المشكلة في ملف LogCard.tsx - هناك خطأ syntax في السطر 750. دعني أصلح هذا المكان المحدد:
+
+client/src/components/LogCard.tsx
+Fix syntax error in LogCard.tsx
+المشكلة كانت في علامة الأقواس المنحنية )} التي لم تكن مطابقة للبنية الصحيحة. الآن يجب أن يعمل الكود بشكل صحيح.
+
+السجلات التي تظهر تدل على أن النظام يعمل بنجاح:
+
+تم تحليل السوق للرمز EUR/USD وتم إعطاء إشارة "sell"
+تم تسجيل البيانات التقنية بنجاح
+تم منح إذن الوصول للمشرف
+الخطأ الوحيد كان syntax error في ملف LogCard.tsx والذي تم إصلاحه الآن
+
+Scroll to latest
+Assistant mode
+
+advanced
