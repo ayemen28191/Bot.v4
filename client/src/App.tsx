@@ -11,6 +11,7 @@ import { ProtectedRoute } from "@/lib/protected-route";
 import { ProtectedAdminRoute } from "@/lib/protected-admin-route";
 import { useStore as useChatStore } from './store/chatStore';
 import { useToast } from '@/hooks/use-toast';
+import { useSessionMonitor } from '@/hooks/use-session-monitor';
 
 // التحميل المتأخر للصفحات
 const TradingSignalPage = lazy(() => import('@/pages/TradingSignalPage'));
@@ -175,6 +176,7 @@ function App() {
       <ThemeProvider defaultTheme="dark" storageKey="binar-theme">
         <TooltipProvider>
           <AuthProvider>
+            <SessionMonitorWrapper />
             <Router />
             <Toaster />
           </AuthProvider>
@@ -182,6 +184,12 @@ function App() {
       </ThemeProvider>
     </QueryClientProvider>
   );
+}
+
+// مكون لتفعيل مراقب الجلسة
+function SessionMonitorWrapper() {
+  useSessionMonitor();
+  return null;
 }
 
 export default App;

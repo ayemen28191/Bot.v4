@@ -21,7 +21,14 @@ export function ProtectedRoute({ path, component: Component }: ProtectedRoutePro
   // منع إعادة التوجيه إذا كنا بالفعل في صفحة تسجيل الدخول
   useEffect(() => {
     if (!isLoading && !user && hasChecked && location !== '/auth') {
-      console.log('🔓 Redirecting to auth page without reload');
+      console.log('🔓 Session lost or expired, redirecting to auth page');
+      // محو أي بيانات محلية متعلقة بالجلسة
+      try {
+        localStorage.removeItem('auth_timestamp');
+        sessionStorage.clear();
+      } catch (e) {
+        console.warn('Could not clear storage on session loss');
+      }
       setLocation('/auth');
     }
   }, [user, isLoading, hasChecked, location, setLocation]);

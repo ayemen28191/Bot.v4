@@ -66,20 +66,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     },
     retry: (failureCount, error) => {
-      // لا نحاول إعادة المحاولة للأخطاء 401 أو أخطاء الشبكة في HTTPS
-      if (error instanceof Error && 
-          (error.message.includes('401') || 
-           error.message.includes('Failed to fetch') ||
-           error instanceof TypeError)) {
-        return false;
+      // إعادة المحاولة للأخطاء الشبكة لكن ليس لأخطاء المصادقة
+      if (error instanceof Error) {
+        // لا نعيد المحاولة لأخطاء المصادقة (401, 403)
+        if (error.message.includes('401') || error.message.includes('403')) {
+          console.log('🔓 Session expired or invalid, redirecting to login');
+          return false;
+        }
+        // إعادة المحاولة لأخطاء الشبكة
+        if (error.message.includes('Failed to fetch') || error instanceof TypeError) {
+          return failureCount < 3; // زيادة عدد المحاولات للشبكة
+        }
       }
       return failureCount < 2;
     },
     staleTime: 10 * 60 * 1000, // 10 دقائق
-    refetchInterval: false, // منع التحديث التلقائي المتكرر
-    refetchOnWindowFocus: false, // منع التحديث عند العودة للنافذة
-    refetchOnMount: false, // منع إعادة التحميل عند تحميل المكون
-    refetchOnReconnect: false, // منع إعادة التحميل عند إعادة الاتصال
+    refetchInterval: 5 * 60 * 1000, // فحص كل 5 دقائق للتأكد من صحة الجلسة
+    refetchOnWindowFocus: true, // التحديث عند العودة للنافذة
+    refetchOnMount: true, // إعادة التحميل عند تحميل المكون لضمان صحة الجلسة
+    refetchOnReconnect: true, // إعادة التحميل عند إعادة الاتصال
   });
 
   // Update user state when query data changes
