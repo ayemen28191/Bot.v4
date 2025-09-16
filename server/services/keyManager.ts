@@ -5,7 +5,6 @@ import {
   createError, 
   createApiLimitError, 
   createDatabaseError, 
-  createSystemError,
   ErrorCategory, 
   ErrorSeverity,
   maskSensitiveData 
@@ -47,9 +46,10 @@ export class KeyManager {
           }
         );
         UnifiedErrorHandler.handleError(validationError, {
-          source: 'KeyManager.getAvailableKeys',
-          context: { provider },
-          operation: 'parameter_validation'
+          requestId: 'keymanager-get-available-keys',
+          clientIP: '127.0.0.1',
+          userAgent: 'KeyManager',
+          timestamp: new Date().toISOString()
         });
         return [];
       }
@@ -93,9 +93,10 @@ export class KeyManager {
       );
       
       UnifiedErrorHandler.handleError(dbError, {
-        source: 'KeyManager.getAvailableKeys',
-        context: { provider, originalError: error?.message },
-        operation: 'database_query'
+        requestId: 'keymanager-get-available-keys-db',
+        clientIP: '127.0.0.1',
+        userAgent: 'KeyManager',
+        timestamp: new Date().toISOString()
       });
       
       return [];
@@ -119,9 +120,10 @@ export class KeyManager {
         }
       );
       UnifiedErrorHandler.handleError(validationError, {
-        source: 'KeyManager.pickNextKey',
-        context: { provider },
-        operation: 'parameter_validation'
+        requestId: 'keymanager-pick-next-key',
+        clientIP: '127.0.0.1',
+        userAgent: 'KeyManager',
+        timestamp: new Date().toISOString()
       });
       return null;
     }
@@ -139,13 +141,10 @@ export class KeyManager {
       );
       
       UnifiedErrorHandler.handleError(dbError, {
-        source: 'KeyManager.pickNextKey',
-        context: { 
-          provider, 
-          originalError: error?.message,
-          maskedError: maskSensitiveData(error)
-        },
-        operation: 'database_transaction'
+        requestId: 'keymanager-pick-next-key-transaction',
+        clientIP: '127.0.0.1',
+        userAgent: 'KeyManager',
+        timestamp: new Date().toISOString()
       });
       
       return null;
@@ -196,9 +195,10 @@ export class KeyManager {
               );
               
               UnifiedErrorHandler.handleError(noKeysError, {
-                source: 'KeyManager.pickNextKey',
-                context: { provider, searchTime: now },
-                operation: 'key_selection'
+                requestId: 'keymanager-no-available-keys',
+                clientIP: '127.0.0.1',
+                userAgent: 'KeyManager',
+                timestamp: new Date().toISOString()
               });
               
               resolve(null);
@@ -260,9 +260,10 @@ export class KeyManager {
         }
       );
       UnifiedErrorHandler.handleError(validationError, {
-        source: 'KeyManager.markKeyFailed',
-        context: { keyId, backoffSeconds },
-        operation: 'parameter_validation'
+        requestId: 'keymanager-mark-key-failed-validation',
+        clientIP: '127.0.0.1',
+        userAgent: 'KeyManager',
+        timestamp: new Date().toISOString()
       });
       return;
     }
@@ -279,9 +280,10 @@ export class KeyManager {
         }
       );
       UnifiedErrorHandler.handleError(validationError, {
-        source: 'KeyManager.markKeyFailed',
-        context: { keyId, backoffSeconds },
-        operation: 'parameter_validation'
+        requestId: 'keymanager-mark-key-failed-backoff-validation',
+        clientIP: '127.0.0.1',
+        userAgent: 'KeyManager',
+        timestamp: new Date().toISOString()
       });
       return;
     }
@@ -303,9 +305,10 @@ export class KeyManager {
           }
         );
         UnifiedErrorHandler.handleError(notFoundError, {
-          source: 'KeyManager.markKeyFailed',
-          context: { keyId, backoffSeconds },
-          operation: 'key_existence_check'
+          requestId: 'keymanager-key-not-found',
+          clientIP: '127.0.0.1',
+          userAgent: 'KeyManager',
+          timestamp: new Date().toISOString()
         });
         return;
       }
@@ -325,15 +328,10 @@ export class KeyManager {
       );
       
       UnifiedErrorHandler.handleError(keyFailedEvent, {
-        source: 'KeyManager.markKeyFailed',
-        context: { 
-          keyId, 
-          provider: existingKey.provider,
-          failedUntil, 
-          backoffSeconds,
-          currentUsage: existingKey.usageToday
-        },
-        operation: 'key_failure_marking'
+        requestId: 'keymanager-key-marked-failed',
+        clientIP: '127.0.0.1',
+        userAgent: 'KeyManager',
+        timestamp: new Date().toISOString()
       });
       
     } catch (error: any) {
@@ -345,14 +343,10 @@ export class KeyManager {
       );
       
       UnifiedErrorHandler.handleError(dbError, {
-        source: 'KeyManager.markKeyFailed',
-        context: { 
-          keyId, 
-          backoffSeconds,
-          originalError: error?.message,
-          maskedError: maskSensitiveData(error)
-        },
-        operation: 'database_update'
+        requestId: 'keymanager-mark-key-failed-db-error',
+        clientIP: '127.0.0.1',
+        userAgent: 'KeyManager',
+        timestamp: new Date().toISOString()
       });
     }
   }
@@ -373,9 +367,10 @@ export class KeyManager {
       );
       
       UnifiedErrorHandler.handleError(dbError, {
-        source: 'KeyManager.getKeyById',
-        context: { keyId, originalError: error?.message },
-        operation: 'database_query'
+        requestId: 'keymanager-get-key-by-id',
+        clientIP: '127.0.0.1',
+        userAgent: 'KeyManager',
+        timestamp: new Date().toISOString()
       });
       
       return null;

@@ -354,20 +354,11 @@ export interface AdminSettings {
 }
 
 // ============================================================================
-// EXPORT CONSOLIDATED TYPES
+// EXPORT CONSOLIDATED TYPES (for backward compatibility)
 // ============================================================================
 
-export type {
-  UnifiedContext as RequestContext, // For backward compatibility
-  UnifiedContext as LoggingContext, // For backward compatibility
-  UnifiedAppState,
-  UnifiedAction,
-  UnifiedAuthState,
-  UnifiedError,
-  UnifiedConnectionState,
-  UnifiedSessionState,
-  UnifiedNotification
-};
+export type RequestContext = UnifiedContext; // For backward compatibility
+export type LoggingContext = UnifiedContext; // For backward compatibility
 
 
 // ============================================================================

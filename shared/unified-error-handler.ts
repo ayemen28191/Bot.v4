@@ -606,7 +606,7 @@ if (typeof setInterval !== 'undefined') {
     const now = Date.now();
     const fiveMinutesAgo = now - 5 * 60 * 1000;
     
-    for (const [key, throttle] of errorReportCache.entries()) {
+    for (const [key, throttle] of Array.from(errorReportCache.entries())) {
       if (throttle.lastOccurrence < fiveMinutesAgo) {
         errorReportCache.delete(key);
       }
