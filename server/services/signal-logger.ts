@@ -688,13 +688,16 @@ class SignalLogger {
 
   // إشعار جميع المستمعين بإشارة جديدة
   private notifyNewSignal(signal: SignalLog): void {
-    this.newSignalCallbacks.forEach(callback => {
-      try {
-        callback(signal);
-      } catch (error) {
-        console.error('[SignalLogger] Error in new signal callback:', error);
-      }
-    });
+    // تأخير صغير للتأكد من اكتمال حفظ البيانات
+    setTimeout(() => {
+      this.newSignalCallbacks.forEach(callback => {
+        try {
+          callback(signal);
+        } catch (error) {
+          console.error('[SignalLogger] Error in new signal callback:', error);
+        }
+      });
+    }, 100); // تأخير 100ms
   }
 }
 
