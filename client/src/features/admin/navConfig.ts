@@ -35,7 +35,7 @@ export const adminNavItems: AdminNavItem[] = [
   {
     id: 'users',
     href: '/admin/users',
-    icon: Users,
+    icon: LayoutDashboard,
     labelKey: 'users',
     labelArabic: 'المستخدمين',
     testId: 'nav-users',
@@ -90,7 +90,7 @@ export const isNavItemActive = (currentPath: string, itemPath: string): boolean 
   if (itemPath === '/admin') {
     return currentPath === '/admin';
   }
-  
+
   // الصفحات الفرعية
   return currentPath.startsWith(itemPath);
 };
