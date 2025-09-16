@@ -46,25 +46,25 @@ export function requestContextMiddleware(req: Request, res: Response, next: Next
   try {
     // إنشاء السياق الجديد
     const context = createRequestContext(req);
-    
+
     // حفظ السياق في res.locals للتوافق مع النظام الحالي
     res.locals.loggingContext = context;
-    
+
     // إضافة معرف الطلب للاستجابة كـ header (مفيد للتتبع)
     res.set('X-Request-ID', context.requestId);
-    
+
     // تشغيل باقي middleware مع السياق المحفوظ في AsyncLocalStorage
     requestContextStorage.run(context, () => {
       next();
     });
-    
+
   } catch (error) {
     console.error('[RequestContext] Error in request context middleware:', error);
-    
+
     // في حالة الخطأ، أنشئ سياق أساسي وتابع
     const fallbackContext = createFallbackContext(req);
     res.locals.loggingContext = fallbackContext;
-    
+
     requestContextStorage.run(fallbackContext, () => {
       next();
     });
@@ -76,7 +76,7 @@ export function requestContextMiddleware(req: Request, res: Response, next: Next
  */
 function createRequestContext(req: Request): RequestContext {
   const requestId = randomUUID();
-  
+
   return {
     requestId,
     sessionId: req.sessionID || undefined,
@@ -120,18 +120,18 @@ function extractClientIP(req: Request): string {
       return firstIP;
     }
   }
-  
+
   // التحقق من headers أخرى شائعة
   const xRealIP = req.get('X-Real-IP');
   if (xRealIP) {
     return xRealIP;
   }
-  
+
   const xClientIP = req.get('X-Client-IP');
   if (xClientIP) {
     return xClientIP;
   }
-  
+
   // استخدام req.ip كـ fallback
   return req.ip || 'unknown';
 }
@@ -209,7 +209,7 @@ export function formatRequestContext(context?: RequestContext): Record<string, a
   if (!context) {
     return {};
   }
-  
+
   return {
     requestId: context.requestId,
     sessionId: context.sessionId,
@@ -261,12 +261,12 @@ export function getLoggingContext(res?: Response): RequestContext | undefined {
   if (asyncContext) {
     return asyncContext;
   }
-  
+
   // في حالة عدم توفره، حاول من res.locals (للتوافق مع النظام السابق)
   if (res?.locals?.loggingContext) {
     return res.locals.loggingContext;
   }
-  
+
   return undefined;
 }
 

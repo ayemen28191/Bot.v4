@@ -1,5 +1,6 @@
+
 import { Request, Response, NextFunction } from 'express';
-import { updateCurrentContext } from './request-context';
+import { updateCurrentContext, getCurrentContext } from './request-context';
 
 /**
  * ======================== Auth Context Updater Middleware ========================
@@ -25,7 +26,6 @@ export function authContextUpdaterMiddleware(req: Request, res: Response, next: 
     // التحقق من وجود مستخدم مصادق عليه
     if (req.isAuthenticated && req.isAuthenticated() && req.user) {
       // تحديث السياق الحالي بمعلومات المستخدم فقط إذا لم يكن محدثاً بالفعل
-      const { getCurrentContext } = require('./request-context');
       const currentContext = getCurrentContext();
       
       if (!currentContext || currentContext.userId !== req.user.id) {
@@ -67,8 +67,11 @@ export function verifyContextUpdate(req: Request): boolean {
     return true; // لا حاجة للتحديث للمستخدمين غير المصادق عليهم
   }
   
-  const { getCurrentContext } = require('./request-context');
-  const context = getCurrentContext();
-  
-  return context && context.userId === req.user.id;
+  try {
+    const context = getCurrentContext();
+    return context && context.userId === req.user.id;
+  } catch (error) {
+    console.error('[AuthContextUpdater] Error verifying context update:', error);
+    return false;
+  }
 }
