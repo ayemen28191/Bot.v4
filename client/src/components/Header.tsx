@@ -14,53 +14,82 @@ import { useState, useEffect } from "react";
 // مكون تبديل اللغة
 function LanguageToggle() {
   const [currentLang, setCurrentLang] = useState(getCurrentLanguage());
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    const handleLanguageChange = () => {
-      setCurrentLang(getCurrentLanguage());
+    const handleLanguageChange = (event: any) => {
+      console.log('Language change event received:', event.detail);
+      const newLang = event.detail?.language || getCurrentLanguage();
+      setCurrentLang(newLang);
+    };
+
+    const handleForceUpdate = () => {
+      const newLang = getCurrentLanguage();
+      console.log('Force translation update:', newLang);
+      setCurrentLang(newLang);
     };
 
     window.addEventListener('languageChanged', handleLanguageChange);
-    return () => window.removeEventListener('languageChanged', handleLanguageChange);
+    window.addEventListener('forceTranslationUpdate', handleForceUpdate);
+    
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange);
+      window.removeEventListener('forceTranslationUpdate', handleForceUpdate);
+    };
   }, []);
 
   const handleLanguageChange = (langId: string) => {
-    changeLanguage(langId, true);
-    setCurrentLang(langId);
+    console.log('Language change requested:', langId);
     
-    // إعادة تحميل الصفحة لتطبيق التغييرات بشكل كامل
-    setTimeout(() => {
-      window.location.reload();
-    }, 100);
+    try {
+      // تحديث اللغة فوراً
+      changeLanguage(langId, true);
+      setCurrentLang(langId);
+      setIsOpen(false);
+      
+      // لا نحتاج لإعادة تحميل الصفحة، فقط نرسل أحداث التحديث
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('languageChanged', { 
+          detail: { language: langId, saveToDatabase: true } 
+        }));
+        window.dispatchEvent(new CustomEvent('forceTranslationUpdate', { 
+          detail: { language: langId } 
+        }));
+      }, 50);
+      
+    } catch (error) {
+      console.error('Error changing language:', error);
+    }
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button 
           variant="ghost" 
           size="icon" 
-          className="text-primary-foreground hover:bg-primary/20" 
+          className="text-primary-foreground hover:bg-primary/20 transition-colors duration-200" 
           data-testid="button-language"
+          title={t('language')}
         >
           <Globe className="h-5 w-5" />
           <span className="sr-only">{t('language')}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-[150px]">
+      <DropdownMenuContent align="end" className="min-w-[150px] z-50">
         {supportedLanguages.map((lang) => (
           <DropdownMenuItem
             key={lang.id}
             onClick={() => handleLanguageChange(lang.id)}
-            className={`cursor-pointer ${
+            className={`cursor-pointer hover:bg-accent transition-colors duration-150 ${
               currentLang === lang.id ? 'bg-accent font-medium' : ''
             }`}
           >
-            <span className={`${currentLang === lang.id ? 'font-bold' : ''}`}>
+            <span className={`flex-1 ${currentLang === lang.id ? 'font-bold' : ''}`}>
               {lang.name}
             </span>
             {currentLang === lang.id && (
-              <span className="ml-auto text-xs">✓</span>
+              <span className="ml-auto text-xs text-primary">✓</span>
             )}
           </DropdownMenuItem>
         ))}
@@ -70,6 +99,9 @@ function LanguageToggle() {
 }
 
 export default function Header() {
+  // تسجيل تشخيصي للتأكد من تحميل المكون
+  console.log('🔨 Header component rendered');
+  
   return (
     <header className="bg-primary text-primary-foreground p-2 shadow-md border-b">
       <div className="container mx-auto flex justify-between items-center">

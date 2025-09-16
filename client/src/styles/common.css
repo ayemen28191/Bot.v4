@@ -473,3 +473,45 @@ html, body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* Header styles */
+.header-glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Language toggle button styles */
+[data-testid="button-language"] {
+  position: relative;
+  overflow: visible;
+}
+
+[data-testid="button-language"]:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}
+
+[data-testid="button-language"] svg {
+  transition: all 0.2s ease;
+}
+
+[data-testid="button-language"]:hover svg {
+  transform: rotate(15deg);
+}
+
+/* Dropdown menu improvements */
+.dropdown-menu-content {
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

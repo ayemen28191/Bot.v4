@@ -2476,10 +2476,13 @@ export const changeLanguage = (newLanguage: string, saveToStorage: boolean = tru
       newLanguage = 'en';
     }
 
-    console.log('Language changed to:', newLanguage, 'Save to DB:', saveToStorage);
+    console.log('🌐 Language change requested:', newLanguage, 'Save to storage:', saveToStorage);
     
     // Update current language
     currentLanguage = newLanguage;
+    
+    // Clear translation cache to force refresh
+    translationCache = {};
     
     // Save to localStorage if requested
     if (saveToStorage) {
@@ -2487,29 +2490,50 @@ export const changeLanguage = (newLanguage: string, saveToStorage: boolean = tru
         const settings = JSON.parse(localStorage.getItem('settings') || '{}');
         settings.language = newLanguage;
         localStorage.setItem('settings', JSON.stringify(settings));
-      } catch {
+        localStorage.setItem('language', newLanguage);
+        console.log('✅ Language saved to localStorage:', newLanguage);
+      } catch (error) {
+        console.error('Error saving language to localStorage:', error);
         localStorage.setItem('settings', JSON.stringify({ language: newLanguage }));
+        localStorage.setItem('language', newLanguage);
       }
     }
 
-    // Apply language settings to document
+    // Apply language settings to document immediately
+    const isRTL = newLanguage === 'ar';
     document.documentElement.setAttribute('lang', newLanguage);
-    document.documentElement.setAttribute('dir', newLanguage === 'ar' ? 'rtl' : 'ltr');
+    document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
 
-    // Add/remove Arabic-specific classes
-    if (newLanguage === 'ar') {
-      document.documentElement.classList.add('ar');
+    // Remove existing direction classes first
+    document.documentElement.classList.remove('ar', 'en', 'hi', 'rtl', 'ltr');
+    document.body.classList.remove('font-arabic');
+
+    // Add new classes
+    if (isRTL) {
+      document.documentElement.classList.add('ar', 'rtl');
       document.body.classList.add('font-arabic');
     } else {
-      document.documentElement.classList.remove('ar');
-      document.body.classList.remove('font-arabic');
+      document.documentElement.classList.add('ltr');
     }
 
-    // Dispatch custom event for components to react to language change
-    window.dispatchEvent(new CustomEvent('languageChanged', {
-      detail: { language: newLanguage, user }
-    }));
+    console.log('✅ DOM updated with language:', newLanguage, 'Direction:', isRTL ? 'RTL' : 'LTR');
 
+    // Dispatch custom events for components to react to language change
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('languageChanged', {
+        detail: { language: newLanguage, user, saveToStorage }
+      }));
+      
+      window.dispatchEvent(new CustomEvent('forceTranslationUpdate', {
+        detail: { language: newLanguage }
+      }));
+      
+      window.dispatchEvent(new CustomEvent('directionChanged', {
+        detail: { direction: isRTL ? 'rtl' : 'ltr', language: newLanguage }
+      }));
+    }, 0);
+
+    console.log('✅ Language change complete:', newLanguage);
     return newLanguage;
   }
   return 'en';
