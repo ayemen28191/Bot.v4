@@ -131,20 +131,25 @@ export default function SettingsPage() {
   });
 
   const handleLanguageChange = (newLang: string) => {
+    console.log('🔧 Settings: Language change requested:', newLang);
+    
     setLanguageState(newLang);
-    // Save to localStorage immediately for responsive UI
-    setLanguage(newLang, false);
+    
+    // Use the improved changeLanguage function
+    changeLanguage(newLang, true);
     
     // Save to database if user is logged in
     if (user) {
       saveUserSettingsMutation.mutate(newLang);
     } else {
-      // For non-logged users, just show success locally
+      // For non-logged users, show success locally
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
       }, 3000);
     }
+    
+    console.log('✅ Settings: Language changed to:', newLang);
   };
 
 

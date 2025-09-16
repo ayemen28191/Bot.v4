@@ -18,14 +18,14 @@ function LanguageToggle() {
 
   useEffect(() => {
     const handleLanguageChange = (event: any) => {
-      console.log('Language change event received:', event.detail);
+      console.log('🌐 Language change event received:', event.detail);
       const newLang = event.detail?.language || getCurrentLanguage();
       setCurrentLang(newLang);
     };
 
     const handleForceUpdate = () => {
       const newLang = getCurrentLanguage();
-      console.log('Force translation update:', newLang);
+      console.log('🔄 Force translation update:', newLang);
       setCurrentLang(newLang);
     };
 
@@ -39,26 +39,31 @@ function LanguageToggle() {
   }, []);
 
   const handleLanguageChange = (langId: string) => {
-    console.log('Language change requested:', langId);
+    console.log('🌍 Language change requested from header:', langId);
     
     try {
-      // تحديث اللغة فوراً
-      changeLanguage(langId, true);
+      // تحديث الحالة المحلية فوراً
       setCurrentLang(langId);
       setIsOpen(false);
       
-      // لا نحتاج لإعادة تحميل الصفحة، فقط نرسل أحداث التحديث
-      setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('languageChanged', { 
-          detail: { language: langId, saveToDatabase: true } 
-        }));
-        window.dispatchEvent(new CustomEvent('forceTranslationUpdate', { 
-          detail: { language: langId } 
-        }));
-      }, 50);
+      // تحديث اللغة باستخدام النظام الجديد
+      changeLanguage(langId, true);
+      
+      // إرسال الأحداث للتأكد من التحديث الفوري
+      window.dispatchEvent(new CustomEvent('languageChanged', { 
+        detail: { language: langId, saveToDatabase: true } 
+      }));
+      
+      window.dispatchEvent(new CustomEvent('forceTranslationUpdate', { 
+        detail: { language: langId } 
+      }));
+      
+      console.log('✅ Language changed successfully to:', langId);
       
     } catch (error) {
-      console.error('Error changing language:', error);
+      console.error('❌ Error changing language:', error);
+      // في حالة الخطأ، استعد إلى اللغة السابقة
+      setCurrentLang(getCurrentLanguage());
     }
   };
 

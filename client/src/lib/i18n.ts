@@ -2472,34 +2472,19 @@ export const changeLanguage = (newLanguage: string, saveToStorage: boolean = tru
     // Validate language
     const supportedLanguages = ['en', 'ar', 'hi'];
     if (!supportedLanguages.includes(newLanguage)) {
-      console.warn('Unsupported language:', newLanguage, 'defaulting to en');
+      console.warn('❌ Unsupported language:', newLanguage, 'defaulting to en');
       newLanguage = 'en';
     }
 
-    console.log('🌐 Language change requested:', newLanguage, 'Save to storage:', saveToStorage);
+    console.log('🌐 Language change initiated:', newLanguage, 'Save to storage:', saveToStorage);
     
-    // Update current language
+    // Update current language immediately
     currentLanguage = newLanguage;
     
     // Clear translation cache to force refresh
     translationCache = {};
     
-    // Save to localStorage if requested
-    if (saveToStorage) {
-      try {
-        const settings = JSON.parse(localStorage.getItem('settings') || '{}');
-        settings.language = newLanguage;
-        localStorage.setItem('settings', JSON.stringify(settings));
-        localStorage.setItem('language', newLanguage);
-        console.log('✅ Language saved to localStorage:', newLanguage);
-      } catch (error) {
-        console.error('Error saving language to localStorage:', error);
-        localStorage.setItem('settings', JSON.stringify({ language: newLanguage }));
-        localStorage.setItem('language', newLanguage);
-      }
-    }
-
-    // Apply language settings to document immediately
+    // Apply language settings to document IMMEDIATELY
     const isRTL = newLanguage === 'ar';
     document.documentElement.setAttribute('lang', newLanguage);
     document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
@@ -2508,7 +2493,7 @@ export const changeLanguage = (newLanguage: string, saveToStorage: boolean = tru
     document.documentElement.classList.remove('ar', 'en', 'hi', 'rtl', 'ltr');
     document.body.classList.remove('font-arabic');
 
-    // Add new classes
+    // Add new classes immediately
     if (isRTL) {
       document.documentElement.classList.add('ar', 'rtl');
       document.body.classList.add('font-arabic');
@@ -2516,24 +2501,37 @@ export const changeLanguage = (newLanguage: string, saveToStorage: boolean = tru
       document.documentElement.classList.add('ltr');
     }
 
-    console.log('✅ DOM updated with language:', newLanguage, 'Direction:', isRTL ? 'RTL' : 'LTR');
+    console.log('✅ DOM updated immediately with language:', newLanguage, 'Direction:', isRTL ? 'RTL' : 'LTR');
 
-    // Dispatch custom events for components to react to language change
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('languageChanged', {
-        detail: { language: newLanguage, user, saveToStorage }
-      }));
-      
-      window.dispatchEvent(new CustomEvent('forceTranslationUpdate', {
-        detail: { language: newLanguage }
-      }));
-      
-      window.dispatchEvent(new CustomEvent('directionChanged', {
-        detail: { direction: isRTL ? 'rtl' : 'ltr', language: newLanguage }
-      }));
-    }, 0);
+    // Save to localStorage if requested
+    if (saveToStorage) {
+      try {
+        const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+        settings.language = newLanguage;
+        localStorage.setItem('settings', JSON.stringify(settings));
+        localStorage.setItem('language', newLanguage);
+        console.log('💾 Language saved to localStorage:', newLanguage);
+      } catch (error) {
+        console.error('❌ Error saving language to localStorage:', error);
+        localStorage.setItem('settings', JSON.stringify({ language: newLanguage }));
+        localStorage.setItem('language', newLanguage);
+      }
+    }
 
-    console.log('✅ Language change complete:', newLanguage);
+    // Dispatch custom events IMMEDIATELY (not with timeout)
+    window.dispatchEvent(new CustomEvent('languageChanged', {
+      detail: { language: newLanguage, user, saveToStorage }
+    }));
+    
+    window.dispatchEvent(new CustomEvent('forceTranslationUpdate', {
+      detail: { language: newLanguage }
+    }));
+    
+    window.dispatchEvent(new CustomEvent('directionChanged', {
+      detail: { direction: isRTL ? 'rtl' : 'ltr', language: newLanguage }
+    }));
+
+    console.log('🎉 Language change completed successfully:', newLanguage);
     return newLanguage;
   }
   return 'en';
