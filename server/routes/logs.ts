@@ -37,17 +37,17 @@ const getLogsQuerySchema = z.object({
 router.get('/logs', isAdmin, async (req, res) => {
   try {
     const validation = getLogsQuerySchema.safeParse(req.query);
-    
+
     if (!validation.success) {
-      return res.status(400).json({ 
-        error: 'معاملات الاستعلام غير صحيحة', 
-        details: validation.error.format() 
+      return res.status(400).json({
+        error: 'معاملات الاستعلام غير صحيحة',
+        details: validation.error.format()
       });
     }
 
     const filters = validation.data;
     const logs = await logsService.getLogs(filters);
-    
+
     res.json(logs);
   } catch (error) {
     console.error('Error fetching system logs:', error);
@@ -70,17 +70,17 @@ router.get('/logs/stats', isAdmin, async (req, res) => {
 router.post('/logs', isAdmin, async (req, res) => {
   try {
     const validation = insertSystemLogSchema.safeParse(req.body);
-    
+
     if (!validation.success) {
-      return res.status(400).json({ 
-        error: 'بيانات السجل غير صحيحة', 
-        details: validation.error.format() 
+      return res.status(400).json({
+        error: 'بيانات السجل غير صحيحة',
+        details: validation.error.format()
       });
     }
 
     const logData = validation.data;
     const newLog = await logsService.log(logData);
-    
+
     res.status(201).json(newLog);
   } catch (error) {
     console.error('Error creating system log:', error);
@@ -92,17 +92,17 @@ router.post('/logs', isAdmin, async (req, res) => {
 router.delete('/logs/old', isAdmin, async (req, res) => {
   try {
     const { daysOld = 30 } = req.body;
-    
+
     if (typeof daysOld !== 'number' || daysOld < 1) {
       return res.status(400).json({ error: 'عدد الأيام يجب أن يكون رقمًا أكبر من 0' });
     }
 
     const deletedCount = await logsService.clearOldLogs(daysOld);
-    
-    res.json({ 
+
+    res.json({
       message: `تم حذف ${deletedCount} سجل قديم`,
       deletedCount,
-      daysOld 
+      daysOld
     });
   } catch (error) {
     console.error('Error clearing old logs:', error);
@@ -110,12 +110,47 @@ router.delete('/logs/old', isAdmin, async (req, res) => {
   }
 });
 
+// حذف جميع السجلات (للمشرفين فقط)
+router.delete('/logs', isAdmin, async (req, res) => {
+  try {
+    // حذف جميع السجلات من قاعدة البيانات
+    const deletedCount = await storage.clearAllSystemLogs();
+
+    // تسجيل عملية الحذف
+    await logsService.logInfo(
+      'logs-management',
+      `تم حذف جميع السجلات (${deletedCount} سجل) بواسطة المشرف`,
+      {
+        deletedCount,
+        adminId: req.user.id,
+        adminUsername: req.user.username,
+        action: 'clear_all_logs'
+      }
+    );
+
+    res.json({
+      success: true,
+      message: 'تم حذف جميع السجلات بنجاح',
+      deletedCount
+    });
+  } catch (error) {
+    console.error('Error clearing logs:', error);
+    await logsService.logError(
+      'logs-management',
+      'فشل في حذف السجلات',
+      { error: error.message }
+    );
+    res.status(500).json({ error: 'Failed to clear logs' });
+  }
+});
+
+
 // ========================= مسارات إعدادات الإشعارات =========================
 
 // دالة لإخفاء الحقول الحساسة (دعم snake_case و camelCase)
 function redactSensitiveFields(setting: any) {
   const redacted = { ...setting };
-  
+
   // إخفاء webhook URL (دعم snake_case و camelCase)
   if (redacted.webhookUrl) {
     redacted.webhookUrl = redacted.webhookUrl.substring(0, 20) + '***REDACTED***';
@@ -123,7 +158,7 @@ function redactSensitiveFields(setting: any) {
   if (redacted.webhook_url) {
     redacted.webhook_url = redacted.webhook_url.substring(0, 20) + '***REDACTED***';
   }
-  
+
   // إخفاء chat ID (دعم snake_case و camelCase)
   if (redacted.chatId) {
     redacted.chatId = '***REDACTED***';
@@ -131,7 +166,7 @@ function redactSensitiveFields(setting: any) {
   if (redacted.chat_id) {
     redacted.chat_id = '***REDACTED***';
   }
-  
+
   return redacted;
 }
 
@@ -139,10 +174,10 @@ function redactSensitiveFields(setting: any) {
 router.get('/notifications', isAdmin, async (req, res) => {
   try {
     const settings = await storage.getAllNotificationSettings();
-    
+
     // إخفاء الحقول الحساسة قبل الإرسال
     const redactedSettings = settings.map(redactSensitiveFields);
-    
+
     res.json(redactedSettings);
   } catch (error) {
     console.error('Error fetching notification settings:', error);
@@ -154,20 +189,20 @@ router.get('/notifications', isAdmin, async (req, res) => {
 router.get('/notifications/:id', isAdmin, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    
+
     if (isNaN(id)) {
       return res.status(400).json({ error: 'معرف الإعداد غير صحيح' });
     }
 
     const setting = await storage.getNotificationSetting(id);
-    
+
     if (!setting) {
       return res.status(404).json({ error: 'إعداد الإشعار غير موجود' });
     }
 
     // إخفاء الحقول الحساسة
     const redactedSetting = redactSensitiveFields(setting);
-    
+
     res.json(redactedSetting);
   } catch (error) {
     console.error('Error fetching notification setting:', error);
@@ -179,26 +214,26 @@ router.get('/notifications/:id', isAdmin, async (req, res) => {
 router.post('/notifications', isAdmin, async (req, res) => {
   try {
     const validation = insertNotificationSettingSchema.safeParse(req.body);
-    
+
     if (!validation.success) {
-      return res.status(400).json({ 
-        error: 'بيانات إعداد الإشعار غير صحيحة', 
-        details: validation.error.format() 
+      return res.status(400).json({
+        error: 'بيانات إعداد الإشعار غير صحيحة',
+        details: validation.error.format()
       });
     }
 
     const settingData = validation.data;
-    
+
     // التحقق من صحة نوع الإشعار
     if (!['telegram', 'slack', 'webhook'].includes(settingData.type)) {
       return res.status(400).json({ error: 'نوع الإشعار غير مدعوم' });
     }
 
     const newSetting = await storage.createNotificationSetting(settingData);
-    
+
     // إخفاء الحقول الحساسة في الاستجابة
     const redactedSetting = redactSensitiveFields(newSetting);
-    
+
     res.status(201).json(redactedSetting);
   } catch (error) {
     console.error('Error creating notification setting:', error);
@@ -210,7 +245,7 @@ router.post('/notifications', isAdmin, async (req, res) => {
 router.put('/notifications/:id', isAdmin, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    
+
     if (isNaN(id)) {
       return res.status(400).json({ error: 'معرف الإعداد غير صحيح' });
     }
@@ -222,10 +257,10 @@ router.put('/notifications/:id', isAdmin, async (req, res) => {
     }
 
     const updatedSetting = await storage.updateNotificationSetting(id, req.body);
-    
+
     // إخفاء الحقول الحساسة
     const redactedSetting = redactSensitiveFields(updatedSetting);
-    
+
     res.json(redactedSetting);
   } catch (error) {
     console.error('Error updating notification setting:', error);
@@ -237,7 +272,7 @@ router.put('/notifications/:id', isAdmin, async (req, res) => {
 router.delete('/notifications/:id', isAdmin, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    
+
     if (isNaN(id)) {
       return res.status(400).json({ error: 'معرف الإعداد غير صحيح' });
     }
@@ -249,7 +284,7 @@ router.delete('/notifications/:id', isAdmin, async (req, res) => {
     }
 
     await storage.deleteNotificationSetting(id);
-    
+
     res.status(204).send();
   } catch (error) {
     console.error('Error deleting notification setting:', error);
@@ -261,7 +296,7 @@ router.delete('/notifications/:id', isAdmin, async (req, res) => {
 router.post('/notifications/:id/test', isAdmin, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    
+
     if (isNaN(id)) {
       return res.status(400).json({ error: 'معرف الإعداد غير صحيح' });
     }
@@ -285,7 +320,7 @@ router.post('/notifications/:id/test', isAdmin, async (req, res) => {
     // استيراد الخدمة واختبار الإشعار
     const { notificationService } = await import('../services/notification-service');
     const success = await notificationService.testNotification(config);
-    
+
     if (success) {
       res.json({ message: 'تم إرسال اختبار الإشعار بنجاح' });
     } else {

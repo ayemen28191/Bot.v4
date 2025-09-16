@@ -589,7 +589,7 @@ export function LogsStatsDashboard({ logs, onFilterChange }: LogsStatsDashboardP
               {t('no_data_available')}
             </h3>
             <p className="text-sm text-muted-foreground">
-              {t('stats_loading')}
+              لا توجد سجلات متاحة. إما أنه لم يتم إنشاء سجلات بعد أو تم حذف جميع السجلات.
             </p>
           </CardContent>
         </Card>

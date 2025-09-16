@@ -512,6 +512,22 @@ class LogsService {
     }
   }
 
+  // مسح جميع السجلات
+  async clearAllLogs(): Promise<number> {
+    try {
+      const deletedCount = await storage.clearAllSystemLogs();
+      
+      // مسح الـ buffer أيضاً
+      this.logBuffer = [];
+      
+      console.log(`[LogsService] Cleared all logs: ${deletedCount} logs deleted`);
+      return deletedCount;
+    } catch (error) {
+      console.error('[LogsService] Failed to clear all logs:', error);
+      return 0;
+    }
+  }
+
   // مساعدات للتسجيل السريع مع دعم السياق التلقائي من AsyncLocalStorage
   // الآن لا حاجة لتمرير userId أو res - سيتم أخذهم من AsyncLocalStorage تلقائياً
   async logError(source: string, message: string, meta?: any, userId?: number, res?: Response): Promise<SystemLog> {

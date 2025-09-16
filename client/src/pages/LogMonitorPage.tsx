@@ -206,12 +206,40 @@ export default function LogMonitorPage() {
     });
   }, [logs, filterLevel, filterSource, search]);
 
-  function clearLogs() {
-    setLogs([]);
-    toast({
-      title: "تم مسح السجلات",
-      description: "تم مسح جميع السجلات من الذاكرة"
-    });
+  async function clearLogs() {
+    if (!confirm("هل أنت متأكد من حذف جميع السجلات؟ هذا الإجراء لا يمكن التراجع عنه.")) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/logs', {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setLogs([]);
+        toast({
+          title: "تم مسح السجلات",
+          description: `تم حذف ${result.deletedCount} سجل من قاعدة البيانات`
+        });
+      } else {
+        const error = await response.json();
+        toast({
+          title: "خطأ في الحذف",
+          description: error.error || "فشل في حذف السجلات",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error clearing logs:', error);
+      toast({
+        title: "خطأ في الاتصال",
+        description: "فشل في الاتصال بالخادم",
+        variant: "destructive"
+      });
+    }
   }
 
   function downloadLogs() {

@@ -260,13 +260,41 @@ export default function EnhancedLogMonitorPage() {
     });
   };
 
-  const handleClearLogs = () => {
-    if (confirm(t('clear_logs_confirm'))) {
-      setLogs([]);
+  const handleClearLogs = async () => {
+    if (!confirm(t('clear_logs_confirm'))) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/logs', {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setLogs([]);
+        toast({
+          title: t('logs_cleared'),
+          description: `تم حذف ${result.deletedCount} سجل من قاعدة البيانات`,
+          duration: 3000
+        });
+      } else {
+        const error = await response.json();
+        toast({
+          title: t('error_title'),
+          description: error.error || t('delete_failed'),
+          variant: "destructive",
+          duration: 3000
+        });
+      }
+    } catch (error) {
+      console.error('Error clearing logs:', error);
       toast({
-        title: t('logs_cleared'),
-        description: t('logs_cleared_desc'),
-        duration: 2000
+        title: t('error_network_failure'),
+        description: t('connection_failed'),
+        variant: "destructive",
+        duration: 3000
       });
     }
   };

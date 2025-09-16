@@ -64,6 +64,7 @@ export interface IStorage {
   getLogsCountByLevel(): Promise<Record<string, number>>;
   getLogsCountBySource(): Promise<Record<string, number>>;
   deleteOldSystemLogs(cutoffDate: string): Promise<number>;
+  clearAllSystemLogs(): Promise<number>;
 
   // Notification settings methods
   getNotificationSetting(id: number): Promise<NotificationSetting | undefined>;
@@ -204,7 +205,7 @@ try {
       console.error('Error creating config_keys table:', err);
     } else {
       console.log('Config_keys table created or already exists');
-      
+
       // تحقق من وجود schema الجدول بدلاً من محاولة التغيير دائماً
       sqliteDb.get(`PRAGMA table_info(config_keys)`, (pragmaErr, result) => {
         if (!pragmaErr) {
@@ -297,7 +298,7 @@ try {
       console.error('Error creating system_logs table:', err);
     } else {
       console.log('System_logs table created or already exists');
-      
+
       // إضافة الأعمدة الجديدة للجداول الموجودة
       const columnsToAdd = [
         'ADD COLUMN request_id TEXT',
@@ -316,7 +317,7 @@ try {
         'ADD COLUMN user_display_name TEXT',
         'ADD COLUMN user_avatar TEXT'
       ];
-      
+
       columnsToAdd.forEach((alteration, index) => {
         sqliteDb.run(`ALTER TABLE system_logs ${alteration}`, (alterErr) => {
           if (alterErr && !alterErr.message.includes('duplicate column name')) {
@@ -390,7 +391,7 @@ try {
       console.error('Error creating signal_logs table:', err);
     } else {
       console.log('Signal_logs table created or already exists');
-      
+
       // إضافة العمود request_id للجداول الموجودة إذا لم يكن موجوداً
       sqliteDb.run('ALTER TABLE signal_logs ADD COLUMN request_id TEXT', (alterErr) => {
         if (alterErr && !alterErr.message.includes('duplicate column name')) {
@@ -399,7 +400,7 @@ try {
           console.log('✓ Added request_id column to signal_logs');
         }
       });
-      
+
       // إضافة فهارس الأداء للحقول المهمة في جدول سجلات الإشارات
       sqliteDb.exec(`
         CREATE INDEX IF NOT EXISTS idx_signal_logs_requested_at ON signal_logs(requested_at);
@@ -430,14 +431,14 @@ try {
     // Check if table exists and has normalized_user_id column
     sqliteDb.get("SELECT sql FROM sqlite_master WHERE type='table' AND name='user_counters'", (err, row: any) => {
       const hasNormalizedUserId = row && row.sql && row.sql.includes('normalized_user_id');
-      
+
       if (!hasNormalizedUserId) {
         console.log('User_counters table needs recreation to add normalized_user_id column');
-        
+
         // Drop existing table if it exists and recreate with correct structure
         sqliteDb.exec(`
           DROP TABLE IF EXISTS user_counters;
-          
+
           CREATE TABLE user_counters (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
@@ -457,15 +458,15 @@ try {
             console.error('Error recreating user_counters table:', createErr);
           } else {
             console.log('✅ User_counters table recreated successfully with normalized_user_id');
-            
+
             // إنشاء فهارس الأداء
             sqliteDb.exec(`
               CREATE INDEX IF NOT EXISTS idx_user_counters_user_period 
               ON user_counters(user_id, period, date DESC);
-              
+
               CREATE INDEX IF NOT EXISTS idx_user_counters_action_period 
               ON user_counters(action, period, date DESC);
-              
+
               CREATE INDEX IF NOT EXISTS idx_user_counters_normalized_user_id 
               ON user_counters(normalized_user_id, period, date DESC);
             `, (indexErr) => {
@@ -479,15 +480,15 @@ try {
         });
       } else {
         console.log('User_counters table already has correct structure');
-        
+
         // إنشاء فهارس الأداء
         sqliteDb.exec(`
           CREATE INDEX IF NOT EXISTS idx_user_counters_user_period 
           ON user_counters(user_id, period, date DESC);
-          
+
           CREATE INDEX IF NOT EXISTS idx_user_counters_action_period 
           ON user_counters(action, period, date DESC);
-          
+
           CREATE INDEX IF NOT EXISTS idx_user_counters_normalized_user_id 
           ON user_counters(normalized_user_id, period, date DESC);
         `, (indexErr) => {
@@ -1411,11 +1412,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   // ========================= دوال إدارة المفاتيح المتقدمة =========================
-  
+
   async updateKeyUsage(keyId: number): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       const now = new Date().toISOString();
-      
+
       sqliteDb.run(
         'UPDATE config_keys SET last_used_at = ?, usage_today = usage_today + 1 WHERE id = ?',
         [now, keyId],
@@ -1453,7 +1454,7 @@ export class DatabaseStorage implements IStorage {
   async resetDailyUsage(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       const now = new Date().toISOString();
-      
+
       sqliteDb.run(
         'UPDATE config_keys SET usage_today = 0, failed_until = NULL, updated_at = ?',
         [now],
@@ -1478,11 +1479,11 @@ export class DatabaseStorage implements IStorage {
         const now = new Date().toISOString();
         const today = now.split('T')[0]; // YYYY-MM-DD format
         const thisMonth = `${now.split('-')[0]}-${now.split('-')[1]}-01`; // YYYY-MM-01 format
-        
+
         let calculatedPreviousTotal = log.previousTotal || null;
         let calculatedDailyTotal = log.dailyTotal || null;
         let calculatedMonthlyTotal = log.monthlyTotal || null;
-        
+
         // حساب العدادات فقط إذا كان لدينا userId و action
         if (log.userId && log.action) {
           try {
@@ -1491,26 +1492,26 @@ export class DatabaseStorage implements IStorage {
               this.getCounter(log.userId, log.action, today, 'daily'),
               this.getCounter(log.userId, log.action, thisMonth, 'monthly')
             ]);
-            
+
             // حساب previousTotal (المجموع الإجمالي للعمل قبل هذا السجل)
             calculatedPreviousTotal = (dailyCounter?.count || 0);
-            
+
             // زيادة العدادات وحفظها
             const [updatedDailyCounter, updatedMonthlyCounter] = await Promise.all([
               this.createOrUpdateCounter(log.userId, log.action, today, 'daily', 1),
               this.createOrUpdateCounter(log.userId, log.action, thisMonth, 'monthly', 1)
             ]);
-            
+
             // حساب القيم الجديدة
             calculatedDailyTotal = updatedDailyCounter.count;
             calculatedMonthlyTotal = updatedMonthlyCounter.count;
-            
+
           } catch (counterError) {
             console.warn('Error calculating counters for system log:', counterError);
             // في حالة الفشل، نستخدم القيم المرسلة أو null
           }
         }
-        
+
         sqliteDb.run(
           `INSERT INTO system_logs (
             timestamp, level, source, message, meta, 
@@ -1694,14 +1695,37 @@ export class DatabaseStorage implements IStorage {
 
   async deleteOldSystemLogs(cutoffDate: string): Promise<number> {
     return new Promise<number>((resolve, reject) => {
-      sqliteDb.run('DELETE FROM system_logs WHERE timestamp < ?', [cutoffDate], function(err) {
-        if (err) {
-          console.error('Error deleting old system logs:', err);
-          reject(err);
-        } else {
-          resolve(this.changes || 0);
+      sqliteDb.run(
+        'DELETE FROM system_logs WHERE timestamp < ?',
+        [cutoffDate],
+        function(err) {
+          if (err) {
+            console.error('Error deleting old system logs:', err);
+            reject(err);
+          } else {
+            console.log(`Deleted ${this.changes} old system logs`);
+            resolve(this.changes || 0);
+          }
         }
-      });
+      );
+    });
+  }
+
+  async clearAllSystemLogs(): Promise<number> {
+    return new Promise<number>((resolve, reject) => {
+      sqliteDb.run(
+        'DELETE FROM system_logs',
+        [],
+        function(err) {
+          if (err) {
+            console.error('Error clearing all system logs:', err);
+            reject(err);
+          } else {
+            console.log(`Cleared ${this.changes} system logs`);
+            resolve(this.changes || 0);
+          }
+        }
+      );
     });
   }
 
@@ -1766,7 +1790,7 @@ export class DatabaseStorage implements IStorage {
   async createNotificationSetting(setting: InsertNotificationSetting): Promise<NotificationSetting> {
     return new Promise<NotificationSetting>((resolve, reject) => {
       const now = new Date().toISOString();
-      
+
       sqliteDb.run(
         'INSERT INTO notification_settings (type, name, is_enabled, webhook_url, chat_id, alert_levels, threshold, cooldown_minutes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
         [setting.type, setting.name, setting.isEnabled ? 1 : 0, setting.webhookUrl || null, setting.chatId || null, setting.alertLevels, setting.threshold, setting.cooldownMinutes, now, now],
@@ -1881,7 +1905,7 @@ export class DatabaseStorage implements IStorage {
   async createSignalLog(log: InsertSignalLog): Promise<SignalLog> {
     return new Promise<SignalLog>((resolve, reject) => {
       const now = new Date().toISOString();
-      
+
       sqliteDb.run(
         `INSERT INTO signal_logs (
           user_id, username, request_id, symbol, market_type, timeframe, platform, status, signal, 
@@ -2357,7 +2381,7 @@ export class DatabaseStorage implements IStorage {
       try {
         const parser = new UAParser(userAgent);
         const parsedResult = parser.getResult();
-        
+
         result.deviceInfo = {
           device: parsedResult.device?.type || 'desktop',
           os: `${parsedResult.os?.name || 'Unknown'} ${parsedResult.os?.version || ''}`.trim(),
@@ -2401,7 +2425,7 @@ export class DatabaseStorage implements IStorage {
         }
         return now.toISOString().split('T')[0]; // YYYY-MM-DD
       }
-      
+
       // Format based on period
       if (period === 'monthly') {
         return `${parsedDate.getFullYear()}-${String(parsedDate.getMonth() + 1).padStart(2, '0')}-01`;
@@ -2429,7 +2453,7 @@ export class DatabaseStorage implements IStorage {
     return new Promise<UserCounter>((resolve, reject) => {
       const now = new Date().toISOString();
       const normalizedDate = this.normalizeDateFormat(date, period);
-      
+
       // Use UPSERT with normalized_user_id for NULL userId handling
       sqliteDb.run(`
         INSERT INTO user_counters (user_id, action, date, period, count, last_updated, created_at, updated_at)
@@ -2486,7 +2510,7 @@ export class DatabaseStorage implements IStorage {
   ): Promise<UserCounter | undefined> {
     return new Promise<UserCounter | undefined>((resolve, reject) => {
       const normalizedDate = this.normalizeDateFormat(date, period);
-      
+
       sqliteDb.get(
         'SELECT * FROM user_counters WHERE normalized_user_id = COALESCE(?, -1) AND action = ? AND date = ? AND period = ?',
         [userId, action, normalizedDate, period],
