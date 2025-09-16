@@ -5,6 +5,7 @@ import {
   ErrorCategory,
   createValidationError,
   toErrorResponse,
+  maskSensitiveData,
   ERROR_CODES,
   ERROR_MESSAGES
 } from '@shared/error-types';
@@ -43,7 +44,7 @@ export function validateRequest(options: ValidateRequestOptions) {
             appError.details = {
               ...appError.details,
               section: 'body',
-              originalData: req.body
+              originalData: maskSensitiveData(req.body) // ✅ تمويه البيانات الحساسة قبل التسجيل
             };
             validationErrors.push(appError);
           } else {
@@ -62,7 +63,7 @@ export function validateRequest(options: ValidateRequestOptions) {
             appError.details = {
               ...appError.details,
               section: 'query',
-              originalData: req.query
+              originalData: maskSensitiveData(req.query) // ✅ تمويه البيانات الحساسة قبل التسجيل
             };
             validationErrors.push(appError);
           } else {
@@ -81,7 +82,7 @@ export function validateRequest(options: ValidateRequestOptions) {
             appError.details = {
               ...appError.details,
               section: 'params',
-              originalData: req.params
+              originalData: maskSensitiveData(req.params) // ✅ تمويه البيانات الحساسة قبل التسجيل
             };
             validationErrors.push(appError);
           } else {

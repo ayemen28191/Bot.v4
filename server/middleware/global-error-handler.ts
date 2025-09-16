@@ -14,6 +14,7 @@ import {
   toErrorResponse,
   getErrorMessage,
   shouldReportError,
+  maskErrorDetails,
   ERROR_CODES,
   ERROR_MESSAGES
 } from '@shared/error-types';
@@ -148,7 +149,7 @@ async function logError(error: AppError, context: ErrorContext): Promise<void> {
       return;
     }
 
-    // تجهيز بيانات السجل
+    // تجهيز بيانات السجل مع تمويه البيانات الحساسة
     const logData = {
       timestamp: context.timestamp,
       level: 'error',
@@ -163,7 +164,7 @@ async function logError(error: AppError, context: ErrorContext): Promise<void> {
       ip: context.ip,
       url: context.req.url,
       method: context.req.method,
-      details: error.details,
+      details: maskErrorDetails(error.details), // ✅ تمويه البيانات الحساسة قبل التسجيل
       errorHash: errorHash.substring(0, 8), // أول 8 أحرف للمرجع
       occurrence: throttle.count > 1 ? `${throttle.count}x` : 'first'
     };

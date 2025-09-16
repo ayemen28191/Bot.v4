@@ -462,6 +462,190 @@ export function shouldReportError(error: AppError): boolean {
 }
 
 // =============================================================================
+// نظام تمويه البيانات الحساسة في السجلات
+// =============================================================================
+
+// قائمة شاملة للحقول الحساسة - قابلة للتوسعة
+const SENSITIVE_FIELD_PATTERNS = [
+  // كلمات المرور وإعدادات المصادقة
+  /password/i,
+  /passwd/i,
+  /pwd/i,
+  /pass/i,
+  /secret/i,
+  /token/i,
+  /auth/i,
+  /credential/i,
+  
+  // مفاتيح API والمفاتيح العامة
+  /api.*key/i,
+  /apikey/i,
+  /access.*key/i,
+  /private.*key/i,
+  /public.*key/i,
+  /key.*secret/i,
+  /client.*secret/i,
+  /bearer/i,
+  
+  // بيانات مالية وبطاقات
+  /credit.*card/i,
+  /card.*number/i,
+  /cvv/i,
+  /cvc/i,
+  /pin/i,
+  /ssn/i,
+  /social.*security/i,
+  
+  // بيانات شخصية حساسة
+  /email/i,
+  /phone/i,
+  /mobile/i,
+  /address/i,
+  /location/i,
+  
+  // مفاتيح التشفير والأمان
+  /hash/i,
+  /salt/i,
+  /nonce/i,
+  /signature/i,
+  /cert/i,
+  /certificate/i,
+  
+  // معرفات وجلسات
+  /session.*id/i,
+  /user.*id/i,
+  /refresh.*token/i,
+  /csrf/i,
+  /xsrf/i,
+  
+  // مفاتيح خدمات معينة
+  /stripe/i,
+  /paypal/i,
+  /oauth/i,
+  /jwt/i,
+  /twilio/i,
+  /sendgrid/i,
+  /binance/i,
+  /coinbase/i
+];
+
+// تحديد ما إذا كان الحقل حساس
+function isSensitiveField(fieldName: string): boolean {
+  return SENSITIVE_FIELD_PATTERNS.some(pattern => pattern.test(fieldName));
+}
+
+// دالة تمويه البيانات الحساسة
+export function maskSensitiveData(data: any, maxDepth: number = 10): any {
+  // تجنب التكرار اللا نهائي
+  if (maxDepth <= 0) {
+    return '[MAX_DEPTH_REACHED]';
+  }
+
+  // معالجة القيم البدائية
+  if (data === null || data === undefined) {
+    return data;
+  }
+
+  if (typeof data === 'string') {
+    return data.length > 0 ? `[MASKED_STRING_${data.length}chars]` : '[EMPTY_STRING]';
+  }
+
+  if (typeof data === 'number' || typeof data === 'boolean') {
+    return '[MASKED_VALUE]';
+  }
+
+  // معالجة التواريخ
+  if (data instanceof Date) {
+    return '[MASKED_DATE]';
+  }
+
+  // معالجة المصفوفات
+  if (Array.isArray(data)) {
+    return data.map((item, index) => {
+      // للمصفوفات الكبيرة، نمسك فقط أول عدد من العناصر
+      if (index >= 5) {
+        return `[...and ${data.length - 5} more items]`;
+      }
+      return maskSensitiveData(item, maxDepth - 1);
+    });
+  }
+
+  // معالجة الكائنات
+  if (typeof data === 'object' && data !== null) {
+    const masked: Record<string, any> = {};
+    const entries = Object.entries(data);
+    
+    // للكائنات الكبيرة، نحد من عدد الخصائص
+    const maxProperties = 20;
+    
+    for (let i = 0; i < Math.min(entries.length, maxProperties); i++) {
+      const [key, value] = entries[i];
+      
+      if (isSensitiveField(key)) {
+        // تمويه الحقول الحساسة مع إعطاء تلميح عن نوع البيانات
+        if (typeof value === 'string') {
+          masked[key] = value.length > 0 ? `[MASKED_${key.toUpperCase()}_${value.length}chars]` : '[EMPTY]';
+        } else if (typeof value === 'number') {
+          masked[key] = '[MASKED_NUMBER]';
+        } else if (Array.isArray(value)) {
+          masked[key] = `[MASKED_ARRAY_${value.length}items]`;
+        } else if (typeof value === 'object' && value !== null) {
+          masked[key] = '[MASKED_OBJECT]';
+        } else {
+          masked[key] = `[MASKED_${typeof value}]`;
+        }
+      } else {
+        // للحقول غير الحساسة، تطبيق التمويه بشكل تكراري
+        masked[key] = maskSensitiveData(value, maxDepth - 1);
+      }
+    }
+    
+    // إضافة تلميح إذا كان هناك خصائص أكثر
+    if (entries.length > maxProperties) {
+      masked['...'] = `[${entries.length - maxProperties} more properties hidden]`;
+    }
+    
+    return masked;
+  }
+
+  // للأنواع غير المعروفة
+  return `[UNKNOWN_TYPE_${typeof data}]`;
+}
+
+// دالة مخصصة لتمويه بيانات طلبات الأخطاء
+export function maskErrorDetails(details: any): any {
+  if (!details || typeof details !== 'object') {
+    return details;
+  }
+
+  const maskedDetails = { ...details };
+
+  // تمويه originalData بشكل خاص
+  if (maskedDetails.originalData) {
+    maskedDetails.originalData = maskSensitiveData(maskedDetails.originalData);
+  }
+
+  // تمويه أي بيانات حساسة أخرى في التفاصيل
+  Object.keys(maskedDetails).forEach(key => {
+    if (isSensitiveField(key)) {
+      maskedDetails[key] = maskSensitiveData(maskedDetails[key]);
+    }
+  });
+
+  return maskedDetails;
+}
+
+// دالة لإضافة حقول حساسة جديدة في وقت التشغيل
+export function addSensitiveFieldPattern(pattern: RegExp): void {
+  SENSITIVE_FIELD_PATTERNS.push(pattern);
+}
+
+// دالة للحصول على قائمة الحقول الحساسة (للتطوير والاختبار)
+export function getSensitiveFieldPatterns(): RegExp[] {
+  return [...SENSITIVE_FIELD_PATTERNS];
+}
+
+// =============================================================================
 // معرفات أخطاء شائعة
 // =============================================================================
 
