@@ -5,11 +5,16 @@ import { signalLogger } from './signal-logger';
 import {
   AppError,
   ErrorCategory,
+  ErrorSeverity,
+  createError,
   createNetworkError,
   createApiLimitError,
+  createAuthenticationError,
+  convertJavaScriptError,
   ERROR_CODES,
   ERROR_MESSAGES
 } from '@shared/error-types';
+import { catchAsync } from '../middleware/global-error-handler';
 
 // تعريف واجهة نتيجة المؤشرات الفنية
 export interface TechnicalIndicatorResult {
@@ -61,45 +66,61 @@ async function handleTechnicalAnalysisError(
   usedKeyName?: string,
   timeframe: string = '1H'
 ): Promise<TechnicalIndicatorResult> {
-  // معالجة أخطاء محددة
+  // تحويل الخطأ إلى نظام الأخطاء الموحد
+  let unifiedError: AppError;
+  
+  // معالجة أخطاء محددة بناءً على نوع الخطأ
   if (error.response?.status === 429 || error.message?.includes('429')) {
-    // تمييز المفتاح كفاشل فقط لأخطاء تجاوز الحد
+    // تمييز المفتاح كفاشل لأخطاء تجاوز الحد
     if (usedKeyName) {
       markKeyAsFailed(usedKeyName);
     }
-    console.warn(`تم تجاوز حد API للعملية: ${operation}${symbol ? ` للرمز ${symbol}` : ''}`);
-    return {
-      value: 50, // قيمة محايدة
-      signal: 'neutral',
-      timeframe
-    };
-  }
-
-  if (error.response?.status === 401 || error.response?.status === 403) {
+    unifiedError = createApiLimitError(
+      ERROR_CODES.API_RATE_LIMITED,
+      ERROR_MESSAGES.API_LIMIT.RATE_LIMITED.ar,
+      'Technical Analysis API',
+      undefined,
+      undefined
+    );
+  } else if (error.response?.status === 401 || error.response?.status === 403) {
     // تمييز المفتاح كفاشل لأخطاء المصادقة
     if (usedKeyName) {
       markKeyAsFailed(usedKeyName);
     }
-    console.error(`خطأ في المصادقة للعملية: ${operation}${symbol ? ` للرمز ${symbol}` : ''}`);
-    return {
-      value: 50,
-      signal: 'neutral', 
-      timeframe
+    unifiedError = createAuthenticationError(
+      ERROR_CODES.AUTH_INVALID_CREDENTIALS,
+      ERROR_MESSAGES.AUTHENTICATION.INVALID_CREDENTIALS.ar
+    );
+  } else if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+    unifiedError = createNetworkError(
+      ERROR_CODES.NETWORK_CONNECTION_FAILED,
+      ERROR_MESSAGES.NETWORK.CONNECTION_FAILED.ar,
+      error.config?.url || 'unknown'
+    );
+  } else {
+    // تحويل خطأ JavaScript عادي إلى نظام موحد
+    unifiedError = convertJavaScriptError(error, ErrorCategory.SYSTEM);
+    // إضافة معلومات إضافية للتشخيص
+    unifiedError.details = {
+      ...unifiedError.details,
+      operation,
+      symbol,
+      timeframe,
+      usedKeyName
     };
   }
 
-  if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
-    // لا تميز المفتاح كفاشل لأخطاء الاتصال العادية
-    console.error(`خطأ في الاتصال للعملية: ${operation}${symbol ? ` للرمز ${symbol}` : ''}`);
-    return {
-      value: 50,
-      signal: 'neutral',
-      timeframe
-    };
-  }
+  // تسجيل الخطأ في النظام الموحد
+  console.error(`Technical Analysis Error - ${operation}:`, {
+    category: unifiedError.category,
+    code: unifiedError.code,
+    message: unifiedError.message,
+    details: unifiedError.details,
+    symbol,
+    timeframe
+  });
 
-  // خطأ عام - لا تميز المفتاح كفاشل للأخطاء العامة
-  console.error(`خطأ في ${operation}${symbol ? ` للرمز ${symbol}` : ''}:`, error.message || error);
+  // إرجاع قيمة محايدة للمؤشر
   return {
     value: 50,
     signal: 'neutral',
@@ -107,9 +128,25 @@ async function handleTechnicalAnalysisError(
   };
 }
 
-// دالة مساعدة لمعالجة أخطاء تحليل السوق
+// دالة مساعدة لمعالجة أخطاء تحليل السوق باستخدام النظام الموحد
 function handleMarketAnalysisError(error: any, operation: string): MarketAnalysisResult {
-  console.error(`خطأ في تحليل السوق - ${operation}:`, error.message || error);
+  // تحويل الخطأ إلى نظام الأخطاء الموحد
+  const unifiedError = convertJavaScriptError(error, ErrorCategory.BUSINESS_LOGIC);
+  // إضافة معلومات إضافية للتشخيص
+  unifiedError.details = {
+    ...unifiedError.details,
+    operation: `market_analysis_${operation}`,
+    component: 'technical-analysis'
+  };
+
+  // تسجيل الخطأ في النظام الموحد
+  console.error(`Market Analysis Error - ${operation}:`, {
+    category: unifiedError.category,
+    code: unifiedError.code,
+    message: unifiedError.message,
+    messageAr: unifiedError.messageAr,
+    details: unifiedError.details
+  });
   
   return {
     trend: 'neutral',
@@ -297,19 +334,30 @@ async function getRSI(symbol: string, timeframe: string): Promise<TechnicalIndic
       timeout: 5000
     });
 
-    // التحقق من وجود خطأ تجاوز الحد اليومي
-    if (response.data && response.data.code === 429) {
-      const error = createApiLimitError(
+    // التحقق من وجود أخطاء API باستخدام النظام الموحد
+    if (response.data?.code === 429) {
+      throw createApiLimitError(
         ERROR_CODES.API_RATE_LIMITED,
         ERROR_MESSAGES.API_LIMIT.RATE_LIMITED.ar,
         'TwelveData',
         undefined,
         undefined
       );
-      throw error;
+    }
+    
+    if (response.data?.status === 'error') {
+      throw createError(
+        ErrorCategory.API_LIMIT,
+        ERROR_CODES.API_KEY_INVALID,
+        response.data.message || 'TwelveData API returned error response',
+        {
+          severity: ErrorSeverity.MEDIUM,
+          details: { symbol, timeframe, provider: 'TwelveData', operation: 'getRSI' }
+        }
+      );
     }
 
-    if (response.data && response.data.values && response.data.values.length > 0) {
+    if (response.data?.values?.length > 0) {
       const rsiValue = parseFloat(response.data.values[0].rsi);
       
       // تحديد الإشارة بناءً على قيمة RSI
@@ -327,12 +375,15 @@ async function getRSI(symbol: string, timeframe: string): Promise<TechnicalIndic
       };
     }
     
-    const error = createNetworkError(
-      ERROR_CODES.NETWORK_BAD_REQUEST,
-      'لا توجد بيانات RSI متاحة',
-      'https://api.twelvedata.com/rsi'
+    throw createError(
+      ErrorCategory.BUSINESS_LOGIC,
+      ERROR_CODES.SYSTEM_INTERNAL_ERROR,
+      'لا توجد بيانات RSI متاحة للرمز المطلوب',
+      {
+        severity: ErrorSeverity.MEDIUM,
+        details: { symbol, timeframe, url: 'https://api.twelvedata.com/rsi' }
+      }
     );
-    throw error;
   } catch (error) {
     return await handleTechnicalAnalysisError(error, 'getRSI', symbol, usedKeyName, timeframe);
   }
@@ -358,19 +409,30 @@ async function getMACD(symbol: string, timeframe: string): Promise<TechnicalIndi
       timeout: 5000
     });
 
-    // التحقق من وجود خطأ تجاوز الحد اليومي
-    if (response.data && response.data.code === 429) {
-      const error = createApiLimitError(
+    // التحقق من وجود أخطاء API باستخدام النظام الموحد
+    if (response.data?.code === 429) {
+      throw createApiLimitError(
         ERROR_CODES.API_RATE_LIMITED,
         ERROR_MESSAGES.API_LIMIT.RATE_LIMITED.ar,
         'TwelveData',
         undefined,
         undefined
       );
-      throw error;
     }
     
-    if (response.data && response.data.values && response.data.values.length > 0) {
+    if (response.data?.status === 'error') {
+      throw createError(
+        ErrorCategory.API_LIMIT,
+        ERROR_CODES.API_KEY_INVALID,
+        response.data.message || 'TwelveData API returned error response',
+        {
+          severity: ErrorSeverity.MEDIUM,
+          details: { symbol, timeframe, provider: 'TwelveData', operation: 'getMACD' }
+        }
+      );
+    }
+    
+    if (response.data?.values?.length > 0) {
       const macdValue = parseFloat(response.data.values[0].macd);
       const signalValue = parseFloat(response.data.values[0].macd_signal);
       
@@ -393,12 +455,15 @@ async function getMACD(symbol: string, timeframe: string): Promise<TechnicalIndi
       };
     }
     
-    const error = createNetworkError(
-      ERROR_CODES.NETWORK_BAD_REQUEST,
-      'لا توجد بيانات MACD متاحة',
-      'https://api.twelvedata.com/macd'
+    throw createError(
+      ErrorCategory.BUSINESS_LOGIC,
+      ERROR_CODES.SYSTEM_INTERNAL_ERROR,
+      'لا توجد بيانات MACD متاحة للرمز المطلوب',
+      {
+        severity: ErrorSeverity.MEDIUM,
+        details: { symbol, timeframe, url: 'https://api.twelvedata.com/macd' }
+      }
     );
-    throw error;
   } catch (error) {
     return await handleTechnicalAnalysisError(error, 'getMACD', symbol, usedKeyName, timeframe);
   }
@@ -426,16 +491,27 @@ async function getMovingAverages(symbol: string, timeframe: string): Promise<Tec
       timeout: 5000
     });
     
-    // التحقق من وجود خطأ تجاوز الحد اليومي في الاستجابة الأولى
-    if (ema9Response.data && ema9Response.data.code === 429) {
-      const error = createApiLimitError(
+    // التحقق من وجود أخطاء API في الاستجابة الأولى
+    if (ema9Response.data?.code === 429) {
+      throw createApiLimitError(
         ERROR_CODES.API_RATE_LIMITED,
         ERROR_MESSAGES.API_LIMIT.RATE_LIMITED.ar,
         'TwelveData',
         undefined,
         undefined
       );
-      throw error;
+    }
+    
+    if (ema9Response.data?.status === 'error') {
+      throw createError(
+        ErrorCategory.API_LIMIT,
+        ERROR_CODES.API_KEY_INVALID,
+        ema9Response.data.message || 'TwelveData API returned error response for EMA9',
+        {
+          severity: ErrorSeverity.MEDIUM,
+          details: { symbol, timeframe, provider: 'TwelveData', operation: 'getEMA9' }
+        }
+      );
     }
     
     // الحصول على مفتاح جديد للطلب الثاني للتقليل من احتمالية تجاوز الحد
@@ -455,16 +531,27 @@ async function getMovingAverages(symbol: string, timeframe: string): Promise<Tec
       timeout: 5000
     });
     
-    // التحقق من وجود خطأ تجاوز الحد اليومي في الاستجابة الثانية
-    if (ema21Response.data && ema21Response.data.code === 429) {
-      const error = createApiLimitError(
+    // التحقق من وجود أخطاء API في الاستجابة الثانية
+    if (ema21Response.data?.code === 429) {
+      throw createApiLimitError(
         ERROR_CODES.API_RATE_LIMITED,
         ERROR_MESSAGES.API_LIMIT.RATE_LIMITED.ar,
         'TwelveData',
         undefined,
         undefined
       );
-      throw error;
+    }
+    
+    if (ema21Response.data?.status === 'error') {
+      throw createError(
+        ErrorCategory.API_LIMIT,
+        ERROR_CODES.API_KEY_INVALID,
+        ema21Response.data.message || 'TwelveData API returned error response for EMA21',
+        {
+          severity: ErrorSeverity.MEDIUM,
+          details: { symbol, timeframe, provider: 'TwelveData', operation: 'getEMA21' }
+        }
+      );
     }
 
     if (ema9Response.data?.values?.[0] && ema21Response.data?.values?.[0]) {
@@ -490,12 +577,15 @@ async function getMovingAverages(symbol: string, timeframe: string): Promise<Tec
       };
     }
     
-    const error = createNetworkError(
-      ERROR_CODES.NETWORK_BAD_REQUEST,
-      'لا توجد بيانات المتوسطات المتحركة متاحة',
-      'https://api.twelvedata.com/ema'
+    throw createError(
+      ErrorCategory.BUSINESS_LOGIC,
+      ERROR_CODES.SYSTEM_INTERNAL_ERROR,
+      'لا توجد بيانات المتوسطات المتحركة متاحة للرمز المطلوب',
+      {
+        severity: ErrorSeverity.MEDIUM,
+        details: { symbol, timeframe, url: 'https://api.twelvedata.com/ema' }
+      }
     );
-    throw error;
   } catch (error) {
     return await handleTechnicalAnalysisError(error, 'getMovingAverages', symbol, usedKeyName, timeframe);
   }
@@ -524,16 +614,27 @@ async function getBollingerBands(symbol: string, timeframe: string): Promise<Tec
       timeout: 5000
     });
     
-    // التحقق من وجود خطأ تجاوز الحد اليومي في الاستجابة الأولى
-    if (bbResponse.data && bbResponse.data.code === 429) {
-      const error = createApiLimitError(
+    // التحقق من وجود أخطاء API في استجابة Bollinger Bands
+    if (bbResponse.data?.code === 429) {
+      throw createApiLimitError(
         ERROR_CODES.API_RATE_LIMITED,
         ERROR_MESSAGES.API_LIMIT.RATE_LIMITED.ar,
         'TwelveData',
         undefined,
         undefined
       );
-      throw error;
+    }
+    
+    if (bbResponse.data?.status === 'error') {
+      throw createError(
+        ErrorCategory.API_LIMIT,
+        ERROR_CODES.API_KEY_INVALID,
+        bbResponse.data.message || 'TwelveData API returned error response for Bollinger Bands',
+        {
+          severity: ErrorSeverity.MEDIUM,
+          details: { symbol, timeframe, provider: 'TwelveData', operation: 'getBollingerBands' }
+        }
+      );
     }
     
     // الحصول على مفتاح جديد للطلب الثاني للتقليل من احتمالية تجاوز الحد
@@ -549,16 +650,27 @@ async function getBollingerBands(symbol: string, timeframe: string): Promise<Tec
       timeout: 5000
     });
     
-    // التحقق من وجود خطأ تجاوز الحد اليومي في الاستجابة الثانية
-    if (priceResponse.data && priceResponse.data.code === 429) {
-      const error = createApiLimitError(
+    // التحقق من وجود أخطاء API في استجابة السعر
+    if (priceResponse.data?.code === 429) {
+      throw createApiLimitError(
         ERROR_CODES.API_RATE_LIMITED,
         ERROR_MESSAGES.API_LIMIT.RATE_LIMITED.ar,
         'TwelveData',
         undefined,
         undefined
       );
-      throw error;
+    }
+    
+    if (priceResponse.data?.status === 'error') {
+      throw createError(
+        ErrorCategory.API_LIMIT,
+        ERROR_CODES.API_KEY_INVALID,
+        priceResponse.data.message || 'TwelveData API returned error response for price',
+        {
+          severity: ErrorSeverity.MEDIUM,
+          details: { symbol, timeframe, provider: 'TwelveData', operation: 'getCurrentPrice' }
+        }
+      );
     }
 
     if (bbResponse.data?.values?.[0] && priceResponse.data?.price) {
@@ -588,12 +700,15 @@ async function getBollingerBands(symbol: string, timeframe: string): Promise<Tec
       };
     }
     
-    const error = createNetworkError(
-      ERROR_CODES.NETWORK_BAD_REQUEST,
-      'لا توجد بيانات Bollinger Bands متاحة',
-      'https://api.twelvedata.com/bbands'
+    throw createError(
+      ErrorCategory.BUSINESS_LOGIC,
+      ERROR_CODES.SYSTEM_INTERNAL_ERROR,
+      'لا توجد بيانات Bollinger Bands أو بيانات السعر متاحة للرمز المطلوب',
+      {
+        severity: ErrorSeverity.MEDIUM,
+        details: { symbol, timeframe, url: 'https://api.twelvedata.com/bbands' }
+      }
     );
-    throw error;
   } catch (error) {
     return await handleTechnicalAnalysisError(error, 'getBollingerBands', symbol, usedKeyName, timeframe);
   }
@@ -619,16 +734,27 @@ async function getADX(symbol: string, timeframe: string): Promise<TechnicalIndic
       timeout: 5000
     });
     
-    // التحقق من وجود خطأ تجاوز الحد اليومي
-    if (adxResponse.data && adxResponse.data.code === 429) {
-      const error = createApiLimitError(
+    // التحقق من وجود أخطاء API لمؤشر ADX
+    if (adxResponse.data?.code === 429) {
+      throw createApiLimitError(
         ERROR_CODES.API_RATE_LIMITED,
         ERROR_MESSAGES.API_LIMIT.RATE_LIMITED.ar,
         'TwelveData',
         undefined,
         undefined
       );
-      throw error;
+    }
+    
+    if (adxResponse.data?.status === 'error') {
+      throw createError(
+        ErrorCategory.API_LIMIT,
+        ERROR_CODES.API_KEY_INVALID,
+        adxResponse.data.message || 'TwelveData API returned error response for ADX',
+        {
+          severity: ErrorSeverity.MEDIUM,
+          details: { symbol, timeframe, provider: 'TwelveData', operation: 'getADX' }
+        }
+      );
     }
 
     if (adxResponse.data?.values?.[0]) {
@@ -653,12 +779,15 @@ async function getADX(symbol: string, timeframe: string): Promise<TechnicalIndic
       };
     }
     
-    const error = createNetworkError(
-      ERROR_CODES.NETWORK_BAD_REQUEST,
-      'لا توجد بيانات ADX متاحة',
-      'https://api.twelvedata.com/adx'
+    throw createError(
+      ErrorCategory.BUSINESS_LOGIC,
+      ERROR_CODES.SYSTEM_INTERNAL_ERROR,
+      'لا توجد بيانات ADX متاحة للرمز المطلوب',
+      {
+        severity: ErrorSeverity.MEDIUM,
+        details: { symbol, timeframe, url: 'https://api.twelvedata.com/adx' }
+      }
     );
-    throw error;
   } catch (error) {
     return await handleTechnicalAnalysisError(error, 'getADX', symbol, usedKeyName, timeframe);
   }
