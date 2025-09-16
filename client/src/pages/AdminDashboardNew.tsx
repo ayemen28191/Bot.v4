@@ -91,6 +91,10 @@ export default function AdminDashboard() {
       const data = await response.json();
       console.log("Fetched users:", data);
       setUsers(data);
+      
+      // حساب عدد المشرفين
+      const admins = data.filter((user: User) => user.isAdmin);
+      setAdminCount(admins.length);
     } catch (error) {
       console.error("Error fetching users:", error);
       toast({
@@ -246,6 +250,15 @@ export default function AdminDashboard() {
   const [apiKeyCount, setApiKeyCount] = useState(0);
   const [serverCount, setServerCount] = useState(0);
   const [activeTab, setActiveTab] = useState("users");
+  
+  // إحصائيات مفصلة جديدة
+  const [adminCount, setAdminCount] = useState(0);
+  const [activeApiKeys, setActiveApiKeys] = useState(0);
+  const [failedApiKeys, setFailedApiKeys] = useState(0);
+  const [activeServers, setActiveServers] = useState(0);
+  const [recentDeployments, setRecentDeployments] = useState(0);
+  const [apiUsageToday, setApiUsageToday] = useState(0);
+  const [totalApiQuota, setTotalApiQuota] = useState(1000);
 
   // جلب بيانات مفاتيح API
   const fetchApiKeys = async () => {
@@ -253,9 +266,24 @@ export default function AdminDashboard() {
       const response = await apiRequest('GET', '/api/config-keys/all');
       const data = await response.json();
       setApiKeyCount(data.length);
+      
+      // حساب المفاتيح النشطة والمعطلة
+      const activeKeys = data.filter((key: any) => !key.failedUntil || new Date(key.failedUntil) < new Date());
+      const failedKeys = data.filter((key: any) => key.failedUntil && new Date(key.failedUntil) > new Date());
+      setActiveApiKeys(activeKeys.length);
+      setFailedApiKeys(failedKeys.length);
+      
+      // حساب إجمالي الاستخدام اليومي والحد الأقصى
+      const totalUsage = data.reduce((sum: number, key: any) => sum + (key.usageToday || 0), 0);
+      const totalQuota = data.reduce((sum: number, key: any) => sum + (key.dailyQuota || 0), 0);
+      setApiUsageToday(totalUsage);
+      setTotalApiQuota(totalQuota > 0 ? totalQuota : 1000);
     } catch (error) {
       console.error("Error fetching API keys count:", error);
       setApiKeyCount(0);
+      setActiveApiKeys(0);
+      setFailedApiKeys(0);
+      setApiUsageToday(0);
     }
   };
 
@@ -265,9 +293,32 @@ export default function AdminDashboard() {
       const response = await apiRequest('GET', '/api/deployment/servers');
       const data = await response.json();
       setServerCount(data.length);
+      
+      // حساب الخوادم النشطة
+      const activeServersData = data.filter((server: any) => server.isActive);
+      setActiveServers(activeServersData.length);
     } catch (error) {
       console.error("Error fetching servers count:", error);
       setServerCount(0);
+      setActiveServers(0);
+    }
+  };
+  
+  // جلب بيانات عمليات النشر الحديثة
+  const fetchRecentDeployments = async () => {
+    try {
+      const response = await apiRequest('GET', '/api/deployment/logs?limit=20');
+      const data = await response.json();
+      
+      // حساب عمليات النشر في آخر 24 ساعة
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const recentDeploys = data.filter((log: any) => {
+        return log.createdAt && new Date(log.createdAt) > oneDayAgo;
+      });
+      setRecentDeployments(recentDeploys.length);
+    } catch (error) {
+      console.error("Error fetching recent deployments:", error);
+      setRecentDeployments(0);
     }
   };
 
@@ -275,6 +326,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchApiKeys();
     fetchServers();
+    fetchRecentDeployments();
   }, []);
 
   if (!user?.isAdmin) {
@@ -292,6 +344,13 @@ export default function AdminDashboard() {
             apiKeyCount={apiKeyCount}
             serverCount={serverCount}
             loading={loading}
+            adminCount={adminCount}
+            activeApiKeys={activeApiKeys}
+            failedApiKeys={failedApiKeys}
+            activeServers={activeServers}
+            recentDeployments={recentDeployments}
+            apiUsageToday={apiUsageToday}
+            totalApiQuota={totalApiQuota}
           />
         </div>
 
