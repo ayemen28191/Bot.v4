@@ -68,12 +68,12 @@ function cleanupErrorCache(): void {
   const now = Date.now();
   const windowStart = now - ERROR_LOG_WINDOW;
   
-  for (const [hash, throttle] of errorLogCache.entries()) {
+  Array.from(errorLogCache.entries()).forEach(([hash, throttle]) => {
     const lastOccurrenceTime = new Date(throttle.lastOccurrence).getTime();
     if (lastOccurrenceTime < windowStart) {
       errorLogCache.delete(hash);
     }
-  }
+  });
 }
 
 // دالة لتسجيل summary للأخطاء المتكررة
@@ -81,7 +81,7 @@ function logErrorSummary(): void {
   const now = new Date().toISOString();
   const summaryTime = Date.now() - SUMMARY_INTERVAL;
   
-  for (const [hash, throttle] of errorLogCache.entries()) {
+  Array.from(errorLogCache.entries()).forEach(([hash, throttle]) => {
     const lastLoggedTime = new Date(throttle.lastLogged).getTime();
     
     // إذا مر دقيقة من آخر log ولدينا تكرارات لم يتم تسجيلها
@@ -94,7 +94,7 @@ function logErrorSummary(): void {
       throttle.hasBeenSummarized = true;
       throttle.lastLogged = now;
     }
-  }
+  });
 }
 
 // Run cleanup every 5 minutes
@@ -202,8 +202,8 @@ export function handleZodError(zodError: ZodError): AppError {
   
   switch (firstIssue.code) {
     case 'invalid_type':
-      errorMessage = `Invalid type for field '${field}'. Expected ${firstIssue.expected}, received ${firstIssue.received}`;
-      messageAr = `نوع بيانات غير صالح للحقل '${field}'. المتوقع: ${getArabicType(firstIssue.expected)}, المستلم: ${getArabicType(firstIssue.received)}`;
+      errorMessage = `Invalid type for field '${field}'. Expected ${(firstIssue as any).expected}, received ${(firstIssue as any).received}`;
+      messageAr = `نوع بيانات غير صالح للحقل '${field}'. المتوقع: ${getArabicType((firstIssue as any).expected)}, المستلم: ${getArabicType((firstIssue as any).received)}`;
       break;
     case 'too_small':
       if (firstIssue.type === 'string') {
@@ -236,7 +236,7 @@ export function handleZodError(zodError: ZodError): AppError {
       }
       break;
     case 'invalid_string':
-      const validation = firstIssue.validation;
+      const validation = (firstIssue as any).validation;
       if (validation === 'email') {
         errorMessage = `Field '${field}' must be a valid email address`;
         messageAr = `الحقل '${field}' يجب أن يكون عنوان بريد إلكتروني صالح`;
@@ -252,7 +252,7 @@ export function handleZodError(zodError: ZodError): AppError {
       }
       break;
     case 'invalid_enum_value':
-      const options = firstIssue.options?.join(', ') || 'valid options';
+      const options = (firstIssue as any).options?.join(', ') || 'valid options';
       errorMessage = `Field '${field}' has invalid value. Allowed values: ${options}`;
       messageAr = `الحقل '${field}' يحتوي على قيمة غير صالحة. القيم المسموحة: ${options}`;
       break;
@@ -261,11 +261,11 @@ export function handleZodError(zodError: ZodError): AppError {
       messageAr = `الحقل '${field}' يجب أن يكون تاريخ صالح`;
       break;
     case 'invalid_literal':
-      errorMessage = `Field '${field}' must be exactly '${firstIssue.expected}'`;
-      messageAr = `الحقل '${field}' يجب أن يكون بالضبط '${firstIssue.expected}'`;
+      errorMessage = `Field '${field}' must be exactly '${(firstIssue as any).expected}'`;
+      messageAr = `الحقل '${field}' يجب أن يكون بالضبط '${(firstIssue as any).expected}'`;
       break;
     case 'unrecognized_keys':
-      const keys = firstIssue.keys?.join(', ') || 'unknown keys';
+      const keys = (firstIssue as any).keys?.join(', ') || 'unknown keys';
       errorMessage = `Unrecognized properties: ${keys}`;
       messageAr = `خصائص غير معروفة: ${keys}`;
       break;
@@ -297,15 +297,15 @@ export function handleZodError(zodError: ZodError): AppError {
     errorMessage,
     {
       messageAr,
-      field,
-      value: firstIssue.received,
       severity: ErrorSeverity.LOW,
       userFriendly: true,
       details: {
+        field,
+        value: (firstIssue as any).received,
         zodCode: firstIssue.code,
-        expectedType: firstIssue.expected,
-        receivedType: firstIssue.received,
-        validation: firstIssue.validation,
+        expectedType: (firstIssue as any).expected,
+        receivedType: (firstIssue as any).received,
+        validation: (firstIssue as any).validation,
         path: firstIssue.path
       }
     }

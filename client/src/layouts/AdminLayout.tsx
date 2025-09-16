@@ -4,6 +4,7 @@ import { t } from '@/lib/i18n';
 import { getCurrentLanguage } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
+import { useAdminCheck } from '@/hooks/use-admin-check';
 
 // Components
 import { AdminSidebar, AdminBottomNav } from '@/features/admin';
@@ -30,6 +31,7 @@ export function AdminLayout({
 }: AdminLayoutProps) {
   const [location] = useLocation();
   const { user } = useAuth();
+  const { isAdmin, renderAccessDenied } = useAdminCheck();
   const isRTL = getCurrentLanguage() === 'ar';
   
   // Sidebar state management
@@ -79,15 +81,8 @@ export function AdminLayout({
     };
   }, [mobileMenuOpen]);
 
-  if (!user?.isAdmin) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4 p-8">
-          <h1 className="text-2xl font-bold text-foreground">{t('access_denied')}</h1>
-          <p className="text-muted-foreground">{t('admin_login_required')}</p>
-        </div>
-      </div>
-    );
+  if (!isAdmin) {
+    return renderAccessDenied();
   }
 
   const displayTitle = pageTitle || title || t('admin_panel');
@@ -177,10 +172,10 @@ export function AdminLayout({
             {/* User info - hidden on mobile */}
             <div className="hidden sm:flex items-center gap-2 text-sm">
               <span className="text-foreground font-medium">
-                {user.displayName}
+                {user?.displayName}
               </span>
               <span className="text-muted-foreground">
-                ({user.username})
+                ({user?.username})
               </span>
             </div>
 
@@ -243,8 +238,8 @@ export function AdminLayout({
         {/* Mobile menu footer */}
         <div className="p-4 border-t border-border">
           <div className="text-center text-sm text-muted-foreground">
-            <div className="font-medium">{user.displayName}</div>
-            <div className="text-xs">({user.username})</div>
+            <div className="font-medium">{user?.displayName}</div>
+            <div className="text-xs">({user?.username})</div>
           </div>
         </div>
       </div>

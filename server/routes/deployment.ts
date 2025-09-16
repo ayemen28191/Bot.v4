@@ -4,6 +4,7 @@ import { insertDeploymentServerSchema } from "@shared/schema";
 import { DeploymentService } from "../services/deployment-service";
 import { z } from "zod";
 import { validateRequest } from "../middleware/validate-request";
+import { requireAdmin, getCurrentUser } from "../middleware/auth-middleware";
 import * as SessionData from "express-session";
 
 // إضافة تعريف لجلسة المستخدم
@@ -19,28 +20,9 @@ declare module "express-session" {
 
 export const deploymentRouter = express.Router();
 
-// التحقق من المصادقة وصلاحيات المشرف
-function isAdmin(req: express.Request, res: express.Response, next: express.NextFunction) {
-  if (!req.session || !req.session.user || !req.session.user.id) {
-    return res.status(401).json({ success: false, message: "غير مصرح به" });
-  }
-
-  storage.getUser(req.session.user.id).then((user) => {
-    if (!user || !user.isAdmin) {
-      return res.status(403).json({ 
-        success: false, 
-        message: "غير مسموح: هذه العملية تتطلب صلاحيات المشرف" 
-      });
-    }
-    next();
-  }).catch((error: any) => {
-    console.error("Error in isAdmin middleware:", error);
-    res.status(500).json({ success: false, message: "خطأ في التحقق من الصلاحيات" });
-  });
-}
 
 // جلب جميع الخوادم
-deploymentRouter.get("/servers", isAdmin, async (req, res) => {
+deploymentRouter.get("/servers", requireAdmin({ language: 'ar', requireDatabaseCheck: true, returnJson: false }), async (req, res) => {
   try {
     const servers = await storage.getAllServers();
     // حماية البيانات الحساسة
@@ -58,7 +40,7 @@ deploymentRouter.get("/servers", isAdmin, async (req, res) => {
 });
 
 // إضافة خادم جديد
-deploymentRouter.post("/servers", isAdmin, 
+deploymentRouter.post("/servers", requireAdmin({ language: 'ar', requireDatabaseCheck: true, returnJson: false }), 
   validateRequest({
     body: insertDeploymentServerSchema
   }),
@@ -81,7 +63,7 @@ deploymentRouter.post("/servers", isAdmin,
 );
 
 // تحديث خادم موجود
-deploymentRouter.put("/servers/:id", isAdmin, async (req, res) => {
+deploymentRouter.put("/servers/:id", requireAdmin({ language: 'ar', requireDatabaseCheck: true, returnJson: false }), async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) {
@@ -133,7 +115,7 @@ deploymentRouter.put("/servers/:id", isAdmin, async (req, res) => {
 });
 
 // حذف خادم
-deploymentRouter.delete("/servers/:id", isAdmin, async (req, res) => {
+deploymentRouter.delete("/servers/:id", requireAdmin({ language: 'ar', requireDatabaseCheck: true, returnJson: false }), async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) {
@@ -155,7 +137,7 @@ deploymentRouter.delete("/servers/:id", isAdmin, async (req, res) => {
 });
 
 // اختبار الاتصال بالخادم
-deploymentRouter.post("/test-connection/:id", isAdmin, async (req, res) => {
+deploymentRouter.post("/test-connection/:id", requireAdmin({ language: 'ar', requireDatabaseCheck: true, returnJson: false }), async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) {
@@ -184,7 +166,7 @@ deploymentRouter.post("/test-connection/:id", isAdmin, async (req, res) => {
 });
 
 // نشر التطبيق إلى خادم محدد
-deploymentRouter.post("/deploy/:id", isAdmin, async (req, res) => {
+deploymentRouter.post("/deploy/:id", requireAdmin({ language: 'ar', requireDatabaseCheck: true, returnJson: false }), async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) {
@@ -202,12 +184,13 @@ deploymentRouter.post("/deploy/:id", isAdmin, async (req, res) => {
       return res.status(400).json({ success: false, message: "الخادم غير نشط" });
     }
 
-    console.log("Starting deployment to server:", server.name, "by user:", req.session.user?.id);
+    const currentUser = getCurrentUser(req);
+    console.log("Starting deployment to server:", server.name, "by user:", currentUser?.id);
 
     // بدء عملية النشر
     const result = await DeploymentService.deployToServer({
       server,
-      userId: req.session.user?.id,
+      userId: currentUser?.id,
       // يمكن تمرير خيارات إضافية من الواجهة
       ...req.body,
     });
@@ -224,7 +207,7 @@ deploymentRouter.post("/deploy/:id", isAdmin, async (req, res) => {
 });
 
 // جلب سجلات النشر
-deploymentRouter.get("/logs", isAdmin, async (req, res) => {
+deploymentRouter.get("/logs", requireAdmin({ language: 'ar', requireDatabaseCheck: true, returnJson: false }), async (req, res) => {
   try {
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
     const logs = await storage.getAllLogs(limit);
@@ -236,7 +219,7 @@ deploymentRouter.get("/logs", isAdmin, async (req, res) => {
 });
 
 // جلب سجلات النشر لخادم محدد
-deploymentRouter.get("/servers/:id/logs", isAdmin, async (req, res) => {
+deploymentRouter.get("/servers/:id/logs", requireAdmin({ language: 'ar', requireDatabaseCheck: true, returnJson: false }), async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) {
@@ -253,7 +236,7 @@ deploymentRouter.get("/servers/:id/logs", isAdmin, async (req, res) => {
 });
 
 // حذف جميع سجلات النشر
-deploymentRouter.delete("/logs", isAdmin, async (req, res) => {
+deploymentRouter.delete("/logs", requireAdmin({ language: 'ar', requireDatabaseCheck: true, returnJson: false }), async (req, res) => {
   try {
     await storage.clearAllLogs();
     res.json({ success: true, message: "تم حذف جميع سجلات النشر بنجاح" });

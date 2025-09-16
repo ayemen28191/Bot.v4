@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
+import { useIsAdmin } from "@/hooks/use-admin-check";
 import { useEffect, useState } from "react";
 import { getCurrentLanguage } from "@/lib/i18n";
 import { getVisibleNavItems, isNavItemActive, AdminNavItem } from "./navConfig";
@@ -25,6 +26,7 @@ interface AdminSidebarProps {
 export function AdminSidebar({ collapsed = false, onToggle, className }: AdminSidebarProps) {
   const [location] = useLocation();
   const { user, logout } = useAuth();
+  const isAdmin = useIsAdmin();
   const isRTL = getCurrentLanguage() === 'ar';
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navItems = getVisibleNavItems();
@@ -41,7 +43,7 @@ export function AdminSidebar({ collapsed = false, onToggle, className }: AdminSi
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  if (!user?.isAdmin) {
+  if (!isAdmin) {
     return null;
   }
 

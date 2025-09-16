@@ -678,6 +678,118 @@ interface AnalysisLoggingParams {
   offlineMode?: boolean;
 }
 
+// دالة مساعدة لجلب السعر الحالي مع نظام fallback موحد
+async function getCurrentPriceWithFallback(
+  symbol: string, 
+  marketType: 'forex' | 'crypto' | 'stocks',
+  requestId: string | null
+): Promise<number> {
+  try {
+    // محاولة استخدام دالة getCurrentPrice المتوفرة في price-sources
+    const { getCurrentPrice } = await import('./price-sources');
+    const priceResult = await getCurrentPrice(symbol);
+    
+    if (priceResult.price !== null) {
+      const currentPrice = priceResult.price;
+      console.log(`تم جلب السعر الحالي من المصدر: ${priceResult.source || 'unknown'}: ${currentPrice}`);
+      
+      // تسجيل جلب السعر الناجح
+      if (requestId) {
+        void signalLogger.logTechnicalData(requestId, {
+          currentPrice: currentPrice.toString(),
+          priceSource: priceResult.source || 'price-sources'
+        }).catch(err => console.warn('فشل في تسجيل جلب السعر:', err));
+      }
+      return currentPrice;
+    }
+    
+    // إذا لم نحصل على سعر، نرمي خطأ للانتقال للطريقة البديلة
+    const priceError = createNetworkError(
+      ERROR_CODES.NETWORK_BAD_REQUEST,
+      'لم يتم العثور على سعر من المصادر المتاحة',
+      undefined,
+      undefined,
+      true
+    );
+    throw priceError;
+    
+  } catch (error) {
+    console.warn('فشل في جلب السعر من price-sources، محاولة استخدام TwelveData مباشرة:', error);
+    
+    try {
+      // استخدام نظام تناوب المفاتيح مع TwelveData API
+      const apiKey = await getRotatedApiKey('TWELVEDATA_API_KEY', env.TWELVEDATA_API_KEY);
+      const usedKeyName = getUsedKeyName('TWELVEDATA_API_KEY');
+      
+      const priceResponse = await axios.get('https://api.twelvedata.com/price', {
+        params: {
+          symbol,
+          apikey: apiKey,
+        },
+        timeout: 5000
+      });
+      
+      // التحقق من وجود خطأ تجاوز الحد اليومي
+      if (priceResponse.data && priceResponse.data.code === 429) {
+        markKeyAsFailed(usedKeyName);
+        const limitError = createApiLimitError(
+          ERROR_CODES.API_RATE_LIMITED,
+          ERROR_MESSAGES.API_LIMIT.RATE_LIMITED.ar,
+          'TwelveData',
+          undefined,
+          undefined
+        );
+        throw limitError;
+      }
+      
+      if (priceResponse.data?.price) {
+        const currentPrice = parseFloat(priceResponse.data.price);
+        console.log(`تم جلب السعر الحالي مباشرة من TwelveData: ${currentPrice}`);
+        
+        // تسجيل جلب السعر الناجح
+        if (requestId) {
+          void signalLogger.logTechnicalData(requestId, {
+            currentPrice: currentPrice.toString(),
+            priceSource: 'TwelveData API',
+            apiKeysUsed: [usedKeyName]
+          }).catch(err => console.warn('فشل في تسجيل جلب السعر من TwelveData:', err));
+        }
+        return currentPrice;
+      }
+      
+      const noDataError = createNetworkError(
+        ERROR_CODES.NETWORK_BAD_REQUEST,
+        'لا يوجد بيانات سعر متاحة من TwelveData',
+        'https://api.twelvedata.com/price'
+      );
+      throw noDataError;
+      
+    } catch (apiError: any) {
+      // معالجة أخطاء API مع تمييز المفاتيح الفاشلة
+      if (apiError.response?.status === 429) {
+        const usedKeyName = getUsedKeyName('TWELVEDATA_API_KEY');
+        markKeyAsFailed(usedKeyName);
+        console.error(`تم تجاوز الحد اليومي للمفتاح ${usedKeyName} عند محاولة جلب السعر`);
+      }
+      
+      // استخدام قيمة تقديرية للسعر بناءً على نوع السوق والرمز
+      const approximatePrice = getApproximatePrice(symbol, marketType);
+      console.log(`استخدام سعر تقديري للرمز ${symbol}: ${approximatePrice}`);
+      
+      // تسجيل استخدام سعر تقديري
+      if (requestId) {
+        void signalLogger.logTechnicalData(requestId, {
+          currentPrice: approximatePrice.toString(),
+          priceSource: 'approximate_price',
+          analysisData: `تم استخدام سعر تقديري بسبب فشل المصادر الأخرى - ${symbol}: ${approximatePrice}`
+        }).catch(err => console.warn('فشل في تسجيل السعر التقديري:', err));
+      }
+      
+      return approximatePrice;
+    }
+  }
+}
+
 // تجميع كل المؤشرات وتحليل السوق
 export async function analyzeMarket(
   symbol: string, 
@@ -706,89 +818,8 @@ export async function analyzeMarket(
     
     console.log(`تحليل السوق للرمز ${symbol} - الإطار الزمني: ${timeframe} - نوع السوق: ${marketType} - طلب التسجيل: ${requestId}`);
     
-    // محاولة جلب السعر الحالي من خدمة TwelveData أو من مصادر السعر المتاحة
-    let currentPrice: number;
-    
-    try {
-      // محاولة استخدام دالة getCurrentPrice المتوفرة في price-sources
-      const { getCurrentPrice } = await import('./price-sources');
-      const priceResult = await getCurrentPrice(symbol);
-      
-      if (priceResult.price !== null) {
-        currentPrice = priceResult.price;
-        console.log(`تم جلب السعر الحالي من المصدر: ${priceResult.source || 'unknown'}: ${currentPrice}`);
-        
-        // تسجيل جلب السعر الناجح (fire-and-forget)
-        if (requestId) {
-          void signalLogger.logTechnicalData(requestId, {
-            currentPrice: currentPrice.toString(),
-            priceSource: priceResult.source || 'price-sources'
-          }).catch(err => console.warn('فشل في تسجيل جلب السعر:', err));
-        }
-      } else {
-        throw new Error('لم يتم العثور على سعر من المصادر المتاحة');
-      }
-    } catch (priceError) {
-      // محاولة استخدام API TwelveData مباشرة
-      try {
-        // استخدام نظام تناوب المفاتيح
-        const apiKey = await getRotatedApiKey('TWELVEDATA_API_KEY', env.TWELVEDATA_API_KEY);
-        const usedKeyName = getUsedKeyName('TWELVEDATA_API_KEY');
-        
-        const priceResponse = await axios.get('https://api.twelvedata.com/price', {
-          params: {
-            symbol,
-            apikey: apiKey,
-          },
-          timeout: 5000
-        });
-        
-        // التحقق من وجود خطأ تجاوز الحد اليومي
-        if (priceResponse.data && priceResponse.data.code === 429) {
-          // تمييز المفتاح كفاشل
-          markKeyAsFailed(usedKeyName);
-          throw new Error(`تم تجاوز الحد اليومي للمفتاح ${usedKeyName}`);
-        }
-        
-        if (priceResponse.data?.price) {
-          currentPrice = parseFloat(priceResponse.data.price);
-          console.log(`تم جلب السعر الحالي مباشرة من TwelveData: ${currentPrice}`);
-          
-          // تسجيل جلب السعر الناجح (fire-and-forget)
-          if (requestId) {
-            void signalLogger.logTechnicalData(requestId, {
-              currentPrice: currentPrice.toString(),
-              priceSource: 'TwelveData API',
-              apiKeysUsed: [usedKeyName] // تمرير معرف المفتاح فقط
-            }).catch(err => console.warn('فشل في تسجيل جلب السعر من TwelveData:', err));
-          }
-        } else {
-          throw new Error('لا يوجد بيانات سعر متاحة من TwelveData');
-        }
-      } catch (twelveDataError) {
-        // تحديد إذا كان الخطأ متعلق بتجاوز الحد
-        const axiosError = twelveDataError as any;
-        if (axiosError.response && axiosError.response.status === 429) {
-          // تمييز المفتاح الحالي كفاشل
-          const usedKeyName = getUsedKeyName('TWELVEDATA_API_KEY');
-          markKeyAsFailed(usedKeyName);
-          console.error(`تم تجاوز الحد اليومي للمفتاح ${usedKeyName} عند محاولة جلب السعر`);
-        }
-        
-        // استخدام قيمة تقديرية للسعر بناءً على نوع السوق والرمز
-        currentPrice = getApproximatePrice(symbol, marketType);
-        console.log(`استخدام سعر تقديري للرمز ${symbol}: ${currentPrice}`);
-        
-        // تسجيل استخدام سعر تقديري (fire-and-forget)
-        if (requestId) {
-          void signalLogger.logTechnicalData(requestId, {
-            currentPrice: currentPrice.toString(),
-            priceSource: 'approximate_price',
-            analysisData: `تم استخدام سعر تقديري بسبب فشل المصادر الأخرى - ${symbol}: ${currentPrice}`
-          }).catch(err => console.warn('فشل في تسجيل السعر التقديري:', err));
-        }
-      }
-    }
+    // جلب السعر الحالي باستخدام النظام الموحد
+    const currentPrice = await getCurrentPriceWithFallback(symbol, marketType, requestId);
     
     // جلب المؤشرات بالتوازي مع تسجيل تفصيلي
     let indicators = {};
@@ -1202,25 +1233,8 @@ export async function analyzeMarket(
       });
     }
     
-    // إعادة تحليل أساسي في حالة الفشل
-    return {
-      trend: 'neutral',
-      strength: 50,
-      volatility: 30,
-      support: null,
-      resistance: null,
-      indicators: {
-        rsi: { value: 50, signal: 'neutral', timeframe },
-        macd: { value: 0, signal: 'neutral', timeframe },
-        ema: { value: 0, signal: 'neutral', timeframe },
-        bband: { value: 50, signal: 'neutral', timeframe },
-        adx: { value: 15, signal: 'neutral', timeframe }
-      },
-      lastUpdate: new Date().toISOString(),
-      nextUpdate: null,
-      probability: 50,
-      signal: 'wait'
-    };
+    // استخدام النظام الموحد لمعالجة أخطاء تحليل السوق
+    return handleMarketAnalysisError(error, `analyzeMarket for ${symbol} (${timeframe})`);
   } finally {
     // ضمان التنظيف في جميع الحالات
     if (requestId) {

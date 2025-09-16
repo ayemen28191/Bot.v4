@@ -2,6 +2,7 @@
 import { Link } from "wouter";
 import { t } from "@/lib/i18n";
 import { useAuth } from "@/hooks/use-auth";
+import { useIsAdmin } from "@/hooks/use-admin-check";
 import { cn } from "@/lib/utils";
 import { 
   Users, 
@@ -18,12 +19,13 @@ interface BottomNavigationProps {
 
 export function BottomNavigation({ activeTab }: BottomNavigationProps) {
   const { user } = useAuth();
+  const isAdmin = useIsAdmin();
 
   return (
     <footer className="fixed bottom-0 left-0 right-0 border-t border-border/50 bg-background/90 backdrop-blur-md z-50 py-2 mobile-navbar">
       <div className="flex justify-around items-center max-w-lg mx-auto px-4">
         {/* Admin Panel / Bot Info */}
-        {user?.isAdmin ? (
+        {isAdmin ? (
           <Link 
             href="/admin" 
             className={cn(

@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/use-auth";
+import { useIsAdmin } from "@/hooks/use-admin-check";
 import { t } from "@/lib/i18n";
 import { ArrowLeft, BarChart, Bot, DollarSign, MessageCircle, Settings, Users } from "lucide-react";
 import { Link } from "wouter";
@@ -6,9 +7,10 @@ import { BottomNavigation } from '@/components';
 
 export default function BotInfoPage() {
   const { user } = useAuth();
+  const isAdmin = useIsAdmin();
 
   // إذا كان مشرف، توجيهه إلى صفحة الإدارة بدلاً من صفحة البوت
-  if (user?.isAdmin) {
+  if (isAdmin) {
     return (
       <div className="p-8 text-center">
         <p>{t('admin_redirect')}</p>

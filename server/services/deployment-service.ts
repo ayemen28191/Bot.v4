@@ -7,6 +7,16 @@ import * as os from 'os';
 import * as crypto from 'crypto';
 import * as child_process from 'child_process';
 import { promisify } from 'util';
+import {
+  ErrorCategory,
+  ErrorSeverity,
+  createError,
+  createValidationError,
+  createNetworkError,
+  convertJavaScriptError,
+  ERROR_CODES,
+  ERROR_MESSAGES
+} from '@shared/error-types';
 
 const exec = promisify(child_process.exec);
 const writeFile = promisify(fs.writeFile);
@@ -48,18 +58,33 @@ const DANGEROUS_PATTERNS = [
  */
 function validateDeployPath(path: string): string {
   if (!path || typeof path !== 'string') {
-    throw new Error('مسار النشر يجب أن يكون نص غير فارغ');
+    throw createValidationError(
+      ERROR_CODES.VALIDATION_REQUIRED,
+      'Deploy path must be a non-empty string',
+      'deployPath',
+      path
+    );
   }
 
   // السماح فقط بمسارات مطلقة آمنة
   const safePathPattern = /^\/[A-Za-z0-9_\-\.\/~]+$/;
   if (!safePathPattern.test(path)) {
-    throw new Error('مسار النشر يحتوي على أحرف غير مسموحة');
+    throw createValidationError(
+      ERROR_CODES.VALIDATION_FORMAT,
+      'Deploy path contains invalid characters',
+      'deployPath',
+      path
+    );
   }
 
   // منع الصعود للمجلدات العليا
   if (path.includes('../')) {
-    throw new Error('مسار النشر لا يمكن أن يحتوي على ../');
+    throw createValidationError(
+      ERROR_CODES.VALIDATION_FORMAT,
+      'Deploy path cannot contain ../',
+      'deployPath',
+      path
+    );
   }
 
   return path;
@@ -78,27 +103,52 @@ function escapeShellArg(arg: string): string {
  */
 function sanitizeCommand(command: string): string {
   if (!command || typeof command !== 'string') {
-    throw new Error('الأمر يجب أن يكون نص غير فارغ');
+    throw createValidationError(
+      ERROR_CODES.VALIDATION_REQUIRED,
+      'Command must be a non-empty string',
+      'command',
+      command
+    );
   }
 
   // إزالة المسافات الزائدة وتحويل إلى مسافة واحدة
   const trimmedCommand = command.trim().replace(/\s+/g, ' ');
   
   if (!trimmedCommand) {
-    throw new Error('لا يمكن تنفيذ أمر فارغ');
+    throw createValidationError(
+      ERROR_CODES.VALIDATION_REQUIRED,
+      'Cannot execute empty command',
+      'command',
+      trimmedCommand
+    );
   }
 
   // فحص الأنماط الخطيرة (رفض فوري بدلاً من التعديل)
   for (const pattern of DANGEROUS_PATTERNS) {
     if (pattern.test(trimmedCommand)) {
-      throw new Error(`الأمر يحتوي على نمط خطير غير مسموح: ${pattern.source}`);
+      throw createError(
+        ErrorCategory.BUSINESS_LOGIC,
+        'COMMAND_UNSAFE_PATTERN',
+        `Command contains dangerous pattern: ${pattern.source}`,
+        {
+          messageAr: `الأمر يحتوي على نمط خطير غير مسموح: ${pattern.source}`,
+          severity: ErrorSeverity.HIGH,
+          userFriendly: true,
+          details: { command: trimmedCommand, pattern: pattern.source }
+        }
+      );
     }
   }
 
   // التحقق من أن الأمر يحتوي فقط على أحرف آمنة
   const safeCharPattern = /^[a-zA-Z0-9\s\-_./:=@]+$/;
   if (!safeCharPattern.test(trimmedCommand)) {
-    throw new Error('الأمر يحتوي على أحرف غير مسموحة');
+    throw createValidationError(
+      ERROR_CODES.VALIDATION_FORMAT,
+      'Command contains invalid characters',
+      'command',
+      trimmedCommand
+    );
   }
 
   // تقسيم الأمر وفحص كل جزء
@@ -107,7 +157,17 @@ function sanitizeCommand(command: string): string {
 
   // فحص إذا كان الأمر الرئيسي مسموح
   if (!ALLOWED_COMMANDS.includes(mainCommand)) {
-    throw new Error(`الأمر '${mainCommand}' غير مسموح. الأوامر المسموحة: ${ALLOWED_COMMANDS.join(', ')}`);
+    throw createError(
+      ErrorCategory.BUSINESS_LOGIC,
+      'COMMAND_NOT_ALLOWED',
+      `Command '${mainCommand}' is not allowed. Allowed commands: ${ALLOWED_COMMANDS.join(', ')}`,
+      {
+        messageAr: `الأمر '${mainCommand}' غير مسموح. الأوامر المسموحة: ${ALLOWED_COMMANDS.join(', ')}`,
+        severity: ErrorSeverity.HIGH,
+        userFriendly: true,
+        details: { command: mainCommand, allowedCommands: ALLOWED_COMMANDS }
+      }
+    );
   }
 
   return trimmedCommand;
@@ -123,7 +183,12 @@ function sanitizeExcludeFiles(files: string[]): string[] {
       // إزالة الأحرف الخطيرة والاحتفاظ بالأحرف الآمنة فقط
       const sanitized = file.replace(/[^a-zA-Z0-9\-_./*]/g, '');
       if (!sanitized) {
-        throw new Error(`اسم ملف غير صالح: ${file}`);
+        throw createValidationError(
+          ERROR_CODES.VALIDATION_FORMAT,
+          `Invalid file name: ${file}`,
+          'excludeFiles',
+          file
+        );
       }
       return sanitized;
     });
@@ -179,7 +244,17 @@ export class DeploymentService {
       } else if (server.authType === 'password' && server.password) {
         result = await this.deployWithPassword(server, packagePath, deploymentLog);
       } else {
-        throw new Error('طريقة المصادقة غير صالحة أو ناقصة');
+        throw createError(
+          ErrorCategory.VALIDATION,
+          'INVALID_AUTH_METHOD',
+          'Invalid or incomplete authentication method',
+          {
+            messageAr: 'طريقة المصادقة غير صالحة أو ناقصة',
+            severity: ErrorSeverity.HIGH,
+            userFriendly: true,
+            details: { authType: server.authType, hasKey: !!server.privateKey, hasPassword: !!server.password }
+          }
+        );
       }
 
       // تحديث تاريخ آخر نشر للخادم
@@ -193,13 +268,14 @@ export class DeploymentService {
       try {
         await rm(packagePath, { force: true });
         console.log(`تم حذف الملف المؤقت: ${packagePath}`);
-      } catch (error) {
-        console.error('خطأ في حذف الملفات المؤقتة:', error);
+      } catch (error: unknown) {
+        console.error('خطأ في حذف الملفات المؤقتة:', (error as Error)?.message || String(error));
       }
 
       return result;
-    } catch (error) {
-      console.error('خطأ في عملية النشر:', error);
+    } catch (error: unknown) {
+      const appError = convertJavaScriptError(error as Error);
+      console.error('خطأ في عملية النشر:', (error as Error)?.message || String(error));
 
       // تحديث سجل النشر بالخطأ
       let updatedLog: DeploymentLog;
@@ -207,19 +283,19 @@ export class DeploymentService {
         updatedLog = await storage.updateLog(
           deploymentLog.id,
           'failure',
-          `فشل في النشر: ${error.message}`,
-          error.stack,
+          `فشل في النشر: ${appError.message}`,
+          JSON.stringify({ error: appError.details || appError.message, stack: (error as Error)?.stack }),
           new Date().toISOString()
         );
-      } catch (updateError) {
-        console.error('خطأ في تحديث سجل النشر:', updateError);
+      } catch (updateError: unknown) {
+        console.error('خطأ في تحديث سجل النشر:', (updateError as Error)?.message || String(updateError));
         updatedLog = deploymentLog;
       }
 
       return {
         success: false,
-        message: `فشل في نشر التطبيق: ${error.message}`,
-        details: error.stack,
+        message: `فشل في نشر التطبيق: ${appError.message}`,
+        details: JSON.stringify({ error: appError.details || appError.message, stack: (error as Error)?.stack }),
         log: updatedLog
       };
     }
@@ -231,13 +307,23 @@ export class DeploymentService {
   private static async prepareDeploymentPackage(sourceDir: string, excludeFiles: string[] = []): Promise<string> {
     // التحقق من صحة sourceDir
     if (!sourceDir || typeof sourceDir !== 'string') {
-      throw new Error('مجلد المصدر غير صالح');
+      throw createValidationError(
+        ERROR_CODES.VALIDATION_REQUIRED,
+        'Source directory must be a valid string',
+        'sourceDir',
+        sourceDir
+      );
     }
     
     // التحقق من أن sourceDir يحتوي على أحرف آمنة فقط
     const safeDirPattern = /^[A-Za-z0-9_\-\.\/~]+$/;
     if (!safeDirPattern.test(sourceDir)) {
-      throw new Error('مجلد المصدر يحتوي على أحرف غير مسموحة');
+      throw createValidationError(
+        ERROR_CODES.VALIDATION_FORMAT,
+        'Source directory contains invalid characters',
+        'sourceDir',
+        sourceDir
+      );
     }
 
     const tempDir = await mkdtemp(path.join(os.tmpdir(), 'deploy-'));
@@ -267,14 +353,34 @@ export class DeploymentService {
 
       tarProcess.on('close', (code) => {
         if (code !== 0) {
-          reject(new Error(`فشل في إنشاء أرشيف النشر: ${stderr}`));
+          reject(createError(
+            ErrorCategory.FILE_SYSTEM,
+            'TAR_CREATE_FAILED',
+            `Failed to create deployment archive: ${stderr}`,
+            {
+              messageAr: `فشل في إنشاء أرشيف النشر: ${stderr}`,
+              severity: ErrorSeverity.HIGH,
+              userFriendly: false,
+              details: { sourceDir, stderr, exitCode: code }
+            }
+          ));
         } else {
           resolve(outputFile);
         }
       });
 
       tarProcess.on('error', (error) => {
-        reject(new Error(`خطأ في تنفيذ أمر tar: ${error.message}`));
+        reject(createError(
+          ErrorCategory.SYSTEM,
+          'TAR_EXEC_FAILED',
+          `Error executing tar command: ${error.message}`,
+          {
+            messageAr: `خطأ في تنفيذ أمر tar: ${error.message}`,
+            severity: ErrorSeverity.HIGH,
+            userFriendly: false,
+            details: { originalError: error.name, sourceDir }
+          }
+        ));
       });
     });
   }
@@ -307,7 +413,13 @@ export class DeploymentService {
         ssh.on('ready', () => {
           resolve();
         }).on('error', (err: any) => {
-          reject(new Error(`فشل في الاتصال بالخادم: ${err.message}`));
+          reject(createNetworkError(
+            ERROR_CODES.NETWORK_CONNECTION_FAILED,
+            `SSH connection failed: ${err.message}`,
+            `${host}:${port}`,
+            undefined,
+            true
+          ));
         }).connect({
           host,
           port: port || 22,
@@ -335,8 +447,19 @@ export class DeploymentService {
         try {
           const sanitizedCommand = sanitizeCommand(server.commands);
           commandOutput = await this.executeSshCommand(ssh, `cd ${escapeShellArg(safeDeployPath)} && ${sanitizedCommand}`);
-        } catch (sanitizeError) {
-          throw new Error(`أمر غير آمن تم رفضه: ${sanitizeError.message}`);
+        } catch (sanitizeError: unknown) {
+          const appError = convertJavaScriptError(sanitizeError as Error);
+          throw createError(
+            ErrorCategory.BUSINESS_LOGIC,
+            'COMMAND_SANITIZATION_FAILED',
+            `أمر غير آمن تم رفضه: ${appError.message}`,
+            {
+              messageAr: `الأمر غير آمن ولا يمكن تنفيذه: ${appError.message}`,
+              severity: ErrorSeverity.HIGH,
+              userFriendly: true,
+              details: { originalError: appError.details }
+            }
+          );
         }
       }
 
@@ -346,8 +469,8 @@ export class DeploymentService {
       // حذف ملف المفتاح المؤقت
       try {
         await rm(tempKeyFile, { force: true });
-      } catch (error) {
-        console.error('خطأ في حذف ملف المفتاح المؤقت:', error);
+      } catch (error: unknown) {
+        console.error('خطأ في حذف ملف المفتاح المؤقت:', (error as Error)?.message || String(error));
       }
 
       // تحديث سجل النشر بالنجاح
@@ -365,11 +488,13 @@ export class DeploymentService {
         details: commandOutput,
         log: updatedLog
       };
-    } catch (error) {
+    } catch (error: unknown) {
+      const appError = convertJavaScriptError(error as Error);
+      
       // حذف ملف المفتاح المؤقت في حالة الخطأ
       try {
         await rm(tempKeyFile, { force: true });
-      } catch (rmError) {
+      } catch (rmError: unknown) {
         console.error('خطأ في حذف ملف المفتاح المؤقت:', rmError);
       }
 
@@ -377,15 +502,15 @@ export class DeploymentService {
       const updatedLog = await storage.updateLog(
         deploymentLog.id,
         'failure',
-        `فشل في النشر: ${error.message}`,
-        error.stack,
+        `فشل في النشر: ${appError.message}`,
+        JSON.stringify({ error: appError.details || appError.message, stack: (error as Error)?.stack }),
         new Date().toISOString()
       );
 
       return {
         success: false,
-        message: `فشل في نشر التطبيق: ${error.message}`,
-        details: error.stack,
+        message: `فشل في نشر التطبيق: ${appError.message}`,
+        details: JSON.stringify({ error: appError.details || appError.message, stack: (error as Error)?.stack }),
         log: updatedLog
       };
     }
@@ -440,8 +565,19 @@ export class DeploymentService {
         try {
           const sanitizedCommand = sanitizeCommand(server.commands);
           commandOutput = await this.executeSshCommand(ssh, `cd ${escapeShellArg(safeDeployPath)} && ${sanitizedCommand}`);
-        } catch (sanitizeError) {
-          throw new Error(`أمر غير آمن تم رفضه: ${sanitizeError.message}`);
+        } catch (sanitizeError: unknown) {
+          const appError = convertJavaScriptError(sanitizeError as Error);
+          throw createError(
+            ErrorCategory.BUSINESS_LOGIC,
+            'COMMAND_SANITIZATION_FAILED',
+            `أمر غير آمن تم رفضه: ${appError.message}`,
+            {
+              messageAr: `الأمر غير آمن ولا يمكن تنفيذه: ${appError.message}`,
+              severity: ErrorSeverity.HIGH,
+              userFriendly: true,
+              details: { originalError: appError.details }
+            }
+          );
         }
       }
 
@@ -463,20 +599,22 @@ export class DeploymentService {
         details: commandOutput,
         log: updatedLog
       };
-    } catch (error) {
+    } catch (error: unknown) {
+      const appError = convertJavaScriptError(error as Error);
+      
       // تحديث سجل النشر بالفشل
       const updatedLog = await storage.updateLog(
         deploymentLog.id,
         'failure',
-        `فشل في النشر: ${error.message}`,
-        error.stack,
+        `فشل في النشر: ${appError.message}`,
+        JSON.stringify({ error: appError.details || appError.message, stack: (error as Error)?.stack }),
         new Date().toISOString()
       );
 
       return {
         success: false,
-        message: `فشل في نشر التطبيق: ${error.message}`,
-        details: error.stack,
+        message: `فشل في نشر التطبيق: ${appError.message}`,
+        details: JSON.stringify({ error: appError.details || appError.message, stack: (error as Error)?.stack }),
         log: updatedLog
       };
     }
@@ -496,15 +634,15 @@ export class DeploymentService {
         let output = '';
         let errorOutput = '';
 
-        stream.on('data', (data) => {
+        stream.on('data', (data: Buffer | string) => {
           output += data.toString();
         });
 
-        stream.stderr.on('data', (data) => {
+        stream.stderr.on('data', (data: Buffer | string) => {
           errorOutput += data.toString();
         });
 
-        stream.on('close', (code) => {
+        stream.on('close', (code: number | null) => {
           if (code !== 0) {
             reject(new Error(`فشل تنفيذ الأمر (${code}): ${errorOutput || output}`));
           } else {
@@ -536,8 +674,18 @@ export class DeploymentService {
           resolve();
         });
 
-        writeStream.on('error', (err) => {
-          reject(new Error(`فشل في رفع الملف: ${err.message}`));
+        writeStream.on('error', (err: Error) => {
+          reject(createError(
+            ErrorCategory.FILE_SYSTEM,
+            'FILE_UPLOAD_FAILED',
+            `فشل في رفع الملف: ${err.message}`,
+            {
+              messageAr: `فشل في رفع الملف عبر SSH: ${err.message}`,
+              severity: ErrorSeverity.HIGH,
+              userFriendly: false,
+              details: { originalError: err.name, server: server.name }
+            }
+          ));
         });
 
         // بدء عملية الرفع
@@ -581,8 +729,8 @@ export class DeploymentService {
           setTimeout(() => {
             try {
               fs.unlinkSync(tempKeyFile);
-            } catch (error) {
-              console.error('خطأ في حذف ملف المفتاح المؤقت:', error);
+            } catch (error: unknown) {
+              console.error('خطأ في حذف ملف المفتاح المؤقت:', (error as Error)?.message || String(error));
             }
           }, 1000);
         } else if (authType === 'password' && server.password) {
@@ -605,17 +753,19 @@ export class DeploymentService {
         success: true,
         message: `تم الاتصال بنجاح بالخادم ${server.name}`
       };
-    } catch (error) {
+    } catch (error: unknown) {
+      const appError = convertJavaScriptError(error as Error);
+      
       // إغلاق الاتصال في حالة الخطأ
       try {
         ssh.end();
-      } catch (e) {
+      } catch (e: unknown) {
         // تجاهل الخطأ
       }
 
       return {
         success: false,
-        message: `فشل الاتصال: ${error.message}`
+        message: `فشل الاتصال: ${appError.message}`
       };
     }
   }

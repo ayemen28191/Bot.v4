@@ -3,17 +3,19 @@ import { t } from "@/lib/i18n";
 import { getCurrentLanguage } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { useIsAdmin } from "@/hooks/use-admin-check";
 import { getVisibleNavItems, isNavItemActive } from "./navConfig";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function AdminBottomNav() {
   const [location] = useLocation();
   const { user } = useAuth();
+  const isAdmin = useIsAdmin();
   const isRTL = getCurrentLanguage() === 'ar';
   const navItems = getVisibleNavItems();
 
   // إخفاء الشريط إذا لم يكن المستخدم مشرفاً
-  if (!user?.isAdmin) {
+  if (!isAdmin) {
     return null;
   }
 

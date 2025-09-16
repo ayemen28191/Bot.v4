@@ -5,43 +5,13 @@ import { promisify } from 'util';
 import path from 'path';
 import fs from 'fs';
 import { logsService } from '../services/logs-service';
+import { requireAdmin } from '../middleware/auth-middleware';
 
 export const updateRouter = express.Router();
 
 // تحويل exec إلى وعد Promise
 const execAsync = promisify(exec);
 
-// ميدلوير للتحقق من صلاحيات المشرف
-function isAdmin(req: express.Request, res: express.Response, next: express.NextFunction) {
-  const clientIP = req.ip || 'unknown';
-  const userAgent = req.get('User-Agent') || 'unknown';
-  
-  if (req.isAuthenticated() && req.user && req.user.isAdmin) {
-    logsService.logInfo('update', `Admin access granted for system operations: ${req.user.username}`, {
-      action: 'admin_access_granted',
-      username: req.user.username,
-      userId: req.user.id,
-      endpoint: req.originalUrl,
-      clientIP,
-      userAgent
-    });
-    return next();
-  }
-  
-  logsService.logWarn('update', 'Unauthorized attempt to access admin update endpoints', {
-    action: 'admin_access_denied',
-    isAuthenticated: req.isAuthenticated(),
-    userId: req.user?.id,
-    username: req.user?.username,
-    endpoint: req.originalUrl,
-    clientIP,
-    userAgent
-  });
-  
-  res.status(403).json({ 
-    message: 'غير مسموح. هذه العملية تتطلب صلاحيات المشرف.' 
-  });
-}
 
 // الحصول على معلومات النظام
 updateRouter.get('/system-info', async (req, res) => {
@@ -100,7 +70,7 @@ updateRouter.get('/system-info', async (req, res) => {
 });
 
 // طلب تحديث النظام
-updateRouter.post('/run-update', isAdmin, async (req, res) => {
+updateRouter.post('/run-update', requireAdmin({ language: 'ar', returnJson: true }), async (req, res) => {
   try {
     await logsService.logInfo('update', `System update initiated by admin: ${req.user!.username}`, {
       action: 'system_update_started',

@@ -3,6 +3,7 @@ import axios from 'axios';
 import { storage } from '../storage';
 import { ConfigKey } from '../../shared/schema';
 import { logsService } from '../services/logs-service';
+import { requireAdmin } from '../middleware/auth-middleware';
 
 // إنشاء جهاز التوجيه لإدارة مفاتيح API
 export const apiKeysRouter = express.Router();
@@ -18,14 +19,6 @@ interface ApiKeyPlaceholder {
   updatedAt?: string;
 }
 
-// التحقق من أن المستخدم مسؤول
-function isAdmin(req: express.Request, res: express.Response, next: express.NextFunction) {
-  if (req.isAuthenticated() && req.user && req.user.isAdmin) {
-    return next();
-  }
-  
-  res.status(403).json({ message: 'غير مسموح. هذه العملية تتطلب صلاحيات المشرف.' });
-}
 
 // أولاً: المسارات الخاصة بالكل (بما فيها المفاتيح الافتراضية والعامة)
 
@@ -437,7 +430,7 @@ apiKeysRouter.get('/test/:key', async (req, res) => {
 // ثانياً: المسارات الخاصة بالمشرفين فقط
 
 // الحصول على جميع مفاتيح API (للمشرفين فقط)
-apiKeysRouter.get('/', isAdmin, async (req, res) => {
+apiKeysRouter.get('/', requireAdmin({ language: 'ar', returnJson: true }), async (req, res) => {
   try {
     const keys = await storage.getAllConfigKeys();
     
@@ -467,7 +460,7 @@ apiKeysRouter.get('/', isAdmin, async (req, res) => {
 });
 
 // إنشاء أو تحديث مفتاح API (للمشرفين فقط)
-apiKeysRouter.post('/', isAdmin, async (req, res) => {
+apiKeysRouter.post('/', requireAdmin({ language: 'ar', returnJson: true }), async (req, res) => {
   try {
     const { key, value, description, isSecret = true } = req.body;
     
@@ -490,7 +483,7 @@ apiKeysRouter.post('/', isAdmin, async (req, res) => {
 });
 
 // حذف مفتاح API (للمشرفين فقط)
-apiKeysRouter.delete('/:key', isAdmin, async (req, res) => {
+apiKeysRouter.delete('/:key', requireAdmin({ language: 'ar', returnJson: true }), async (req, res) => {
   try {
     const keyName = req.params.key;
     
@@ -512,7 +505,7 @@ apiKeysRouter.delete('/:key', isAdmin, async (req, res) => {
 
 // الحصول على مفتاح API محدد (للمشرفين فقط)
 // ملاحظة: يجب أن يكون هذا المسار آخر مسار لأنه يتعامل مع المعلمة المتغيرة :key
-apiKeysRouter.get('/:key', isAdmin, async (req, res) => {
+apiKeysRouter.get('/:key', requireAdmin({ language: 'ar', returnJson: true }), async (req, res) => {
   try {
     const keyName = req.params.key;
     const keyData = await storage.getConfigKey(keyName);
