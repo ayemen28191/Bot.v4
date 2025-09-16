@@ -106,8 +106,10 @@ class SignalLogger {
         marketType: requestData.marketType,
         platform: requestData.platform,
         action: 'signal_request',
+        actorType: 'user',
         userId: requestData.userId,
-        username: requestData.username
+        username: requestData.username,
+        actorDisplayName: requestData.username
       }, requestData.userId);
 
       console.log(`[SignalLogger] Started request: ${requestId} for ${requestData.symbol}`);
@@ -194,7 +196,8 @@ class SignalLogger {
         result: 'success',
         actorType: 'user',
         userId: activeRequest.data.userId,
-        username: activeRequest.data.username
+        username: activeRequest.data.username,
+        actorDisplayName: activeRequest.data.username
       }, activeRequest.data.userId || undefined);
 
       // إزالة من الطلبات النشطة
@@ -276,7 +279,8 @@ class SignalLogger {
         result: 'failed',
         actorType: 'user',
         userId: activeRequest.data.userId,
-        username: activeRequest.data.username
+        username: activeRequest.data.username,
+        actorDisplayName: activeRequest.data.username
       }, activeRequest.data.userId || undefined);
 
       // إزالة من الطلبات النشطة

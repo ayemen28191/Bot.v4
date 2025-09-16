@@ -477,14 +477,14 @@ export function LogCard({ log, onClick, isSelected, onSearch }: LogCardProps) {
   const timeInfo = formatTime(log.timestamp);
   const actorDisplayName = log.actorDisplayName || log.userDisplayName || log.username || log.source;
   const isUserAction = log.actorType === 'user' || 
-                     log.userId || 
-                     log.username || 
-                     log.userDisplayName ||
+                     Boolean(log.userId) || 
+                     Boolean(log.username) || 
+                     Boolean(log.userDisplayName) ||
                      (log.source === 'signal-logger' && log.meta && 
                       (() => {
                         try {
-                          const metaData = JSON.parse(log.meta);
-                          return metaData.context?.userId;
+                          const metaData = typeof log.meta === 'string' ? JSON.parse(log.meta) : log.meta;
+                          return metaData?.context?.userId || metaData?.userId;
                         } catch {
                           return false;
                         }
@@ -713,9 +713,9 @@ export function LogCard({ log, onClick, isSelected, onSearch }: LogCardProps) {
         />
 
         {/* Enhanced Cumulative Counters */}
-        {((log.previousTotal !== undefined && log.previousTotal !== null) || 
-          (log.dailyTotal !== undefined && log.dailyTotal !== null) || 
-          (log.monthlyTotal !== undefined && log.monthlyTotal !== null)) && (
+        {(log.previousTotal !== undefined && log.previousTotal !== null) || 
+         (log.dailyTotal !== undefined && log.dailyTotal !== null) || 
+         (log.monthlyTotal !== undefined && log.monthlyTotal !== null) ? (
           <div className="my-4">
             <div className="flex items-center space-x-2 space-x-reverse flex-wrap gap-2">
               {log.previousTotal !== undefined && log.previousTotal !== null && (
