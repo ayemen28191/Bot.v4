@@ -5,7 +5,7 @@ import { promisify } from 'util';
 import path from 'path';
 import fs from 'fs';
 import { logsService } from '../services/logs-service';
-import { requireAdmin } from '../middleware/auth-middleware';
+import { requireAdmin, requireAdminFast } from '../middleware/auth-middleware';
 
 export const updateRouter = express.Router();
 

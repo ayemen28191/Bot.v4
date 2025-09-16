@@ -3,7 +3,7 @@ import axios from 'axios';
 import { storage } from '../storage';
 import { ConfigKey } from '../../shared/schema';
 import { logsService } from '../services/logs-service';
-import { requireAdmin } from '../middleware/auth-middleware';
+import { requireAdmin, requireAdminFast } from '../middleware/auth-middleware';
 
 // إنشاء جهاز التوجيه لإدارة مفاتيح API
 export const apiKeysRouter = express.Router();

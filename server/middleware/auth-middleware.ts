@@ -67,6 +67,44 @@ function extractRequestContext(req: Request) {
 }
 
 /**
+ * دالة مساعدة داخلية للتحقق من المصادقة
+ * تُستخدم داخلياً لتجنب التكرار في الدوال الأخرى
+ */
+function _checkAuthState(req: Request): {
+  isAuthenticated: boolean;
+  user: any;
+  authMethod: 'passport' | 'session' | null;
+} {
+  // التحقق من المصادقة عبر Passport.js
+  const isPassportAuthenticated = req.isAuthenticated && req.isAuthenticated() && req.user;
+  
+  // التحقق من المصادقة عبر الجلسة المخصصة (للتوافق مع الكود القديم)
+  const isSessionAuthenticated = req.session?.user?.id;
+
+  if (isPassportAuthenticated) {
+    return {
+      isAuthenticated: true,
+      user: req.user,
+      authMethod: 'passport'
+    };
+  }
+
+  if (isSessionAuthenticated) {
+    return {
+      isAuthenticated: true,
+      user: req.session.user,
+      authMethod: 'session'
+    };
+  }
+
+  return {
+    isAuthenticated: false,
+    user: null,
+    authMethod: null
+  };
+}
+
+/**
  * التحقق الأساسي من المصادقة
  * يدعم كلاً من req.user (Passport.js) و req.session.user
  */
@@ -80,20 +118,15 @@ export function isAuthenticated(
   const context = extractRequestContext(req);
 
   try {
-    // التحقق من المصادقة عبر Passport.js
-    const isPassportAuthenticated = req.isAuthenticated && req.isAuthenticated() && req.user;
-    
-    // التحقق من المصادقة عبر الجلسة المخصصة (للتوافق مع الكود القديم)
-    const isSessionAuthenticated = req.session?.user?.id;
+    const authState = _checkAuthState(req);
 
-    if (isPassportAuthenticated || isSessionAuthenticated) {
+    if (authState.isAuthenticated) {
       if (!silent) {
-        const user = req.user || req.session?.user;
-        logsService.logInfo('auth', `Authentication check passed for user: ${user?.username}`, {
+        logsService.logInfo('auth', `Authentication check passed for user: ${authState.user?.username}`, {
           action: 'auth_check_success',
-          userId: user?.id,
-          username: user?.username,
-          authMethod: isPassportAuthenticated ? 'passport' : 'session',
+          userId: authState.user?.id,
+          username: authState.user?.username,
+          authMethod: authState.authMethod,
           ...context
         });
       }
@@ -153,11 +186,10 @@ export function isAdmin(
   const context = extractRequestContext(req);
 
   try {
-    // أولاً، التحقق من المصادقة
-    const isPassportAuthenticated = req.isAuthenticated && req.isAuthenticated() && req.user;
-    const isSessionAuthenticated = req.session?.user?.id;
+    // أولاً، التحقق من المصادقة باستخدام الدالة الموحدة
+    const authState = _checkAuthState(req);
 
-    if (!isPassportAuthenticated && !isSessionAuthenticated) {
+    if (!authState.isAuthenticated) {
       logsService.logWarn('auth', 'Admin check failed: User not authenticated', {
         action: 'admin_check_failed',
         reason: 'not_authenticated',
@@ -172,7 +204,7 @@ export function isAdmin(
       return;
     }
 
-    const user = req.user || req.session?.user;
+    const user = authState.user;
 
     // إذا كان التحقق من قاعدة البيانات مطلوب (للحالات الحساسة)
     if (requireDatabaseCheck && user?.id) {
@@ -185,6 +217,7 @@ export function isAdmin(
             username: user?.username,
             isAdmin: dbUser?.isAdmin || false,
             checkMethod: 'database',
+            authMethod: authState.authMethod,
             ...context
           });
 
@@ -200,6 +233,7 @@ export function isAdmin(
           userId: user?.id,
           username: user?.username,
           checkMethod: 'database',
+          authMethod: authState.authMethod,
           ...context
         });
 
@@ -210,6 +244,7 @@ export function isAdmin(
           userId: user?.id,
           username: user?.username,
           error: error.message || String(error),
+          authMethod: authState.authMethod,
           ...context
         });
 
@@ -231,6 +266,7 @@ export function isAdmin(
         username: user?.username,
         isAdmin: user?.isAdmin || false,
         checkMethod: 'session',
+        authMethod: authState.authMethod,
         ...context
       });
 
@@ -248,6 +284,7 @@ export function isAdmin(
       userId: user?.id,
       username: user?.username,
       checkMethod: 'session',
+      authMethod: authState.authMethod,
       ...context
     });
 
@@ -305,24 +342,15 @@ export function requireUser(options: {
 /**
  * Middleware للمسارات التي تتطلب صلاحيات المشرف
  * مع خيارات إضافية للتخصيص
+ * تم تبسيطه لإزالة التكرار - isAdmin تتضمن بالفعل فحص المصادقة
  */
 export function requireAdmin(options: { 
   language?: 'ar' | 'en'; 
   requireDatabaseCheck?: boolean;
   returnJson?: boolean;
-  checkUserFirst?: boolean;
 } = {}) {
   return (req: Request, res: Response, next: NextFunction) => {
-    const { checkUserFirst = true } = options;
-
-    // إذا كان المطلوب التحقق من المستخدم أولاً
-    if (checkUserFirst) {
-      return isAuthenticated(req, res, () => {
-        isAdmin(req, res, next, options);
-      }, { language: options.language, silent: false });
-    }
-
-    // التحقق من المشرف مباشرة (يتضمن التحقق من المصادقة)
+    // isAdmin تتضمن بالفعل فحص المصادقة، لذا لا نحتاج تكرار
     isAdmin(req, res, next, options);
   };
 }
@@ -402,6 +430,41 @@ export function checkUserPermission(user: any, permission: 'admin' | 'user' = 'u
   return true; // مستخدم عادي
 }
 
+// ===================== Shortcuts شائعة الاستخدام =====================
+
+/**
+ * Middleware للمشرف مع فحص قاعدة البيانات (للحالات الحساسة)
+ * يُستخدم عادة في endpoints الحساسة مثل إدارة الخوادم
+ */
+export const requireAdminDB = requireAdmin({ 
+  language: 'ar', 
+  requireDatabaseCheck: true, 
+  returnJson: false 
+});
+
+/**
+ * Middleware للمشرف العادي (أسرع، بدون فحص قاعدة البيانات)
+ * يُستخدم في معظم admin endpoints
+ */
+export const requireAdminFast = requireAdmin({ 
+  language: 'ar', 
+  returnJson: true 
+});
+
+/**
+ * Middleware للمستخدم العادي مع رسائل بالعربية
+ */
+export const requireUserAR = requireUser({ 
+  language: 'ar' 
+});
+
+/**
+ * Middleware للمستخدم العادي مع رسائل بالإنجليزية
+ */
+export const requireUserEN = requireUser({ 
+  language: 'en' 
+});
+
 // تصدير دوال مساعدة إضافية للتوافق مع الكود القديم
 export const authMiddleware = {
   isAuthenticated,
@@ -410,7 +473,12 @@ export const authMiddleware = {
   requireAdmin,
   requirePermission,
   getCurrentUser,
-  checkUserPermission
+  checkUserPermission,
+  // Shortcuts الجديدة
+  requireAdminDB,
+  requireAdminFast,
+  requireUserAR,
+  requireUserEN
 };
 
 export default authMiddleware;
