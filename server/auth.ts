@@ -243,10 +243,12 @@ export function setupAuth(app: Express) {
         }
 
         console.log(`Authentication successful for user: ${username}`);
-        await logsService.info("auth", `Login successful for user: ${username}`, {
+        await logsService.logUserInfo("auth", `Login successful for user: ${username}`, {
+          id: user.id,
+          username: user.username,
+          displayName: user.displayName
+        }, {
           action: "login_success",
-          username,
-          userId: user.id,
           isAdmin: user.isAdmin,
           timestamp: new Date().toISOString()
         });
@@ -331,10 +333,12 @@ export function setupAuth(app: Express) {
           return next(err);
         }
         console.log(`User logged in successfully: ${user.id}`);
-        await logsService.logInfo("auth", `Session created successfully for user: ${user.username}`, {
-          action: "session_created",
+        await logsService.logUserInfo("auth", `Session created successfully for user: ${user.username}`, {
+          id: user.id,
           username: user.username,
-          userId: user.id,
+          displayName: user.displayName
+        }, {
+          action: "session_created",
           isAdmin: user.isAdmin,
           clientIP,
           userAgent
@@ -368,13 +372,23 @@ export function setupAuth(app: Express) {
         return next(err);
       }
       console.log(`User ${userId} logged out successfully`);
-      await logsService.logInfo("auth", `User logged out successfully: ${username}`, {
-        action: "logout_success",
-        username,
-        userId,
-        clientIP,
-        userAgent
-      });
+      if (userId && username) {
+        await logsService.logUserInfo("auth", `User logged out successfully: ${username}`, {
+          id: userId,
+          username: username,
+          displayName: username
+        }, {
+          action: "logout_success",
+          clientIP,
+          userAgent
+        });
+      } else {
+        await logsService.logInfo("auth", `User logged out successfully`, {
+          action: "logout_success",
+          clientIP,
+          userAgent
+        });
+      }
       res.sendStatus(200);
     });
   });
@@ -454,10 +468,12 @@ export function setupAuth(app: Express) {
           return next(err);
         }
         console.log(`User registered and logged in successfully: ${newUser.id}`);
-        await logsService.logInfo("auth", `User registered and auto-logged in successfully: ${newUser.username}`, {
-          action: "registration_success",
+        await logsService.logUserInfo("auth", `User registered and auto-logged in successfully: ${newUser.username}`, {
+          id: newUser.id,
           username: newUser.username,
-          userId: newUser.id,
+          displayName: newUser.displayName
+        }, {
+          action: "registration_success",
           isAdmin: newUser.isAdmin,
           clientIP,
           userAgent
@@ -512,10 +528,12 @@ export function setupAuth(app: Express) {
       return res.status(401).json({ message: "غير مسجل الدخول" });
     }
     
-    await logsService.logInfo("auth", `Session check for user: ${req.user!.username}`, {
-      action: "session_check_authenticated",
+    await logsService.logUserInfo("auth", `Session check for user: ${req.user!.username}`, {
+      id: req.user!.id,
       username: req.user!.username,
-      userId: req.user!.id,
+      displayName: req.user!.displayName || req.user!.username
+    }, {
+      action: "session_check_authenticated",
       isAdmin: req.user!.isAdmin,
       clientIP,
       userAgent
