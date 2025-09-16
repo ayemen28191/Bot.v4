@@ -160,6 +160,36 @@ export const userCounters = sqliteTable("user_counters", {
   updatedAt: text("updated_at").notNull().default(new Date().toISOString()),
 });
 
+// جدول تقارير الأخطاء (لتجميع وتحليل الأخطاء من العملاء)
+export const errorReports = sqliteTable("error_reports", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  errorHash: text("error_hash").notNull(), // Hash للخطأ للتجميع والفلترة
+  category: text("category").notNull(), // validation, authentication, network, etc.
+  code: text("code").notNull(), // كود الخطأ المحدد
+  message: text("message").notNull(), // رسالة الخطأ الأساسية
+  messageAr: text("message_ar"), // رسالة الخطأ بالعربية
+  severity: text("severity").notNull(), // low, medium, high, critical
+  count: integer("count").notNull().default(1), // عدد المرات التي تم الإبلاغ عن هذا الخطأ
+  // معلومات السياق (منظفة من البيانات الحساسة)
+  userAgent: text("user_agent"), // معلومات المتصفح
+  language: text("language"), // لغة المستخدم
+  url: text("url"), // الصفحة التي حدث فيها الخطأ (منظفة)
+  platform: text("platform"), // platform المستخدم
+  connectionType: text("connection_type"), // نوع الاتصال
+  // تفاصيل إضافية (JSON)
+  details: text("details"), // تفاصيل إضافية آمنة
+  stack: text("stack"), // stack trace منظف
+  // معلومات الطلب (مجهولة)
+  requestId: text("request_id"), // معرف الطلب للتتبع
+  sessionId: text("session_id"), // معرف الجلسة (مجهول)
+  userId: integer("user_id"), // معرف المستخدم (اختياري)
+  // تواريخ
+  firstReportedAt: text("first_reported_at").notNull().default(new Date().toISOString()),
+  lastReportedAt: text("last_reported_at").notNull().default(new Date().toISOString()),
+  createdAt: text("created_at").notNull().default(new Date().toISOString()),
+  updatedAt: text("updated_at").notNull().default(new Date().toISOString()),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -324,3 +354,49 @@ export const enhancedUserCounterSchema = insertUserCounterSchema.extend({
 export type InsertUserCounter = z.infer<typeof insertUserCounterSchema>;
 export type EnhancedInsertUserCounter = z.infer<typeof enhancedUserCounterSchema>;
 export type UserCounter = typeof userCounters.$inferSelect;
+
+// سكيما لإنشاء تقرير خطأ جديد
+export const insertErrorReportSchema = createInsertSchema(errorReports).pick({
+  errorHash: true,
+  category: true,
+  code: true,
+  message: true,
+  messageAr: true,
+  severity: true,
+  count: true,
+  userAgent: true,
+  language: true,
+  url: true,
+  platform: true,
+  connectionType: true,
+  details: true,
+  stack: true,
+  requestId: true,
+  sessionId: true,
+  userId: true,
+  firstReportedAt: true,
+  lastReportedAt: true,
+});
+
+// سكيما للتحقق من تقارير الأخطاء من العميل (بدون errorHash - ينشئه الخادم)
+export const enhancedErrorReportSchema = z.object({
+  category: z.enum(['validation', 'authentication', 'authorization', 'network', 'database', 'api_limit', 'file_system', 'business_logic', 'system', 'unknown']),
+  code: z.string().min(1).max(100),
+  message: z.string().min(1).max(1000),
+  messageAr: z.string().max(1000).optional(),
+  severity: z.enum(['low', 'medium', 'high', 'critical']).default('medium'),
+  userAgent: z.string().max(500).optional(),
+  language: z.string().max(10).optional(),
+  url: z.string().max(2000).optional(), // Allow longer URLs, server will clean them
+  platform: z.string().max(100).optional(),
+  connectionType: z.string().max(50).optional(),
+  details: z.record(z.any()).optional(),
+  stack: z.string().max(10000).optional(), // Allow longer stack, server will clean it
+  requestId: z.string().uuid().optional(),
+  sessionId: z.string().max(255).optional(),
+  userId: z.number().int().positive().optional()
+});
+
+export type InsertErrorReport = z.infer<typeof insertErrorReportSchema>;
+export type EnhancedInsertErrorReport = z.infer<typeof enhancedErrorReportSchema>;
+export type ErrorReport = typeof errorReports.$inferSelect;

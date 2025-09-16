@@ -1,7 +1,8 @@
 import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema } from "@shared/schema";
+import { insertUserSchema, enhancedErrorReportSchema } from "@shared/schema";
+import crypto from "crypto";
 import { apiKeysRouter } from "./routes/api-keys";
 import { apiKeysDebugRouter } from "./routes/api-keys-debug";
 import { testRouter } from "./routes/test";
@@ -35,6 +36,39 @@ function isAdmin(req: express.Request, res: express.Response, next: express.Next
   return res.status(403).json({ error: 'غير مصرح بالوصول. المسار مخصص للمشرفين فقط.' });
 }
 
+// Rate limiting for error reports
+const errorReportThrottles = new Map<string, { count: number; lastReset: number }>();
+const ERROR_REPORT_WINDOW = 60000; // 1 minute
+const MAX_ERROR_REPORTS_PER_WINDOW = 20; // Max 20 error reports per minute per IP
+
+function errorReportRateLimit(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const clientId = req.ip || 'unknown';
+  const now = Date.now();
+  
+  let throttle = errorReportThrottles.get(clientId);
+  
+  if (!throttle) {
+    throttle = { count: 0, lastReset: now };
+    errorReportThrottles.set(clientId, throttle);
+  }
+  
+  // Reset window if needed
+  if (now - throttle.lastReset > ERROR_REPORT_WINDOW) {
+    throttle.count = 0;
+    throttle.lastReset = now;
+  }
+  
+  if (throttle.count >= MAX_ERROR_REPORTS_PER_WINDOW) {
+    return res.status(429).json({ 
+      error: 'Too many error reports. Please try again later.',
+      errorAr: 'تم إرسال الكثير من تقارير الأخطاء. يرجى المحاولة لاحقاً.'
+    });
+  }
+  
+  throttle.count++;
+  next();
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   console.log('Creating HTTP server...');
   const httpServer = createServer(app);
@@ -63,6 +97,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // تسجيل مسارات السجلات والإشعارات (للمشرفين فقط)
   app.use("/api", logsRouter);
+
+  // ===== مسار تقارير الأخطاء (عام - لا يحتاج authentication) =====
+  app.post('/api/errors', errorReportRateLimit, async (req, res) => {
+    try {
+      // Validate the request body using Zod
+      const validationResult = enhancedErrorReportSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        console.warn('Invalid error report payload:', validationResult.error.issues);
+        return res.status(400).json({
+          error: 'Invalid error report format',
+          errorAr: 'تنسيق تقرير الخطأ غير صالح',
+          details: validationResult.error.issues.map(issue => ({
+            path: issue.path.join('.'),
+            message: issue.message
+          }))
+        });
+      }
+
+      const errorData = validationResult.data;
+      
+      // Clean sensitive data and create error hash
+      const cleanedUrl = errorData.url ? (() => {
+        try {
+          // If it's already a path (starts with /), keep it as is
+          if (errorData.url.startsWith('/')) {
+            // Remove query parameters and hash if present
+            return errorData.url.split('?')[0].split('#')[0];
+          }
+          // If it's a full URL, extract only the pathname
+          const url = new URL(errorData.url);
+          return url.pathname;
+        } catch {
+          // If parsing fails, try to extract path-like structure
+          const pathMatch = errorData.url.match(/^[^?#]+/);
+          return pathMatch ? pathMatch[0] : null;
+        }
+      })() : null;
+      
+      // Create a hash for deduplication (based on category, code, and cleaned message)
+      const errorHash = crypto
+        .createHash('sha256')
+        .update(`${errorData.category}:${errorData.code}:${errorData.message.substring(0, 100)}`)
+        .digest('hex');
+
+      // Clean stack trace - remove sensitive paths and keep only function names
+      const cleanedStack = errorData.stack ? (() => {
+        try {
+          return errorData.stack
+            .split('\n')
+            .map(line => line.replace(/\/[^\/\s]+\/[^\/\s]+/g, '[PATH]')) // Remove file paths
+            .slice(0, 10) // Limit to first 10 stack frames
+            .join('\n');
+        } catch {
+          return '[REDACTED]';
+        }
+      })() : undefined;
+
+      // Clean user agent - keep only basic browser info
+      const cleanedUserAgent = errorData.userAgent ? (() => {
+        try {
+          // Keep only the browser name and major version
+          const match = errorData.userAgent.match(/(Chrome|Firefox|Safari|Edge)\/(\d+)/);
+          return match ? `${match[1]}/${match[2]}` : 'Unknown';
+        } catch {
+          return 'Unknown';
+        }
+      })() : undefined;
+
+      // Get user ID if authenticated (optional)
+      const userId = req.isAuthenticated() && req.user ? req.user.id : undefined;
+
+      // Prepare cleaned error data for storage
+      const cleanedErrorData = {
+        errorHash,
+        category: errorData.category,
+        code: errorData.code,
+        message: errorData.message.substring(0, 500), // Limit message length
+        messageAr: errorData.messageAr?.substring(0, 500), // Limit Arabic message length
+        severity: errorData.severity,
+        userAgent: cleanedUserAgent,
+        language: errorData.language,
+        url: cleanedUrl,
+        platform: errorData.platform?.substring(0, 50), // Limit platform string
+        connectionType: errorData.connectionType?.substring(0, 20), // Limit connection type
+        details: errorData.details ? JSON.stringify(errorData.details).substring(0, 1000) : undefined, // Limit details
+        stack: cleanedStack,
+        requestId: crypto.randomUUID(), // Generate new request ID for tracking
+        sessionId: undefined, // Don't store session ID for privacy
+        userId
+      };
+
+      // Store the error report
+      await storage.createOrUpdateErrorReport(cleanedErrorData);
+
+      // Return success response (minimal info)
+      res.status(204).send(); // No content - just acknowledgment
+      
+    } catch (error) {
+      console.error('Error processing error report:', error);
+      // Don't expose internal errors to client
+      res.status(500).json({
+        error: 'Internal server error',
+        errorAr: 'خطأ داخلي في الخادم'
+      });
+    }
+  });
 
   // ===== مسارات إعدادات المستخدم =====
 

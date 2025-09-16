@@ -2,6 +2,14 @@ import axios from 'axios';
 import env, { getKeyFromDatabase } from '../env';
 import { storage } from '../storage';
 import { signalLogger } from './signal-logger';
+import {
+  AppError,
+  ErrorCategory,
+  createNetworkError,
+  createApiLimitError,
+  ERROR_CODES,
+  ERROR_MESSAGES
+} from '@shared/error-types';
 
 // تعريف واجهة نتيجة المؤشرات الفنية
 export interface TechnicalIndicatorResult {
@@ -40,6 +48,77 @@ function convertTimeframe(timeframe: string): string {
     '1D': '1day'
   };
   return mapping[timeframe] || '1h';
+}
+
+// =============================================================================
+// دوال مساعدة لمعالجة الأخطاء في التحليل الفني
+// =============================================================================
+
+async function handleTechnicalAnalysisError(
+  error: any, 
+  operation: string, 
+  symbol?: string,
+  usedKeyName?: string
+): Promise<TechnicalIndicatorResult> {
+  // تمييز المفتاح كفاشل إذا تم توفيره
+  if (usedKeyName) {
+    markKeyAsFailed(usedKeyName);
+  }
+
+  // معالجة أخطاء محددة
+  if (error.response?.status === 429 || error.message?.includes('429')) {
+    console.warn(`تم تجاوز حد API للعملية: ${operation}${symbol ? ` للرمز ${symbol}` : ''}`);
+    return {
+      value: 50, // قيمة محايدة
+      signal: 'neutral',
+      timeframe: '1H'
+    };
+  }
+
+  if (error.response?.status === 401 || error.response?.status === 403) {
+    console.error(`خطأ في المصادقة للعملية: ${operation}${symbol ? ` للرمز ${symbol}` : ''}`);
+    return {
+      value: 50,
+      signal: 'neutral', 
+      timeframe: '1H'
+    };
+  }
+
+  if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+    console.error(`خطأ في الاتصال للعملية: ${operation}${symbol ? ` للرمز ${symbol}` : ''}`);
+    return {
+      value: 50,
+      signal: 'neutral',
+      timeframe: '1H'
+    };
+  }
+
+  // خطأ عام
+  console.error(`خطأ في ${operation}${symbol ? ` للرمز ${symbol}` : ''}:`, error.message || error);
+  return {
+    value: 50,
+    signal: 'neutral',
+    timeframe: '1H'
+  };
+}
+
+// دالة مساعدة لمعالجة أخطاء تحليل السوق
+function handleMarketAnalysisError(error: any, operation: string): MarketAnalysisResult {
+  console.error(`خطأ في تحليل السوق - ${operation}:`, error.message || error);
+  
+  return {
+    trend: 'neutral',
+    strength: 50,
+    volatility: 50,
+    support: null,
+    resistance: null,
+    indicators: {},
+    lastUpdate: new Date().toISOString(),
+    nextUpdate: null,
+    probability: 50,
+    signal: 'wait',
+    dataSource: 'error_fallback'
+  };
 }
 
 // الحصول على مفتاح API من قاعدة البيانات أو المتغيرات البيئية

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import { MoreHorizontal, Clock, User, Monitor, AlertTriangle, Info, CheckCircle, XCircle, Activity, Settings, LogIn, LogOut, Signal, Edit, MessageCircle, Power, PowerOff, Copy, Search, MapPin, Smartphone, Globe, Hash, Calendar, TrendingUp, Wifi } from "lucide-react";
+import { MoreHorizontal, Clock, User, Monitor, AlertTriangle, Info, CheckCircle, XCircle, Activity, Settings, LogIn, LogOut, Signal, Edit, MessageCircle, Power, PowerOff, Copy, Search, MapPin, Smartphone, Globe, Hash, Calendar, TrendingUp, Wifi, BarChart3, Timer } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -247,7 +247,119 @@ const formatLocationInfo = (deviceInfo: any): string => {
   return parts.join(' ');
 };
 
-// دالة لتنسيق العدادات التراكمية
+// Static gradient variants للعدادات التراكمية (لتجنب dynamic Tailwind classes)
+const CUMULATIVE_COUNTER_VARIANTS = {
+  previousTotal: {
+    bgLight: 'bg-gradient-to-r from-purple-50/80 via-purple-100/60 to-purple-50/80',
+    bgDark: 'dark:bg-gradient-to-r dark:from-purple-950/40 dark:via-purple-900/30 dark:to-purple-950/40',
+    border: 'border-purple-200/60 dark:border-purple-800/40',
+    iconBg: 'bg-gradient-to-br from-purple-500/20 to-purple-600/20 dark:from-purple-400/30 dark:to-purple-500/30',
+    textColor: 'text-purple-700 dark:text-purple-300',
+    valueColor: 'text-purple-800 dark:text-purple-200',
+    shadow: 'shadow-purple-500/10 dark:shadow-purple-500/20'
+  },
+  dailyTotal: {
+    bgLight: 'bg-gradient-to-r from-blue-50/80 via-blue-100/60 to-blue-50/80',
+    bgDark: 'dark:bg-gradient-to-r dark:from-blue-950/40 dark:via-blue-900/30 dark:to-blue-950/40',
+    border: 'border-blue-200/60 dark:border-blue-800/40',
+    iconBg: 'bg-gradient-to-br from-blue-500/20 to-blue-600/20 dark:from-blue-400/30 dark:to-blue-500/30',
+    textColor: 'text-blue-700 dark:text-blue-300',
+    valueColor: 'text-blue-800 dark:text-blue-200',
+    shadow: 'shadow-blue-500/10 dark:shadow-blue-500/20'
+  },
+  monthlyTotal: {
+    bgLight: 'bg-gradient-to-r from-emerald-50/80 via-emerald-100/60 to-emerald-50/80',
+    bgDark: 'dark:bg-gradient-to-r dark:from-emerald-950/40 dark:via-emerald-900/30 dark:to-emerald-950/40',
+    border: 'border-emerald-200/60 dark:border-emerald-800/40',
+    iconBg: 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 dark:from-emerald-400/30 dark:to-emerald-500/30',
+    textColor: 'text-emerald-700 dark:text-emerald-300',
+    valueColor: 'text-emerald-800 dark:text-emerald-200',
+    shadow: 'shadow-emerald-500/10 dark:shadow-emerald-500/20'
+  }
+};
+
+// دالة لإنشاء العدادات التراكمية المحسنة
+const createCumulativeCounters = (log: LogEntry): Array<{
+  label: string;
+  value: number;
+  icon: React.ReactNode;
+  variant: keyof typeof CUMULATIVE_COUNTER_VARIANTS;
+}> => {
+  const counters = [];
+
+  if (log.previousTotal !== undefined && log.previousTotal !== null) {
+    counters.push({
+      label: 'التراكمي',
+      value: log.previousTotal,
+      icon: <BarChart3 className="h-3 w-3" />,
+      variant: 'previousTotal' as const
+    });
+  }
+
+  if (log.dailyTotal !== undefined && log.dailyTotal !== null) {
+    counters.push({
+      label: 'اليوم',
+      value: log.dailyTotal,
+      icon: <Calendar className="h-3 w-3" />,
+      variant: 'dailyTotal' as const
+    });
+  }
+
+  if (log.monthlyTotal !== undefined && log.monthlyTotal !== null) {
+    counters.push({
+      label: 'الشهر',
+      value: log.monthlyTotal,
+      icon: <TrendingUp className="h-3 w-3" />,
+      variant: 'monthlyTotal' as const
+    });
+  }
+
+  return counters;
+};
+
+// Component للعدادات التراكمية المحسنة
+const CumulativeCounters = ({ counters }: { counters: ReturnType<typeof createCumulativeCounters> }) => {
+  if (counters.length === 0) return null;
+
+  return (
+    <div className="flex items-center space-x-1.5 space-x-reverse">
+      {counters.map((counter, index) => {
+        const variant = CUMULATIVE_COUNTER_VARIANTS[counter.variant];
+        return (
+          <div
+            key={index}
+            className={`
+              relative flex items-center space-x-1 space-x-reverse px-2 py-1 rounded-md border transition-all duration-200 
+              hover:scale-105 hover:shadow-md group cursor-default backdrop-blur-sm
+              ${variant.bgLight} ${variant.bgDark} ${variant.border} ${variant.shadow}
+            `}
+            data-testid={`cumulative-counter-${counter.variant}`}
+          >
+            {/* Glass morphism overlay */}
+            <div className="absolute inset-0 rounded-md bg-gradient-to-r from-white/20 via-white/10 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-200 pointer-events-none"></div>
+            
+            {/* Content */}
+            <div className="relative flex items-center space-x-1 space-x-reverse">
+              <div className={`p-0.5 rounded-sm ${variant.iconBg} border border-white/20 dark:border-white/15`}>
+                <div className={variant.textColor}>
+                  {counter.icon}
+                </div>
+              </div>
+              <span className={`text-xs font-medium ${variant.textColor}`}>
+                {counter.label}:
+              </span>
+              <span className={`text-xs font-bold ${variant.valueColor}`}>
+                {counter.value.toLocaleString()}
+              </span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+// دالة لتنسيق العدادات التراكمية (الإصدار القديم - للاحتفاظ بالتوافق)
 const formatCumulativeCounts = (log: LogEntry): string => {
   const parts = [];
 
@@ -328,6 +440,7 @@ export function LogCard({ log, onClick, isSelected, onSearch }: LogCardProps) {
   const deviceInfo = parseDeviceAndLocationInfo(log.meta);
   const signalInfo = parseSignalInfo(log.message, log.meta);
   const cumulativeCounts = formatCumulativeCounts(log);
+  const cumulativeCounters = createCumulativeCounters(log);
 
   return (
     <Card 
@@ -423,10 +536,10 @@ export function LogCard({ log, onClick, isSelected, onSearch }: LogCardProps) {
           </div>
         )}
 
-        {/* الصف الخامس: العدادات التراكمية */}
-        {cumulativeCounts && (
-          <div className="text-xs text-purple-600 dark:text-purple-400 mb-1.5">
-            {cumulativeCounts}
+        {/* الصف الخامس: العدادات التراكمية المحسنة */}
+        {cumulativeCounters.length > 0 && (
+          <div className="mb-1.5">
+            <CumulativeCounters counters={cumulativeCounters} />
           </div>
         )}
 

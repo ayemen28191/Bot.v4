@@ -1,26 +1,67 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { handleError } from '@/lib/errorHandler';
+import {
+  AppError,
+  createNetworkError,
+  createAuthenticationError,
+  ERROR_CODES
+} from '@shared/error-types';
 
 type UnauthorizedBehavior = "throw" | "returnNull";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     let errorMessage = res.statusText;
+    let responseData: any = null;
+    
     try {
       const text = await res.text();
       if (text) {
-        errorMessage = text;
+        // محاولة تحليل JSON أولاً
+        try {
+          responseData = JSON.parse(text);
+          errorMessage = responseData.message || responseData.error || text;
+        } catch {
+          errorMessage = text;
+        }
       }
     } catch (parseError) {
       console.warn('Failed to parse error response:', parseError);
     }
     
-    const error = new Error(`${res.status}: ${errorMessage}`);
-    console.error('HTTP Error:', {
-      status: res.status,
-      statusText: res.statusText,
-      url: res.url,
-      message: errorMessage
-    });
+    // إنشاء AppError مناسب حسب نوع الخطأ
+    let error: AppError;
+    
+    if (res.status === 401) {
+      error = createAuthenticationError(
+        ERROR_CODES.AUTH_SESSION_EXPIRED,
+        'Your session has expired. Please log in again'
+      );
+    } else if (res.status >= 500) {
+      error = createNetworkError(
+        ERROR_CODES.NETWORK_SERVER_ERROR,
+        `Server error: ${errorMessage}`
+      );
+    } else if (res.status >= 400) {
+      error = new AppError(
+        'client',
+        ERROR_CODES.VALIDATION_INVALID_INPUT,
+        `Request error (${res.status}): ${errorMessage}`,
+        new Date().toISOString(),
+        'medium',
+        false,
+        true,
+        responseData || { status: res.status, url: res.url }
+      );
+    } else {
+      error = createNetworkError(
+        ERROR_CODES.NETWORK_REQUEST_FAILED,
+        `HTTP ${res.status}: ${errorMessage}`
+      );
+    }
+    
+    // تسجيل الخطأ وإلقاؤه
+    handleError(error);
     throw error;
   }
 }
@@ -65,12 +106,8 @@ export async function apiRequest(
     await throwIfResNotOk(res);
     return res;
   } catch (error: any) {
-    // تحسين تسجيل الأخطاء
-    console.error(`API Request Error [${method} ${url}]:`, error);
-    
     // تجاهل أخطاء AbortError ومنع الإبلاغ عنها
     if (error?.name === 'AbortError' || error?.message?.includes('user aborted') || error?.message?.includes('aborted')) {
-      // لا تعيد المحاولة عند الإلغاء المتعمد
       if (process.env.NODE_ENV === 'development') {
         console.debug('🔄 API request aborted (normal behavior)');
       }
@@ -91,6 +128,17 @@ export async function apiRequest(
       return apiRequest(method, url, data, retryCount + 1);
     }
 
+    // إنشاء خطأ موحد إذا لم يكن AppError بالفعل
+    if (!(error instanceof AppError)) {
+      const networkError = createNetworkError(
+        ERROR_CODES.NETWORK_REQUEST_FAILED,
+        `API request failed [${method} ${url}]: ${error.message || error}`
+      );
+      handleError(networkError);
+      throw networkError;
+    }
+
+    // إذا كان AppError بالفعل، فقط أعد إلقاؤه
     throw error;
   }
 }
@@ -142,8 +190,18 @@ export const getQueryFn: <T>(options: {
       await throwIfResNotOk(res);
       return await res.json();
     } catch (error) {
-      console.error('Query error:', error);
-      throw error;
+      // إذا كان AppError بالفعل، فقط أعد إلقاؤه
+      if (error instanceof AppError) {
+        throw error;
+      }
+      
+      // إنشاء خطأ موحد للأخطاء الأخرى
+      const queryError = createNetworkError(
+        ERROR_CODES.NETWORK_REQUEST_FAILED,
+        `Query failed for ${queryKey[0]}: ${error instanceof Error ? error.message : String(error)}`
+      );
+      handleError(queryError);
+      throw queryError;
     }
   };
 

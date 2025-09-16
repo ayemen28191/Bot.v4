@@ -14,7 +14,8 @@ import {
   systemLogs, type SystemLog, type InsertSystemLog,
   notificationSettings, type NotificationSetting, type InsertNotificationSetting,
   signalLogs, type SignalLog, type InsertSignalLog,
-  userCounters, type UserCounter, type InsertUserCounter
+  userCounters, type UserCounter, type InsertUserCounter,
+  errorReports, type ErrorReport, type InsertErrorReport
 } from "@shared/schema";
 import env from "./env";
 
@@ -116,6 +117,43 @@ export interface IStorage {
     mostActiveDay: string | null;
     mostActiveAction: string | null;
   }>;
+
+  // Error reports methods
+  createOrUpdateErrorReport(errorData: {
+    errorHash: string;
+    category: string;
+    code: string;
+    message: string;
+    messageAr?: string;
+    severity: string;
+    userAgent?: string;
+    language?: string;
+    url?: string;
+    platform?: string;
+    connectionType?: string;
+    details?: string;
+    stack?: string;
+    requestId?: string;
+    sessionId?: string;
+    userId?: number;
+  }): Promise<ErrorReport>;
+  getErrorReport(id: number): Promise<ErrorReport | undefined>;
+  getErrorReportByHash(errorHash: string): Promise<ErrorReport | undefined>;
+  getErrorReports(filters: {
+    category?: string;
+    severity?: string;
+    since?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<ErrorReport[]>;
+  getErrorReportsStats(): Promise<{
+    totalReports: number;
+    categoryCounts: Record<string, number>;
+    severityCounts: Record<string, number>;
+    recentErrors: ErrorReport[];
+    topErrors: ErrorReport[];
+  }>;
+  deleteOldErrorReports(cutoffDate: string): Promise<number>;
 
   // Database access
   getDatabase(): any;
@@ -500,6 +538,58 @@ try {
         });
       }
     });
+  });
+
+  // تأكد من إنشاء جدول تقارير الأخطاء
+  sqliteDb.exec(`
+    CREATE TABLE IF NOT EXISTS error_reports (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      error_hash TEXT NOT NULL,
+      category TEXT NOT NULL,
+      code TEXT NOT NULL,
+      message TEXT NOT NULL,
+      message_ar TEXT,
+      severity TEXT NOT NULL,
+      count INTEGER NOT NULL DEFAULT 1,
+      user_agent TEXT,
+      language TEXT,
+      url TEXT,
+      platform TEXT,
+      connection_type TEXT,
+      details TEXT,
+      stack TEXT,
+      request_id TEXT,
+      session_id TEXT,
+      user_id INTEGER,
+      first_reported_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      last_reported_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id),
+      UNIQUE (error_hash)
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating error_reports table:', err);
+    } else {
+      console.log('Error_reports table created or already exists');
+
+      // إنشاء فهارس الأداء
+      sqliteDb.exec(`
+        CREATE INDEX IF NOT EXISTS idx_error_reports_category ON error_reports(category);
+        CREATE INDEX IF NOT EXISTS idx_error_reports_severity ON error_reports(severity);
+        CREATE INDEX IF NOT EXISTS idx_error_reports_last_reported ON error_reports(last_reported_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_error_reports_count ON error_reports(count DESC);
+        CREATE INDEX IF NOT EXISTS idx_error_reports_hash ON error_reports(error_hash);
+        CREATE INDEX IF NOT EXISTS idx_error_reports_category_severity ON error_reports(category, severity);
+      `, (indexErr) => {
+        if (indexErr) {
+          console.error('Error creating error_reports indexes:', indexErr);
+        } else {
+          console.log('✅ Error_reports performance indexes created successfully');
+        }
+      });
+    }
   });
 
   console.log('✅ تم إنشاء جداول قاعدة البيانات بنجاح');
@@ -2734,6 +2824,369 @@ export class DatabaseStorage implements IStorage {
         }
       );
     });
+  }
+
+  // ========================= دوال إدارة تقارير الأخطاء =========================
+
+  async createOrUpdateErrorReport(errorData: {
+    errorHash: string;
+    category: string;
+    code: string;
+    message: string;
+    messageAr?: string;
+    severity: string;
+    userAgent?: string;
+    language?: string;
+    url?: string;
+    platform?: string;
+    connectionType?: string;
+    details?: string;
+    stack?: string;
+    requestId?: string;
+    sessionId?: string;
+    userId?: number;
+  }): Promise<ErrorReport> {
+    return new Promise<ErrorReport>((resolve, reject) => {
+      const now = new Date().toISOString();
+      
+      // Save reference to this for use in callbacks
+      const self = this;
+      
+      // إنشاء hash آمن للخطأ لتجميع التقارير المتشابهة - تنظيف URL
+      const cleanUrl = errorData.url ? (() => {
+        try {
+          // If it's already a path (starts with /), keep it as is
+          if (errorData.url.startsWith('/')) {
+            // Remove query parameters and hash if present
+            return errorData.url.split('?')[0].split('#')[0];
+          }
+          // If it's a full URL, extract only the pathname
+          const url = new URL(errorData.url);
+          return url.pathname;
+        } catch {
+          // If parsing fails, try to extract path-like structure
+          const pathMatch = errorData.url.match(/^[^?#]+/);
+          return pathMatch ? pathMatch[0] : null;
+        }
+      })() : null;
+      
+      // First check if error exists
+      sqliteDb.get(
+        'SELECT * FROM error_reports WHERE error_hash = ?',
+        [errorData.errorHash],
+        (err, existingRow: any) => {
+          if (err) {
+            console.error('Error checking existing error report:', err);
+            reject(err);
+            return;
+          }
+
+          if (existingRow) {
+            // Update existing error report (increment count)
+            sqliteDb.run(
+              `UPDATE error_reports SET 
+                count = count + 1,
+                last_reported_at = ?,
+                updated_at = ?,
+                user_agent = COALESCE(?, user_agent),
+                language = COALESCE(?, language),
+                platform = COALESCE(?, platform),
+                connection_type = COALESCE(?, connection_type)
+               WHERE error_hash = ?`,
+              [
+                now, now,
+                errorData.userAgent,
+                errorData.language,
+                errorData.platform,
+                errorData.connectionType,
+                errorData.errorHash
+              ],
+              function(updateErr) {
+                if (updateErr) {
+                  console.error('Error updating error report:', updateErr);
+                  reject(updateErr);
+                  return;
+                }
+
+                // Return updated record
+                sqliteDb.get(
+                  'SELECT * FROM error_reports WHERE error_hash = ?',
+                  [errorData.errorHash],
+                  (getErr, updatedRow: any) => {
+                    if (getErr) {
+                      reject(getErr);
+                    } else {
+                      resolve(self.convertErrorReportRow(updatedRow));
+                    }
+                  }
+                );
+              }
+            );
+          } else {
+            // Create new error report
+            sqliteDb.run(
+              `INSERT INTO error_reports (
+                error_hash, category, code, message, message_ar, severity,
+                user_agent, language, url, platform, connection_type,
+                details, stack, request_id, session_id, user_id,
+                first_reported_at, last_reported_at, created_at, updated_at
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [
+                errorData.errorHash,
+                errorData.category,
+                errorData.code,
+                errorData.message,
+                errorData.messageAr,
+                errorData.severity,
+                errorData.userAgent,
+                errorData.language,
+                cleanUrl,
+                errorData.platform,
+                errorData.connectionType,
+                errorData.details,
+                errorData.stack,
+                errorData.requestId,
+                errorData.sessionId,
+                errorData.userId,
+                now, now, now, now
+              ],
+              function(insertErr) {
+                if (insertErr) {
+                  console.error('Error creating error report:', insertErr);
+                  reject(insertErr);
+                  return;
+                }
+
+                const reportId = this.lastID;
+                sqliteDb.get(
+                  'SELECT * FROM error_reports WHERE id = ?',
+                  [reportId],
+                  (getErr, newRow: any) => {
+                    if (getErr) {
+                      reject(getErr);
+                    } else {
+                      resolve(self.convertErrorReportRow(newRow));
+                    }
+                  }
+                );
+              }
+            );
+          }
+        }
+      );
+    });
+  }
+
+  async getErrorReport(id: number): Promise<ErrorReport | undefined> {
+    return new Promise<ErrorReport | undefined>((resolve, reject) => {
+      sqliteDb.get('SELECT * FROM error_reports WHERE id = ?', [id], (err, row: any) => {
+        if (err) {
+          console.error('Error getting error report by ID:', err);
+          reject(err);
+        } else {
+          resolve(row ? this.convertErrorReportRow(row) : undefined);
+        }
+      });
+    });
+  }
+
+  async getErrorReportByHash(errorHash: string): Promise<ErrorReport | undefined> {
+    return new Promise<ErrorReport | undefined>((resolve, reject) => {
+      sqliteDb.get('SELECT * FROM error_reports WHERE error_hash = ?', [errorHash], (err, row: any) => {
+        if (err) {
+          console.error('Error getting error report by hash:', err);
+          reject(err);
+        } else {
+          resolve(row ? this.convertErrorReportRow(row) : undefined);
+        }
+      });
+    });
+  }
+
+  async getErrorReports(filters: {
+    category?: string;
+    severity?: string;
+    since?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<ErrorReport[]> {
+    return new Promise<ErrorReport[]>((resolve, reject) => {
+      let query = 'SELECT * FROM error_reports WHERE 1=1';
+      const params: any[] = [];
+
+      if (filters.category) {
+        query += ' AND category = ?';
+        params.push(filters.category);
+      }
+
+      if (filters.severity) {
+        query += ' AND severity = ?';
+        params.push(filters.severity);
+      }
+
+      if (filters.since) {
+        query += ' AND last_reported_at >= ?';
+        params.push(filters.since);
+      }
+
+      query += ' ORDER BY last_reported_at DESC';
+
+      if (filters.limit) {
+        query += ' LIMIT ?';
+        params.push(filters.limit);
+      }
+
+      if (filters.offset) {
+        query += ' OFFSET ?';
+        params.push(filters.offset);
+      }
+
+      sqliteDb.all(query, params, (err, rows: any[]) => {
+        if (err) {
+          console.error('Error getting error reports:', err);
+          reject(err);
+        } else {
+          const reports = rows.map(row => this.convertErrorReportRow(row));
+          resolve(reports);
+        }
+      });
+    });
+  }
+
+  async getErrorReportsStats(): Promise<{
+    totalReports: number;
+    categoryCounts: Record<string, number>;
+    severityCounts: Record<string, number>;
+    recentErrors: ErrorReport[];
+    topErrors: ErrorReport[];
+  }> {
+    return new Promise((resolve, reject) => {
+      // Get total count
+      sqliteDb.get('SELECT COUNT(*) as total FROM error_reports', [], (err, totalRow: any) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        const totalReports = totalRow.total;
+
+        // Get category counts
+        sqliteDb.all(
+          'SELECT category, SUM(count) as total FROM error_reports GROUP BY category ORDER BY total DESC',
+          [],
+          (err, categoryRows: any[]) => {
+            if (err) {
+              reject(err);
+              return;
+            }
+
+            const categoryCounts: Record<string, number> = {};
+            categoryRows.forEach(row => {
+              categoryCounts[row.category] = row.total;
+            });
+
+            // Get severity counts
+            sqliteDb.all(
+              'SELECT severity, SUM(count) as total FROM error_reports GROUP BY severity ORDER BY total DESC',
+              [],
+              (err, severityRows: any[]) => {
+                if (err) {
+                  reject(err);
+                  return;
+                }
+
+                const severityCounts: Record<string, number> = {};
+                severityRows.forEach(row => {
+                  severityCounts[row.severity] = row.total;
+                });
+
+                // Get recent errors
+                sqliteDb.all(
+                  'SELECT * FROM error_reports ORDER BY last_reported_at DESC LIMIT 10',
+                  [],
+                  (err, recentRows: any[]) => {
+                    if (err) {
+                      reject(err);
+                      return;
+                    }
+
+                    const recentErrors = recentRows.map(row => this.convertErrorReportRow(row));
+
+                    // Get top errors by count
+                    sqliteDb.all(
+                      'SELECT * FROM error_reports ORDER BY count DESC LIMIT 10',
+                      [],
+                      (err, topRows: any[]) => {
+                        if (err) {
+                          reject(err);
+                          return;
+                        }
+
+                        const topErrors = topRows.map(row => this.convertErrorReportRow(row));
+
+                        resolve({
+                          totalReports,
+                          categoryCounts,
+                          severityCounts,
+                          recentErrors,
+                          topErrors
+                        });
+                      }
+                    );
+                  }
+                );
+              }
+            );
+          }
+        );
+      });
+    });
+  }
+
+  async deleteOldErrorReports(cutoffDate: string): Promise<number> {
+    return new Promise<number>((resolve, reject) => {
+      sqliteDb.run(
+        'DELETE FROM error_reports WHERE first_reported_at < ?',
+        [cutoffDate],
+        function(err) {
+          if (err) {
+            console.error('Error deleting old error reports:', err);
+            reject(err);
+          } else {
+            console.log(`Deleted ${this.changes} old error reports`);
+            resolve(this.changes);
+          }
+        }
+      );
+    });
+  }
+
+  // Helper method to convert snake_case database row to camelCase
+  private convertErrorReportRow(row: any): ErrorReport {
+    return {
+      id: row.id,
+      errorHash: row.error_hash,
+      category: row.category,
+      code: row.code,
+      message: row.message,
+      messageAr: row.message_ar,
+      severity: row.severity,
+      count: row.count,
+      userAgent: row.user_agent,
+      language: row.language,
+      url: row.url,
+      platform: row.platform,
+      connectionType: row.connection_type,
+      details: row.details,
+      stack: row.stack,
+      requestId: row.request_id,
+      sessionId: row.session_id,
+      userId: row.user_id,
+      firstReportedAt: row.first_reported_at,
+      lastReportedAt: row.last_reported_at,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    };
   }
 }
 

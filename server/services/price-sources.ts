@@ -2,6 +2,15 @@ import axios, { AxiosError } from 'axios';
 import env from '../env';
 import { storage } from '../storage';
 import { KeyManager } from './keyManager';
+import {
+  AppError,
+  ErrorCategory,
+  createNetworkError,
+  createApiLimitError,
+  ERROR_CODES,
+  ERROR_MESSAGES
+} from '@shared/error-types';
+import { catchAsync } from '../middleware/global-error-handler';
 
 // تكوين المصادر
 const ALPHA_VANTAGE_BASE_URL = 'https://www.alphavantage.co/query';
@@ -25,25 +34,90 @@ function formatSymbolForBinance(symbol: string): string {
 const keyManager = new KeyManager(storage);
 
 
-// دالة لجلب السعر من Binance
-async function fetchFromBinance(symbol: string): Promise<PriceResult> {
-  let keyId: number | null = null;
-  try {
-    console.log('محاولة جلب السعر من Binance للرمز:', symbol);
-    const formattedSymbol = formatSymbolForBinance(symbol);
-    
-    // استخدام KeyManager للحصول على مفتاح API
-    const keyResult = await keyManager.getKeyForProvider('binance', 'BINANCE_API_KEY', env.BINANCE_API_KEY);
-    if (!keyResult.key) {
+// =============================================================================
+// دوال مساعدة لمعالجة الأخطاء المخصصة للـ API providers
+// =============================================================================
+
+async function handleProviderError(
+  error: any, 
+  provider: string, 
+  keyId: number | null,
+  failureDurationMinutes: number = 30
+): Promise<PriceResult> {
+  // تمييز المفتاح كفاشل إذا كان من قاعدة البيانات
+  if (keyId) {
+    await keyManager.markKeyFailed(keyId, failureDurationMinutes * 60);
+  }
+
+  // معالجة الأخطاء المختلفة
+  if (error instanceof AxiosError) {
+    if (error.response?.status === 429) {
       return {
         price: null,
-        error: 'لا يوجد مفتاح API متاح للـ Binance',
-        source: 'binance'
+        error: `API rate limit exceeded for ${provider}`,
+        source: provider
       };
     }
-    const { key: apiKey, keyId: resultKeyId } = keyResult;
-    keyId = resultKeyId;
     
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      return {
+        price: null,
+        error: `API authentication failed for ${provider}`,
+        source: provider
+      };
+    }
+    
+    if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+      return {
+        price: null,
+        error: `Connection failed to ${provider}`,
+        source: provider
+      };
+    }
+  }
+
+  return {
+    price: null,
+    error: error instanceof Error ? error.message : 'Unknown error',
+    source: provider
+  };
+}
+
+function validatePriceResponse(data: any, provider: string): PriceResult {
+  if (!data) {
+    return {
+      price: null,
+      error: `No data received from ${provider}`,
+      source: provider
+    };
+  }
+  return { price: null, error: '', source: provider }; // سيتم استبداله في كل دالة
+}
+
+// =============================================================================
+// دوال جلب الأسعار المحسنة
+// =============================================================================
+
+// دالة لجلب السعر من Binance
+async function fetchFromBinance(symbol: string): Promise<PriceResult> {
+  console.log('محاولة جلب السعر من Binance للرمز:', symbol);
+  const formattedSymbol = formatSymbolForBinance(symbol);
+  let keyId: number | null = null;
+  
+  // استخدام KeyManager للحصول على مفتاح API
+  const keyResult = await keyManager.getKeyForProvider('binance', 'BINANCE_API_KEY', env.BINANCE_API_KEY);
+  if (!keyResult.key) {
+    return {
+      price: null,
+      error: 'لا يوجد مفتاح API متاح للـ Binance',
+      source: 'binance'
+    };
+  }
+  
+  const { key: apiKey, keyId: resultKeyId } = keyResult;
+  keyId = resultKeyId;
+  
+  try {
     const response = await axios.get(`${BINANCE_BASE_URL}/ticker/price`, {
       params: { symbol: formattedSymbol },
       timeout: 5000,
@@ -68,36 +142,29 @@ async function fetchFromBinance(symbol: string): Promise<PriceResult> {
     };
   } catch (error) {
     console.error('خطأ في جلب السعر من Binance:', error);
-    // في حالة الخطأ، وسم المفتاح كفاشل إذا كان من قاعدة البيانات
-    if (keyId) {
-      await keyManager.markKeyFailed(keyId, 30 * 60); // 30 دقيقة
-    }
-    return { 
-      price: null, 
-      error: error instanceof Error ? error.message : 'خطأ غير معروف',
-      source: 'binance'
-    };
+    return await handleProviderError(error, 'binance', keyId, 30);
   }
 }
 
 // دالة لجلب السعر من TwelveData
 async function fetchFromTwelveData(symbol: string): Promise<PriceResult> {
+  console.log('محاولة جلب السعر من TwelveData للرمز:', symbol);
   let keyId: number | null = null;
-  try {
-    console.log('محاولة جلب السعر من TwelveData للرمز:', symbol);
-    
-    // استخدام KeyManager للحصول على مفتاح API
-    const keyResult = await keyManager.getKeyForProvider('twelvedata', 'TWELVEDATA_API_KEY', env.TWELVEDATA_API_KEY);
-    if (!keyResult.key) {
-      return {
-        price: null,
-        error: 'لا يوجد مفتاح API متاح لـ TwelveData',
-        source: 'twelvedata'
-      };
-    }
-    const { key: apiKey, keyId: resultKeyId } = keyResult;
-    keyId = resultKeyId;
+  
+  // استخدام KeyManager للحصول على مفتاح API
+  const keyResult = await keyManager.getKeyForProvider('twelvedata', 'TWELVEDATA_API_KEY', env.TWELVEDATA_API_KEY);
+  if (!keyResult.key) {
+    return {
+      price: null,
+      error: 'لا يوجد مفتاح API متاح لـ TwelveData',
+      source: 'twelvedata'
+    };
+  }
+  
+  const { key: apiKey, keyId: resultKeyId } = keyResult;
+  keyId = resultKeyId;
 
+  try {
     const response = await axios.get('https://api.twelvedata.com/price', {
       params: {
         symbol,
@@ -108,17 +175,8 @@ async function fetchFromTwelveData(symbol: string): Promise<PriceResult> {
 
     console.log('استجابة TwelveData:', response.data);
 
-    // التحقق من نجاح الاستجابة
-    if (response.data && response.data.price) {
-      return { 
-        price: parseFloat(response.data.price),
-        source: 'twelvedata'
-      };
-    }
-
-    // التحقق من تجاوز حد API
+    // التحقق من تجاوز حد API في الاستجابة
     if (response.data && response.data.code === 429) {
-      // تمييز المفتاح الحالي كفاشل لتجنبه في المرة القادمة
       if (keyId) {
         await keyManager.markKeyFailed(keyId, 24 * 60 * 60); // 24 ساعة
       }
@@ -126,6 +184,14 @@ async function fetchFromTwelveData(symbol: string): Promise<PriceResult> {
       return { 
         price: null, 
         error: `API credits exceeded: ${response.data.message}`,
+        source: 'twelvedata'
+      };
+    }
+
+    // التحقق من نجاح الاستجابة
+    if (response.data && response.data.price) {
+      return { 
+        price: parseFloat(response.data.price),
         source: 'twelvedata'
       };
     }
@@ -138,43 +204,20 @@ async function fetchFromTwelveData(symbol: string): Promise<PriceResult> {
   } catch (error) {
     console.error('خطأ في جلب السعر من TwelveData:', error);
     
-    // التحقق من وجود خطأ محدد
+    // معالجة خاصة لـ TwelveData rate limits
     const axiosError = error as AxiosError;
-    if (axiosError.response) {
-      // التحقق من خطأ تجاوز حد API في حالة الخطأ
-      if (axiosError.response.status === 429 ||
-         (axiosError.response.data && 
-          typeof axiosError.response.data === 'object' && 
-          'code' in axiosError.response.data && 
-          axiosError.response.data.code === 429)) {
-        
-        const errorData = axiosError.response.data as any;
-        const errorMessage = errorData?.message || 'تم تجاوز حد API';
-        
-        // تمييز المفتاح الحالي كفاشل لتجنبه في المرة القادمة
-        if (keyId) {
-          await keyManager.markKeyFailed(keyId, 24 * 60 * 60); // 24 ساعة
-        }
-        
-        return { 
-          price: null, 
-          error: `API credits exceeded: ${errorMessage}`,
-          source: 'twelvedata'
-        };
-      }
+    if (axiosError.response?.status === 429 ||
+        (axiosError.response?.data && 
+         typeof axiosError.response.data === 'object' && 
+         'code' in axiosError.response.data && 
+         axiosError.response.data.code === 429)) {
       
-      return { 
-        price: null, 
-        error: `خطأ من TwelveData: ${axiosError.response.status} - ${JSON.stringify(axiosError.response.data)}`,
-        source: 'twelvedata'
-      };
+      if (keyId) {
+        await keyManager.markKeyFailed(keyId, 24 * 60 * 60); // 24 ساعة
+      }
     }
     
-    return { 
-      price: null, 
-      error: error instanceof Error ? error.message : 'خطأ غير معروف',
-      source: 'twelvedata'
-    };
+    return await handleProviderError(error, 'twelvedata', keyId, 24 * 60); // 24 ساعة
   }
 }
 
