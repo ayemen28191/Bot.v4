@@ -33,8 +33,8 @@ export function BottomNavigation({ activeTab }: BottomNavigationProps) {
                 : "text-muted-foreground hover:text-primary"
             )}
           >
-            <Users className="h-5 w-5 mb-1" />
-            <span className="text-[10px] font-medium text-center">{t('users')}</span>
+            <Settings className="h-5 w-5 mb-1" />
+            <span className="text-[10px] font-medium text-center">{t('admin_panel')}</span>
           </Link>
         ) : (
           <Link 
