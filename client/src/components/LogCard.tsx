@@ -1,8 +1,16 @@
-import { useState } from "react";
+
+import { useState, useRef, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import { MoreHorizontal, Clock, User, Monitor, AlertTriangle, Info, CheckCircle, XCircle, Activity, Settings, LogIn, LogOut, Signal, Edit, MessageCircle, Power, PowerOff, Copy, Search, MapPin, Smartphone, Globe, Hash, Calendar, TrendingUp, Wifi, BarChart3, Timer } from "lucide-react";
+import { 
+  MoreHorizontal, Clock, User, Monitor, AlertTriangle, Info, CheckCircle, XCircle, 
+  Activity, Settings, LogIn, LogOut, Signal, Edit, MessageCircle, Power, PowerOff, 
+  Copy, Search, MapPin, Smartphone, Globe, Hash, Calendar, TrendingUp, Wifi, 
+  BarChart3, Timer, ChevronDown, ChevronUp, Database, Zap, Shield, Eye, EyeOff,
+  Network, Cpu, HardDrive, Terminal, Code, Server, Cloud, Lock, Unlock,
+  MousePointer, Layers, Gauge, Fingerprint, Key, Radar
+} from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -44,364 +52,398 @@ interface LogCardProps {
   onSearch?: (filters: { userId?: number; requestId?: string; sessionId?: string }) => void;
 }
 
-// دالة لتوليد الألوان للمستخدمين والمصادر
-const generateColor = (str: string): string => {
-  const colors = [
-    'hsl(142, 76%, 36%)', // أخضر
-    'hsl(221, 83%, 53%)', // أزرق
-    'hsl(262, 83%, 58%)', // بنفسجي
-    'hsl(346, 87%, 43%)', // أحمر
-    'hsl(33, 100%, 50%)', // برتقالي
-    'hsl(280, 100%, 70%)', // وردي
-    'hsl(200, 100%, 50%)', // سماوي
-    'hsl(120, 100%, 25%)', // أخضر داكن
+// الألوان الديناميكية المتقدمة
+const generateAdvancedColor = (str: string): { 
+  primary: string; 
+  secondary: string; 
+  gradient: string;
+  glow: string;
+} => {
+  const colorPalettes = [
+    {
+      primary: 'rgb(59, 130, 246)', // blue
+      secondary: 'rgb(147, 197, 253)',
+      gradient: 'from-blue-500/20 via-blue-400/10 to-blue-300/5',
+      glow: 'shadow-blue-500/20'
+    },
+    {
+      primary: 'rgb(16, 185, 129)', // emerald
+      secondary: 'rgb(110, 231, 183)',
+      gradient: 'from-emerald-500/20 via-emerald-400/10 to-emerald-300/5',
+      glow: 'shadow-emerald-500/20'
+    },
+    {
+      primary: 'rgb(139, 92, 246)', // violet
+      secondary: 'rgb(196, 181, 253)',
+      gradient: 'from-violet-500/20 via-violet-400/10 to-violet-300/5',
+      glow: 'shadow-violet-500/20'
+    },
+    {
+      primary: 'rgb(236, 72, 153)', // pink
+      secondary: 'rgb(251, 207, 232)',
+      gradient: 'from-pink-500/20 via-pink-400/10 to-pink-300/5',
+      glow: 'shadow-pink-500/20'
+    },
+    {
+      primary: 'rgb(245, 158, 11)', // amber
+      secondary: 'rgb(252, 211, 77)',
+      gradient: 'from-amber-500/20 via-amber-400/10 to-amber-300/5',
+      glow: 'shadow-amber-500/20'
+    },
+    {
+      primary: 'rgb(239, 68, 68)', // red
+      secondary: 'rgb(252, 165, 165)',
+      gradient: 'from-red-500/20 via-red-400/10 to-red-300/5',
+      glow: 'shadow-red-500/20'
+    }
   ];
+  
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
-  return colors[Math.abs(hash) % colors.length];
+  return colorPalettes[Math.abs(hash) % colorPalettes.length];
 };
 
-// دالة للحصول على الأيقونة المناسبة للمستوى
-const getLevelIcon = (level: string) => {
-  switch (level.toLowerCase()) {
-    case 'error':
-      return <AlertTriangle className="h-3 w-3 text-red-500" />;
-    case 'warn':
-      return <AlertTriangle className="h-3 w-3 text-yellow-500" />;
-    case 'info':
-      return <Info className="h-3 w-3 text-blue-500" />;
-    case 'debug':
-      return <Monitor className="h-3 w-3 text-gray-500" />;
-    default:
-      return <Info className="h-3 w-3 text-gray-400" />;
-  }
+// تأثيرات المستوى المتقدمة
+const getLevelStyle = (level: string) => {
+  const styles = {
+    error: {
+      icon: <AlertTriangle className="h-3.5 w-3.5" />,
+      color: 'text-red-500 dark:text-red-400',
+      bg: 'bg-gradient-to-r from-red-50 to-red-100/50 dark:from-red-950/30 dark:to-red-900/20',
+      border: 'border-red-200/60 dark:border-red-800/40',
+      glow: 'shadow-red-500/20',
+      pulse: 'animate-pulse',
+      badge: 'bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/20'
+    },
+    warn: {
+      icon: <AlertTriangle className="h-3.5 w-3.5" />,
+      color: 'text-amber-500 dark:text-amber-400',
+      bg: 'bg-gradient-to-r from-amber-50 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-900/20',
+      border: 'border-amber-200/60 dark:border-amber-800/40',
+      glow: 'shadow-amber-500/20',
+      pulse: '',
+      badge: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20'
+    },
+    info: {
+      icon: <Info className="h-3.5 w-3.5" />,
+      color: 'text-blue-500 dark:text-blue-400',
+      bg: 'bg-gradient-to-r from-blue-50 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-900/20',
+      border: 'border-blue-200/60 dark:border-blue-800/40',
+      glow: 'shadow-blue-500/20',
+      pulse: '',
+      badge: 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20'
+    },
+    debug: {
+      icon: <Terminal className="h-3.5 w-3.5" />,
+      color: 'text-gray-500 dark:text-gray-400',
+      bg: 'bg-gradient-to-r from-gray-50 to-gray-100/50 dark:from-gray-950/30 dark:to-gray-900/20',
+      border: 'border-gray-200/60 dark:border-gray-800/40',
+      glow: 'shadow-gray-500/20',
+      pulse: '',
+      badge: 'bg-gray-500/10 text-gray-700 dark:text-gray-300 border-gray-500/20'
+    }
+  };
+  
+  return styles[level.toLowerCase() as keyof typeof styles] || styles.info;
 };
 
-// دالة للحصول على أيقونة الإجراء
-const getActionIcon = (action?: string | null) => {
-  if (!action) return <Activity className="h-3 w-3 text-muted-foreground" />;
+// أيقونات الإجراءات المتقدمة
+const getAdvancedActionIcon = (action?: string | null) => {
+  if (!action) return <Activity className="h-3.5 w-3.5 text-muted-foreground" />;
 
-  switch (action.toLowerCase()) {
-    case 'login':
-      return <LogIn className="h-3 w-3 text-green-500" />;
-    case 'logout':
-      return <LogOut className="h-3 w-3 text-orange-500" />;
-    case 'signal_request':
-      return <Signal className="h-3 w-3 text-blue-500" />;
-    case 'password_change':
-      return <Edit className="h-3 w-3 text-purple-500" />;
-    case 'change_avatar':
-      return <User className="h-3 w-3 text-cyan-500" />;
-    case 'chat_message':
-      return <MessageCircle className="h-3 w-3 text-pink-500" />;
-    case 'server_on':
-      return <Power className="h-3 w-3 text-green-500" />;
-    case 'server_off':
-      return <PowerOff className="h-3 w-3 text-red-500" />;
-    case 'error':
-      return <XCircle className="h-3 w-3 text-red-500" />;
-    default:
-      return <Activity className="h-3 w-3 text-blue-500" />;
-  }
+  const iconMap: Record<string, JSX.Element> = {
+    login: <LogIn className="h-3.5 w-3.5 text-green-500" />,
+    logout: <LogOut className="h-3.5 w-3.5 text-orange-500" />,
+    signal_request: <Signal className="h-3.5 w-3.5 text-blue-500" />,
+    password_change: <Key className="h-3.5 w-3.5 text-purple-500" />,
+    change_avatar: <User className="h-3.5 w-3.5 text-cyan-500" />,
+    chat_message: <MessageCircle className="h-3.5 w-3.5 text-pink-500" />,
+    server_on: <Power className="h-3.5 w-3.5 text-green-500" />,
+    server_off: <PowerOff className="h-3.5 w-3.5 text-red-500" />,
+    error: <XCircle className="h-3.5 w-3.5 text-red-500" />,
+    database: <Database className="h-3.5 w-3.5 text-indigo-500" />,
+    network: <Network className="h-3.5 w-3.5 text-teal-500" />,
+    security: <Shield className="h-3.5 w-3.5 text-rose-500" />,
+    api_call: <Code className="h-3.5 w-3.5 text-violet-500" />,
+    deployment: <Cloud className="h-3.5 w-3.5 text-sky-500" />
+  };
+
+  return iconMap[action.toLowerCase()] || <Activity className="h-3.5 w-3.5 text-blue-500" />;
 };
 
-// دالة للحصول على النص الوصفي للإجراء
-const getActionDisplayName = (action?: string | null): string => {
-  if (!action) return 'نشاط عام';
-
-  switch (action.toLowerCase()) {
-    case 'login':
-      return 'تسجيل دخول';
-    case 'logout':
-      return 'تسجيل خروج';
-    case 'signal_request':
-      return 'طلب إشارة';
-    case 'password_change':
-      return 'تغيير كلمة المرور';
-    case 'change_avatar':
-      return 'تغيير الصورة';
-    case 'chat_message':
-      return 'رسالة دردشة';
-    case 'server_on':
-      return 'تشغيل الخادم';
-    case 'server_off':
-      return 'إيقاف الخادم';
-    case 'error':
-      return 'خطأ في النظام';
-    default:
-      return action.replace(/_/g, ' ');
-  }
-};
-
-// دالة للحصول على أيقونة النتيجة
-const getResultIcon = (result?: string) => {
-  if (!result) return null;
-
-  switch (result.toLowerCase()) {
-    case 'success':
-      return <CheckCircle className="h-3 w-3 text-green-500" />;
-    case 'failure':
-    case 'error':
-      return <XCircle className="h-3 w-3 text-red-500" />;
-    default:
-      return null;
-  }
-};
-
-// دالة للحصول على النص الوصفي للنتيجة
-const getResultDisplayName = (result?: string): string => {
-  if (!result) return '';
-
-  switch (result.toLowerCase()) {
-    case 'success':
-      return 'نجح';
-    case 'failure':
-      return 'فشل';
-    case 'error':
-      return 'خطأ';
-    default:
-      return result;
-  }
-};
-
-// دالة للحصول على لون الحد الجانبي حسب المستوى
-const getLevelBorderColor = (level: string): string => {
-  switch (level.toLowerCase()) {
-    case 'error':
-      return 'border-l-red-500';
-    case 'warn':
-      return 'border-l-yellow-500';
-    case 'info':
-      return 'border-l-blue-500';
-    case 'debug':
-      return 'border-l-gray-400';
-    default:
-      return 'border-l-gray-300';
-  }
-};
-
-// دالة لتحليل معلومات الجهاز والموقع الجغرافي من meta
-const parseDeviceAndLocationInfo = (meta?: string | null) => {
+// تحليل معلومات النظام المتقدم
+const parseAdvancedSystemInfo = (meta?: string | null) => {
   if (!meta) return null;
 
   try {
     const metaObj = typeof meta === 'string' ? JSON.parse(meta) : (meta || {});
 
     return {
+      // Device Information
       device: metaObj.device || metaObj.userAgent,
-      location: metaObj.location || metaObj.country || metaObj.city,
-      ip: metaObj.ip || metaObj.requestIp || metaObj.clientIP,
       browser: metaObj.browser,
       os: metaObj.os,
+      platform: metaObj.platform,
+      
+      // Network Information
+      ip: metaObj.ip || metaObj.requestIp || metaObj.clientIP,
+      location: metaObj.location || metaObj.country || metaObj.city,
       country: metaObj.country,
       city: metaObj.city,
-      timezone: metaObj.timezone
+      timezone: metaObj.timezone,
+      isp: metaObj.isp,
+      
+      // Performance Metrics
+      responseTime: metaObj.responseTime || metaObj.execTime,
+      memoryUsage: metaObj.memoryUsage,
+      cpuUsage: metaObj.cpuUsage,
+      
+      // Security Information
+      ssl: metaObj.ssl,
+      userAgent: metaObj.userAgent,
+      referer: metaObj.referer,
+      
+      // Technical Details
+      method: metaObj.method,
+      statusCode: metaObj.statusCode,
+      contentLength: metaObj.contentLength,
+      
+      // Trading Specific
+      signal: metaObj.signal,
+      confidence: metaObj.confidence,
+      symbol: metaObj.symbol,
+      timeframe: metaObj.timeframe
     };
   } catch (error) {
     return null;
   }
 };
 
-// دالة لتنسيق معرفات التتبع
-const formatTrackingId = (id?: string | null): string => {
-  if (!id) return '';
-  return id.length > 6 ? `${id.slice(0, 6)}…` : id;
-};
-
-// دالة لتنسيق معلومات الجهاز
-const formatDeviceInfo = (deviceInfo: any): string => {
-  if (!deviceInfo) return '';
-
-  const parts = [];
-  if (deviceInfo.device && deviceInfo.device.includes('Android')) {
-    const androidMatch = deviceInfo.device.match(/Android.*?([A-Z0-9-]+)/);
-    if (androidMatch) {
-      parts.push(`Android ${androidMatch[1]}`);
-    }
-  }
-
-  if (deviceInfo.browser && deviceInfo.browser.includes('Chrome')) {
-    const chromeMatch = deviceInfo.browser.match(/Chrome\s+(\d+)/);
-    if (chromeMatch) {
-      parts.push(`Chrome ${chromeMatch[1]}`);
-    }
-  }
-
-  return parts.join(' • ') || 'Unknown Device';
-};
-
-// دالة لتنسيق معلومات الموقع
-const formatLocationInfo = (deviceInfo: any): string => {
-  if (!deviceInfo) return '';
-
-  const parts = [];
-  if (deviceInfo.ip) {
-    parts.push(deviceInfo.ip);
-  }
-  if (deviceInfo.country) {
-    parts.push(`(${deviceInfo.country})`);
-  }
-
-  return parts.join(' ');
-};
-
-// Static gradient variants للعدادات التراكمية (لتجنب dynamic Tailwind classes)
-const CUMULATIVE_COUNTER_VARIANTS = {
-  previousTotal: {
-    bgLight: 'bg-gradient-to-r from-purple-50/80 via-purple-100/60 to-purple-50/80',
-    bgDark: 'dark:bg-gradient-to-r dark:from-purple-950/40 dark:via-purple-900/30 dark:to-purple-950/40',
-    border: 'border-purple-200/60 dark:border-purple-800/40',
-    iconBg: 'bg-gradient-to-br from-purple-500/20 to-purple-600/20 dark:from-purple-400/30 dark:to-purple-500/30',
-    textColor: 'text-purple-700 dark:text-purple-300',
-    valueColor: 'text-purple-800 dark:text-purple-200',
-    shadow: 'shadow-purple-500/10 dark:shadow-purple-500/20'
-  },
-  dailyTotal: {
-    bgLight: 'bg-gradient-to-r from-blue-50/80 via-blue-100/60 to-blue-50/80',
-    bgDark: 'dark:bg-gradient-to-r dark:from-blue-950/40 dark:via-blue-900/30 dark:to-blue-950/40',
-    border: 'border-blue-200/60 dark:border-blue-800/40',
-    iconBg: 'bg-gradient-to-br from-blue-500/20 to-blue-600/20 dark:from-blue-400/30 dark:to-blue-500/30',
-    textColor: 'text-blue-700 dark:text-blue-300',
-    valueColor: 'text-blue-800 dark:text-blue-200',
-    shadow: 'shadow-blue-500/10 dark:shadow-blue-500/20'
-  },
-  monthlyTotal: {
-    bgLight: 'bg-gradient-to-r from-emerald-50/80 via-emerald-100/60 to-emerald-50/80',
-    bgDark: 'dark:bg-gradient-to-r dark:from-emerald-950/40 dark:via-emerald-900/30 dark:to-emerald-950/40',
-    border: 'border-emerald-200/60 dark:border-emerald-800/40',
-    iconBg: 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 dark:from-emerald-400/30 dark:to-emerald-500/30',
-    textColor: 'text-emerald-700 dark:text-emerald-300',
-    valueColor: 'text-emerald-800 dark:text-emerald-200',
-    shadow: 'shadow-emerald-500/10 dark:shadow-emerald-500/20'
-  }
-};
-
-// دالة لإنشاء العدادات التراكمية المحسنة
-const createCumulativeCounters = (log: LogEntry): Array<{
-  label: string;
-  value: number;
+// مكونات العرض المتقدمة
+const AdvancedMetricBadge = ({ 
+  icon, 
+  label, 
+  value, 
+  color = 'blue',
+  animated = false 
+}: {
   icon: React.ReactNode;
-  variant: keyof typeof CUMULATIVE_COUNTER_VARIANTS;
-}> => {
-  const counters = [];
+  label: string;
+  value: string | number;
+  color?: string;
+  animated?: boolean;
+}) => (
+  <div className={`
+    group relative flex items-center space-x-1.5 space-x-reverse px-2.5 py-1.5 
+    rounded-lg border backdrop-blur-sm transition-all duration-300
+    hover:scale-105 hover:shadow-lg cursor-default
+    bg-gradient-to-r from-${color}-50/80 via-${color}-100/40 to-${color}-50/60
+    dark:from-${color}-950/40 dark:via-${color}-900/20 dark:to-${color}-950/30
+    border-${color}-200/50 dark:border-${color}-800/30
+    ${animated ? 'animate-pulse' : ''}
+  `}>
+    <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-white/20 via-white/10 to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
+    <div className="relative flex items-center space-x-1.5 space-x-reverse">
+      <div className={`
+        p-1 rounded-md bg-gradient-to-br from-${color}-500/20 to-${color}-600/20 
+        border border-white/20 text-${color}-600 dark:text-${color}-400
+      `}>
+        {icon}
+      </div>
+      <span className={`text-xs font-medium text-${color}-700 dark:text-${color}-300`}>
+        {label}:
+      </span>
+      <span className={`text-xs font-bold text-${color}-800 dark:text-${color}-200`}>
+        {value}
+      </span>
+    </div>
+  </div>
+);
 
-  if (log.previousTotal !== undefined && log.previousTotal !== null) {
-    counters.push({
-      label: 'التراكمي',
-      value: log.previousTotal,
-      icon: <BarChart3 className="h-3 w-3" />,
-      variant: 'previousTotal' as const
-    });
-  }
+const PerformanceIndicator = ({ responseTime }: { responseTime?: number }) => {
+  if (!responseTime) return null;
+  
+  const getPerformanceColor = (time: number) => {
+    if (time < 100) return 'green';
+    if (time < 500) return 'yellow';
+    return 'red';
+  };
 
-  if (log.dailyTotal !== undefined && log.dailyTotal !== null) {
-    counters.push({
-      label: 'اليوم',
-      value: log.dailyTotal,
-      icon: <Calendar className="h-3 w-3" />,
-      variant: 'dailyTotal' as const
-    });
-  }
-
-  if (log.monthlyTotal !== undefined && log.monthlyTotal !== null) {
-    counters.push({
-      label: 'الشهر',
-      value: log.monthlyTotal,
-      icon: <TrendingUp className="h-3 w-3" />,
-      variant: 'monthlyTotal' as const
-    });
-  }
-
-  return counters;
+  const color = getPerformanceColor(responseTime);
+  
+  return (
+    <AdvancedMetricBadge
+      icon={<Gauge className="h-3 w-3" />}
+      label="أداء"
+      value={`${responseTime}ms`}
+      color={color}
+      animated={responseTime > 1000}
+    />
+  );
 };
 
-// Component للعدادات التراكمية المحسنة
-const CumulativeCounters = ({ counters }: { counters: ReturnType<typeof createCumulativeCounters> }) => {
-  if (counters.length === 0) return null;
-
+const SecurityIndicator = ({ ssl, ip }: { ssl?: boolean; ip?: string }) => {
+  if (!ssl && !ip) return null;
+  
   return (
-    <div className="flex items-center space-x-1.5 space-x-reverse">
-      {counters.map((counter, index) => {
-        const variant = CUMULATIVE_COUNTER_VARIANTS[counter.variant];
-        return (
-          <div
-            key={index}
-            className={`
-              relative flex items-center space-x-1 space-x-reverse px-2 py-1 rounded-md border transition-all duration-200 
-              hover:scale-105 hover:shadow-md group cursor-default backdrop-blur-sm
-              ${variant.bgLight} ${variant.bgDark} ${variant.border} ${variant.shadow}
-            `}
-            data-testid={`cumulative-counter-${counter.variant}`}
-          >
-            {/* Glass morphism overlay */}
-            <div className="absolute inset-0 rounded-md bg-gradient-to-r from-white/20 via-white/10 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-200 pointer-events-none"></div>
-            
-            {/* Content */}
-            <div className="relative flex items-center space-x-1 space-x-reverse">
-              <div className={`p-0.5 rounded-sm ${variant.iconBg} border border-white/20 dark:border-white/15`}>
-                <div className={variant.textColor}>
-                  {counter.icon}
-                </div>
-              </div>
-              <span className={`text-xs font-medium ${variant.textColor}`}>
-                {counter.label}:
-              </span>
-              <span className={`text-xs font-bold ${variant.valueColor}`}>
-                {counter.value.toLocaleString()}
-              </span>
-            </div>
-          </div>
-        );
-      })}
+    <div className="flex items-center space-x-1 space-x-reverse">
+      {ssl !== undefined && (
+        <AdvancedMetricBadge
+          icon={ssl ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
+          label="SSL"
+          value={ssl ? "آمن" : "غير آمن"}
+          color={ssl ? 'green' : 'red'}
+        />
+      )}
+      {ip && (
+        <AdvancedMetricBadge
+          icon={<Globe className="h-3 w-3" />}
+          label="IP"
+          value={ip.slice(0, 12) + (ip.length > 12 ? '...' : '')}
+          color="blue"
+        />
+      )}
     </div>
   );
 };
 
-// دالة لتنسيق العدادات التراكمية (الإصدار القديم - للاحتفاظ بالتوافق)
-const formatCumulativeCounts = (log: LogEntry): string => {
-  const parts = [];
-
-  if (log.previousTotal !== undefined && log.previousTotal !== null) {
-    parts.push(`التراكمي (قبل): ${log.previousTotal}`);
-  }
-
-  if (log.dailyTotal !== undefined && log.dailyTotal !== null) {
-    parts.push(`اليوم: ${log.dailyTotal}`);
-  }
-
-  if (log.monthlyTotal !== undefined && log.monthlyTotal !== null) {
-    parts.push(`الشهر: ${log.monthlyTotal}`);
-  }
-
-  return parts.join(' • ');
+const TradingSignalIndicator = ({ signal, confidence, symbol }: {
+  signal?: string;
+  confidence?: number;
+  symbol?: string;
+}) => {
+  if (!signal && !confidence && !symbol) return null;
+  
+  return (
+    <div className="flex items-center space-x-1.5 space-x-reverse">
+      {signal && (
+        <Badge className={`
+          text-xs px-2 py-1 font-bold border-2 transition-all duration-300
+          ${signal.toUpperCase() === 'BUY' 
+            ? 'bg-green-500/10 text-green-700 dark:text-green-300 border-green-500/30 shadow-green-500/20' 
+            : 'bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/30 shadow-red-500/20'
+          }
+        `}>
+          <Signal className="h-3 w-3 mr-1" />
+          {signal.toUpperCase()}
+        </Badge>
+      )}
+      {confidence && (
+        <AdvancedMetricBadge
+          icon={<Radar className="h-3 w-3" />}
+          label="ثقة"
+          value={`${confidence}%`}
+          color={confidence > 80 ? 'green' : confidence > 60 ? 'yellow' : 'red'}
+        />
+      )}
+      {symbol && (
+        <AdvancedMetricBadge
+          icon={<TrendingUp className="h-3 w-3" />}
+          label="رمز"
+          value={symbol}
+          color="purple"
+        />
+      )}
+    </div>
+  );
 };
 
-// دالة لاستخراج معلومات الإشارة من الرسالة
-const parseSignalInfo = (message: string, meta?: string | null) => {
-  try {
-    const metaObj = typeof meta === 'string' ? JSON.parse(meta) : (meta || {});
-
-    // استخراج معلومات الإشارة
-    const signalMatch = message.match(/Signal:\s*(\w+)/i);
-    const confidenceMatch = message.match(/Confidence:\s*(\d+)%/i);
-    const execTimeMatch = message.match(/execTime:\s*(\d+)ms/i);
-
-    return {
-      signal: signalMatch ? signalMatch[1] : null,
-      confidence: confidenceMatch ? confidenceMatch[1] : null,
-      execTime: execTimeMatch ? execTimeMatch[1] : null,
-      ...metaObj
-    };
-  } catch (error) {
-    return null;
+// Enhanced Cumulative Counters with animations
+const ENHANCED_COUNTER_VARIANTS = {
+  previousTotal: {
+    gradient: 'bg-gradient-to-br from-purple-500/10 via-purple-400/5 to-purple-300/10',
+    border: 'border-purple-300/40 dark:border-purple-700/40',
+    icon: <BarChart3 className="h-3.5 w-3.5" />,
+    iconBg: 'bg-purple-500/20 border-purple-500/30',
+    textColor: 'text-purple-700 dark:text-purple-300',
+    valueColor: 'text-purple-900 dark:text-purple-100',
+    glow: 'hover:shadow-purple-500/25'
+  },
+  dailyTotal: {
+    gradient: 'bg-gradient-to-br from-blue-500/10 via-blue-400/5 to-blue-300/10',
+    border: 'border-blue-300/40 dark:border-blue-700/40',
+    icon: <Calendar className="h-3.5 w-3.5" />,
+    iconBg: 'bg-blue-500/20 border-blue-500/30',
+    textColor: 'text-blue-700 dark:text-blue-300',
+    valueColor: 'text-blue-900 dark:text-blue-100',
+    glow: 'hover:shadow-blue-500/25'
+  },
+  monthlyTotal: {
+    gradient: 'bg-gradient-to-br from-emerald-500/10 via-emerald-400/5 to-emerald-300/10',
+    border: 'border-emerald-300/40 dark:border-emerald-700/40',
+    icon: <TrendingUp className="h-3.5 w-3.5" />,
+    iconBg: 'bg-emerald-500/20 border-emerald-500/30',
+    textColor: 'text-emerald-700 dark:text-emerald-300',
+    valueColor: 'text-emerald-900 dark:text-emerald-100',
+    glow: 'hover:shadow-emerald-500/25'
   }
+};
+
+const EnhancedCumulativeCounter = ({ 
+  label, 
+  value, 
+  variant 
+}: { 
+  label: string; 
+  value: number; 
+  variant: keyof typeof ENHANCED_COUNTER_VARIANTS;
+}) => {
+  const config = ENHANCED_COUNTER_VARIANTS[variant];
+  
+  return (
+    <div className={`
+      group relative flex items-center space-x-1.5 space-x-reverse px-3 py-2 
+      rounded-xl border backdrop-blur-md transition-all duration-500
+      hover:scale-110 hover:rotate-1 cursor-default
+      ${config.gradient} ${config.border} ${config.glow}
+      transform-gpu will-change-transform
+    `}>
+      {/* Animated background overlay */}
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/30 via-white/10 to-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      
+      {/* Content */}
+      <div className="relative flex items-center space-x-1.5 space-x-reverse z-10">
+        <div className={`
+          p-1.5 rounded-lg border backdrop-blur-sm
+          ${config.iconBg} ${config.textColor}
+          group-hover:scale-110 transition-transform duration-300
+        `}>
+          {config.icon}
+        </div>
+        <div className="flex flex-col">
+          <span className={`text-xs font-medium ${config.textColor} leading-tight`}>
+            {label}
+          </span>
+          <span className={`text-sm font-bold ${config.valueColor} leading-tight`}>
+            {value.toLocaleString()}
+          </span>
+        </div>
+      </div>
+      
+      {/* Glow effect */}
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+    </div>
+  );
 };
 
 export function LogCard({ log, onClick, isSelected, onSearch }: LogCardProps) {
   const { toast } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const levelStyle = getLevelStyle(log.level);
+  const systemInfo = parseAdvancedSystemInfo(log.meta);
+  const sourceColor = generateAdvancedColor(log.source);
+
+  // Animation effects
+  useEffect(() => {
+    if (isSelected && cardRef.current) {
+      cardRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [isSelected]);
 
   const copyToClipboard = (text: string, label?: string) => {
     navigator.clipboard.writeText(text);
@@ -416,71 +458,130 @@ export function LogCard({ log, onClick, isSelected, onSearch }: LogCardProps) {
     if (onSearch) {
       onSearch(filters);
       toast({
-        title: 'بحث',
-        description: 'تم تطبيق مرشح البحث',
+        title: 'بحث متقدم',
+        description: 'تم تطبيق مرشح البحث المتقدم',
         duration: 2000
       });
     }
   };
 
   const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleTimeString('ar-SA', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    const date = new Date(timestamp);
+    return {
+      time: date.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
+      date: date.toLocaleDateString('ar-SA', { month: 'short', day: 'numeric' }),
+      full: date.toLocaleString('ar-SA')
+    };
   };
 
-  // Enhanced logic to determine actor information
-  const actorType = log.actorType || (log.userId && log.username ? 'user' : 'system');
+  const timeInfo = formatTime(log.timestamp);
   const actorDisplayName = log.actorDisplayName || log.userDisplayName || log.username || log.source;
-  const actorId = log.actorId || (log.userId ? log.userId.toString() : log.source);
-  const isUserAction = actorType === 'user';
-
-  // Parse device and location info
-  const deviceInfo = parseDeviceAndLocationInfo(log.meta);
-  const signalInfo = parseSignalInfo(log.message, log.meta);
-  const cumulativeCounts = formatCumulativeCounts(log);
-  const cumulativeCounters = createCumulativeCounters(log);
+  const isUserAction = log.actorType === 'user' || log.userId;
 
   return (
     <Card 
-      className={`mb-1.5 transition-all duration-200 hover:shadow-sm border-l-4 ${getLevelBorderColor(log.level)} ${isSelected ? 'ring-2 ring-primary bg-primary/5' : ''} cursor-pointer bg-card/80 hover:bg-card/90`}
+      ref={cardRef}
+      className={`
+        group relative mb-3 transition-all duration-500 cursor-pointer backdrop-blur-md
+        border-l-4 ${levelStyle.border} ${levelStyle.glow}
+        hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1
+        ${isSelected ? 'ring-2 ring-primary shadow-2xl scale-[1.02] -translate-y-1' : ''}
+        ${levelStyle.bg}
+        transform-gpu will-change-transform
+      `}
       onClick={onClick}
-      data-testid={`log-card-${log.id}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      data-testid={`enhanced-log-card-${log.id}`}
     >
-      <CardContent className="p-2.5">
-        {/* الصف الأول: الوقت، المصدر، المستوى */}
-        <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
-          <div className="flex items-center space-x-1 space-x-reverse">
-            <Clock className="h-3 w-3" />
-            <span>{formatTime(log.timestamp)}</span>
-            <span>•</span>
-            <span className="font-medium">📈 {log.source}</span>
-            <span>•</span>
-            <div className="flex items-center space-x-0.5 space-x-reverse">
-              {getLevelIcon(log.level)}
-              <span className="uppercase font-medium">{log.level}</span>
+      {/* Animated border gradient */}
+      <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+      
+      <CardContent className="relative p-4 z-10">
+        {/* Header Row - Enhanced */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-2 space-x-reverse">
+            {/* Time with enhanced styling */}
+            <div className="flex items-center space-x-1.5 space-x-reverse">
+              <div className={`
+                p-1.5 rounded-lg ${levelStyle.color} 
+                ${levelStyle.bg} border ${levelStyle.border}
+                group-hover:scale-110 transition-transform duration-300
+              `}>
+                <Clock className="h-3.5 w-3.5" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-foreground">{timeInfo.time}</span>
+                <span className="text-xs text-muted-foreground">{timeInfo.date}</span>
+              </div>
             </div>
+
+            <div className="h-6 w-px bg-border/50"></div>
+
+            {/* Source with enhanced styling */}
+            <div className="flex items-center space-x-1.5 space-x-reverse">
+              <div 
+                className={`
+                  p-1.5 rounded-lg border backdrop-blur-sm
+                  bg-gradient-to-br ${sourceColor.gradient}
+                  hover:scale-110 transition-all duration-300
+                `}
+                style={{ borderColor: sourceColor.primary + '40' }}
+              >
+                <Server className="h-3.5 w-3.5" style={{ color: sourceColor.primary }} />
+              </div>
+              <span 
+                className="text-sm font-bold"
+                style={{ color: sourceColor.primary }}
+              >
+                {log.source}
+              </span>
+            </div>
+
+            <div className="h-6 w-px bg-border/50"></div>
+
+            {/* Level Badge Enhanced */}
+            <Badge className={`
+              ${levelStyle.badge} border text-xs px-2.5 py-1 font-bold
+              hover:scale-105 transition-transform duration-300
+              ${levelStyle.pulse}
+            `}>
+              <div className="flex items-center space-x-1 space-x-reverse">
+                {levelStyle.icon}
+                <span className="uppercase">{log.level}</span>
+              </div>
+            </Badge>
           </div>
 
+          {/* Actions Menu Enhanced */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-5 w-5 p-0 opacity-50 hover:opacity-100">
-                <MoreHorizontal className="h-3 w-3" />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className={`
+                  h-8 w-8 p-0 rounded-full transition-all duration-300
+                  opacity-60 hover:opacity-100 hover:scale-110 hover:bg-primary/10
+                  ${isHovered ? 'opacity-100' : ''}
+                `}
+              >
+                <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="text-xs">
+            <DropdownMenuContent align="end" className="min-w-48">
               <DropdownMenuItem onClick={(e) => {
                 e.stopPropagation();
                 setIsExpanded(!isExpanded);
               }}>
-                {isExpanded ? 'إخفاء التفاصيل' : 'تفاصيل'}
+                <Eye className="h-4 w-4 mr-2" />
+                {isExpanded ? 'إخفاء التفاصيل' : 'عرض التفاصيل'}
               </DropdownMenuItem>
               {onSearch && log.userId && (
                 <DropdownMenuItem onClick={(e) => {
                   e.stopPropagation();
                   handleSearch({ userId: log.userId! });
                 }}>
+                  <Search className="h-4 w-4 mr-2" />
                   بحث بنفس المستخدم
                 </DropdownMenuItem>
               )}
@@ -489,142 +590,278 @@ export function LogCard({ log, onClick, isSelected, onSearch }: LogCardProps) {
                   e.stopPropagation();
                   copyToClipboard(log.requestId!, 'معرف الطلب');
                 }}>
+                  <Copy className="h-4 w-4 mr-2" />
                   نسخ معرف الطلب
                 </DropdownMenuItem>
               )}
+              <DropdownMenuItem onClick={(e) => {
+                e.stopPropagation();
+                copyToClipboard(timeInfo.full, 'الوقت الكامل');
+              }}>
+                <Calendar className="h-4 w-4 mr-2" />
+                نسخ الوقت الكامل
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
 
-        {/* الصف الثاني: الرسالة الرئيسية */}
-        <div className="text-sm font-medium text-foreground mb-1.5 leading-tight">
-          {log.message}
+        {/* Message Row Enhanced */}
+        <div className="mb-3">
+          <p className="text-sm leading-relaxed text-foreground font-medium">
+            {log.message}
+          </p>
         </div>
 
-        {/* الصف الثالث: معلومات المستخدم */}
+        {/* User Information Enhanced */}
         {isUserAction && (
-          <div className="text-xs text-muted-foreground mb-1.5">
-            <span>المستخدم: </span>
-            <span className="font-medium text-foreground">{actorDisplayName}</span>
-            {log.userId && (
-              <span> (id={log.userId})</span>
-            )}
-          </div>
-        )}
-
-        {/* الصف الرابع: معلومات الجهاز والشبكة */}
-        {deviceInfo && (
-          <div className="text-xs text-muted-foreground mb-1.5 flex items-center space-x-2 space-x-reverse">
-            <div className="flex items-center space-x-1 space-x-reverse">
-              <Smartphone className="h-3 w-3" />
-              <span>Device: {formatDeviceInfo(deviceInfo)}</span>
+          <div className="flex items-center space-x-2 space-x-reverse mb-3">
+            <Avatar className="h-6 w-6 border-2 border-primary/20">
+              <AvatarFallback className="text-xs bg-primary/10">
+                {actorDisplayName.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex items-center space-x-1.5 space-x-reverse">
+              <span className="text-xs text-muted-foreground">المستخدم:</span>
+              <span className="text-sm font-medium text-foreground">{actorDisplayName}</span>
+              {log.userId && (
+                <Badge variant="outline" className="text-xs px-1.5 py-0.5">
+                  ID: {log.userId}
+                </Badge>
+              )}
             </div>
-            <span>•</span>
-            <div className="flex items-center space-x-1 space-x-reverse">
-              <Globe className="h-3 w-3" />
-              <span>IP: {formatLocationInfo(deviceInfo)}</span>
+          </div>
+        )}
+
+        {/* System Information Row */}
+        {systemInfo && (
+          <div className="mb-3 space-y-2">
+            {/* Performance & Security */}
+            <div className="flex items-center space-x-2 space-x-reverse flex-wrap gap-1">
+              <PerformanceIndicator responseTime={systemInfo.responseTime} />
+              <SecurityIndicator ssl={systemInfo.ssl} ip={systemInfo.ip} />
+              
+              {systemInfo.method && (
+                <AdvancedMetricBadge
+                  icon={<Code className="h-3 w-3" />}
+                  label="طريقة"
+                  value={systemInfo.method}
+                  color="indigo"
+                />
+              )}
+              
+              {systemInfo.statusCode && (
+                <AdvancedMetricBadge
+                  icon={<Activity className="h-3 w-3" />}
+                  label="حالة"
+                  value={systemInfo.statusCode}
+                  color={systemInfo.statusCode < 300 ? 'green' : systemInfo.statusCode < 400 ? 'yellow' : 'red'}
+                />
+              )}
             </div>
-            {log.requestId && (
-              <>
-                <span>•</span>
-                <div className="flex items-center space-x-1 space-x-reverse">
-                  <Hash className="h-3 w-3" />
-                  <span>RequestId: {formatTrackingId(log.requestId)}</span>
-                </div>
-              </>
+
+            {/* Device Information */}
+            {(systemInfo.browser || systemInfo.os || systemInfo.platform) && (
+              <div className="flex items-center space-x-2 space-x-reverse flex-wrap gap-1">
+                {systemInfo.browser && (
+                  <AdvancedMetricBadge
+                    icon={<Globe className="h-3 w-3" />}
+                    label="متصفح"
+                    value={systemInfo.browser.split(' ')[0]}
+                    color="cyan"
+                  />
+                )}
+                
+                {systemInfo.os && (
+                  <AdvancedMetricBadge
+                    icon={<Monitor className="h-3 w-3" />}
+                    label="نظام"
+                    value={systemInfo.os.split(' ')[0]}
+                    color="slate"
+                  />
+                )}
+                
+                {systemInfo.platform && (
+                  <AdvancedMetricBadge
+                    icon={<Smartphone className="h-3 w-3" />}
+                    label="منصة"
+                    value={systemInfo.platform}
+                    color="pink"
+                  />
+                )}
+              </div>
             )}
           </div>
         )}
 
-        {/* الصف الخامس: العدادات التراكمية المحسنة */}
-        {cumulativeCounters.length > 0 && (
-          <div className="mb-1.5">
-            <CumulativeCounters counters={cumulativeCounters} />
+        {/* Trading Signal Information */}
+        <TradingSignalIndicator 
+          signal={systemInfo?.signal} 
+          confidence={systemInfo?.confidence} 
+          symbol={systemInfo?.symbol}
+        />
+
+        {/* Enhanced Cumulative Counters */}
+        {(log.previousTotal || log.dailyTotal || log.monthlyTotal) && (
+          <div className="my-4">
+            <div className="flex items-center space-x-2 space-x-reverse flex-wrap gap-2">
+              {log.previousTotal !== undefined && log.previousTotal !== null && (
+                <EnhancedCumulativeCounter
+                  label="التراكمي"
+                  value={log.previousTotal}
+                  variant="previousTotal"
+                />
+              )}
+              {log.dailyTotal !== undefined && log.dailyTotal !== null && (
+                <EnhancedCumulativeCounter
+                  label="اليوم"
+                  value={log.dailyTotal}
+                  variant="dailyTotal"
+                />
+              )}
+              {log.monthlyTotal !== undefined && log.monthlyTotal !== null && (
+                <EnhancedCumulativeCounter
+                  label="الشهر"
+                  value={log.monthlyTotal}
+                  variant="monthlyTotal"
+                />
+              )}
+            </div>
           </div>
         )}
 
-        {/* الصف السادس: معلومات الإشارة */}
-        {signalInfo && (signalInfo.signal || signalInfo.confidence || signalInfo.execTime) && (
-          <div className="text-xs space-x-2 space-x-reverse flex items-center">
-            {signalInfo.signal && (
-              <Badge variant={signalInfo.signal === 'BUY' ? 'default' : 'secondary'} className="text-xs px-1.5 py-0.5">
-                <Signal className="h-2.5 w-2.5 mr-0.5" />
-                Signal: {signalInfo.signal}
-              </Badge>
-            )}
-            {signalInfo.confidence && (
-              <span className="text-green-600 dark:text-green-400 font-medium">
-                Confidence: {signalInfo.confidence}%
-              </span>
-            )}
-            {signalInfo.execTime && (
-              <span className="text-blue-600 dark:text-blue-400">
-                execTime: {signalInfo.execTime}ms
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* صف الأزرار السفلي */}
-        <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-border/30">
-          <div className="flex items-center space-x-1 space-x-reverse">
-            <Button variant="ghost" size="sm" className="h-6 text-xs px-2 py-0" onClick={(e) => {
-              e.stopPropagation();
-              setIsExpanded(!isExpanded);
-            }}>
+        {/* Action Footer Enhanced */}
+        <div className="flex items-center justify-between pt-3 border-t border-border/30">
+          <div className="flex items-center space-x-2 space-x-reverse">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className={`
+                h-7 text-xs px-3 py-1 rounded-full transition-all duration-300
+                hover:scale-105 hover:shadow-md
+                ${isExpanded ? 'bg-primary/10 text-primary' : ''}
+              `}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsExpanded(!isExpanded);
+              }}
+            >
+              {isExpanded ? <EyeOff className="h-3 w-3 mr-1" /> : <Eye className="h-3 w-3 mr-1" />}
               {isExpanded ? 'إخفاء' : 'تفاصيل'}
             </Button>
 
             {onSearch && log.userId && (
-              <Button variant="ghost" size="sm" className="h-6 text-xs px-2 py-0" onClick={(e) => {
-                e.stopPropagation();
-                handleSearch({ userId: log.userId! });
-              }}>
-                <Search className="h-2.5 w-2.5 mr-0.5" />
-                بحث بنفس المستخدم
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-7 text-xs px-3 py-1 rounded-full hover:scale-105 transition-all duration-300"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSearch({ userId: log.userId! });
+                }}
+              >
+                <Search className="h-3 w-3 mr-1" />
+                بحث متقدم
               </Button>
             )}
 
             {log.requestId && (
-              <Button variant="ghost" size="sm" className="h-6 text-xs px-2 py-0" onClick={(e) => {
-                e.stopPropagation();
-                copyToClipboard(log.requestId!, 'معرف الطلب');
-              }}>
-                <Copy className="h-2.5 w-2.5 mr-0.5" />
-                نسخ RequestId
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-7 text-xs px-3 py-1 rounded-full hover:scale-105 transition-all duration-300"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  copyToClipboard(log.requestId!, 'معرف الطلب');
+                }}
+              >
+                <Copy className="h-3 w-3 mr-1" />
+                نسخ ID
               </Button>
             )}
           </div>
 
-          {/* إشارة الحالة */}
-          <div className="flex items-center space-x-1 space-x-reverse">
-            {log.result && getResultIcon(log.result)}
-            {getActionIcon(log.action)}
+          {/* Status Indicators Enhanced */}
+          <div className="flex items-center space-x-1.5 space-x-reverse">
+            {log.result && (
+              <div className={`
+                p-1.5 rounded-full transition-all duration-300 group-hover:scale-110
+                ${log.result === 'success' 
+                  ? 'bg-green-500/20 text-green-600 dark:text-green-400' 
+                  : 'bg-red-500/20 text-red-600 dark:text-red-400'
+                }
+              `}>
+                {log.result === 'success' ? 
+                  <CheckCircle className="h-3.5 w-3.5" /> : 
+                  <XCircle className="h-3.5 w-3.5" />
+                }
+              </div>
+            )}
+            <div className={`
+              p-1.5 rounded-full transition-all duration-300 group-hover:scale-110
+              bg-primary/20 text-primary
+            `}>
+              {getAdvancedActionIcon(log.action)}
+            </div>
           </div>
         </div>
 
-        {/* التفاصيل الموسعة */}
+        {/* Expanded Details Enhanced */}
         {isExpanded && (
-          <div className="mt-3 pt-3 border-t border-border/50 space-y-2 text-xs">
-            {/* معلومات إضافية */}
-            {log.meta && (
-              <div className="p-2 bg-muted/30 rounded text-xs">
-                <div className="font-medium mb-1">معلومات إضافية:</div>
-                <pre className="whitespace-pre-wrap break-words text-xs">
-                  {typeof log.meta === 'string' ? log.meta : JSON.stringify(log.meta, null, 2)}
-                </pre>
-              </div>
-            )}
+          <div className="mt-4 pt-4 border-t border-border/50 space-y-4 animate-in slide-in-from-top-3 duration-500">
+            {/* Technical Details */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {log.meta && (
+                <div className="p-3 bg-muted/50 rounded-lg border border-border/50 backdrop-blur-sm">
+                  <div className="flex items-center space-x-2 space-x-reverse mb-2">
+                    <Database className="h-4 w-4 text-primary" />
+                    <span className="font-medium text-sm">البيانات التقنية</span>
+                  </div>
+                  <pre className="whitespace-pre-wrap break-words text-xs text-muted-foreground max-h-32 overflow-y-auto">
+                    {typeof log.meta === 'string' ? log.meta : JSON.stringify(log.meta, null, 2)}
+                  </pre>
+                </div>
+              )}
 
-            {/* تفاصيل الحدث */}
-            {log.details && (
-              <div className="p-2 bg-blue-50/50 dark:bg-blue-950/20 rounded text-xs">
-                <div className="font-medium mb-1 text-blue-700 dark:text-blue-300">تفاصيل الحدث:</div>
-                <pre className="whitespace-pre-wrap break-words text-blue-600 dark:text-blue-400">
-                  {typeof log.details === 'string' ? log.details : JSON.stringify(log.details, null, 2)}
-                </pre>
-              </div>
-            )}
+              {log.details && (
+                <div className="p-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-lg border border-blue-200/50 dark:border-blue-800/50 backdrop-blur-sm">
+                  <div className="flex items-center space-x-2 space-x-reverse mb-2">
+                    <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <span className="font-medium text-sm text-blue-700 dark:text-blue-300">تفاصيل الحدث</span>
+                  </div>
+                  <pre className="whitespace-pre-wrap break-words text-xs text-blue-600 dark:text-blue-400 max-h-32 overflow-y-auto">
+                    {typeof log.details === 'string' ? log.details : JSON.stringify(log.details, null, 2)}
+                  </pre>
+                </div>
+              )}
+            </div>
+
+            {/* System Identifiers */}
+            <div className="flex items-center space-x-2 space-x-reverse flex-wrap gap-2">
+              {log.requestId && (
+                <AdvancedMetricBadge
+                  icon={<Hash className="h-3 w-3" />}
+                  label="طلب"
+                  value={log.requestId.slice(0, 8)}
+                  color="violet"
+                />
+              )}
+              {log.sessionId && (
+                <AdvancedMetricBadge
+                  icon={<Fingerprint className="h-3 w-3" />}
+                  label="جلسة"
+                  value={log.sessionId.slice(0, 8)}
+                  color="rose"
+                />
+              )}
+              {log.combinedTrackingId && (
+                <AdvancedMetricBadge
+                  icon={<Layers className="h-3 w-3" />}
+                  label="تتبع"
+                  value={log.combinedTrackingId.slice(0, 8)}
+                  color="amber"
+                />
+              )}
+            </div>
           </div>
         )}
       </CardContent>
