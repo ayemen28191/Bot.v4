@@ -66,6 +66,162 @@ router.get('/logs/stats', isAdmin, async (req, res) => {
   }
 });
 
+// إحصائيات محسنة مع العدادات التراكمية (للمشرفين فقط)
+router.get('/logs/enhanced-stats', isAdmin, async (req, res) => {
+  try {
+    // جلب الإحصائيات الأساسية
+    const basicStats = await logsService.getLogStats();
+    
+    // جلب العدادات التراكمية للمستخدمين النشطين
+    const activeUsers = await storage.getSystemLogs({ 
+      limit: 1000, 
+      filters: { userIdNotNull: true } 
+    });
+    
+    // حساب المقاييس المحسنة
+    const now = new Date();
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const lastMonth = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    
+    // السجلات حسب الفترات الزمنية
+    const [logsToday, logsYesterday, logsLastWeek, logsLastMonth] = await Promise.all([
+      storage.getLogsCount({ since: now.toISOString().split('T')[0] }),
+      storage.getLogsCount({ 
+        since: yesterday.toISOString().split('T')[0], 
+        until: now.toISOString().split('T')[0] 
+      }),
+      storage.getLogsCount({ since: lastWeek.toISOString() }),
+      storage.getLogsCount({ since: lastMonth.toISOString() })
+    ]);
+    
+    // حساب معدلات النمو
+    const growthRates = {
+      daily: logsYesterday > 0 ? ((logsToday - logsYesterday) / logsYesterday * 100) : 0,
+      weekly: logsLastWeek > 0 ? ((logsToday - logsLastWeek) / logsLastWeek * 100) : 0,
+      monthly: logsLastMonth > 0 ? ((logsToday - logsLastMonth) / logsLastMonth * 100) : 0
+    };
+    
+    // إحصائيات المستخدمين النشطين
+    const uniqueUsers = new Set(activeUsers.filter(log => log.userId).map(log => log.userId));
+    const userActivity = {};
+    
+    for (const log of activeUsers) {
+      if (log.userId && log.username) {
+        if (!userActivity[log.userId]) {
+          userActivity[log.userId] = {
+            username: log.username,
+            displayName: log.userDisplayName || log.username,
+            totalActions: 0,
+            dailyTotal: 0,
+            monthlyTotal: 0,
+            lastActivity: log.timestamp
+          };
+        }
+        userActivity[log.userId].totalActions += 1;
+        if (log.dailyTotal) userActivity[log.userId].dailyTotal = Math.max(userActivity[log.userId].dailyTotal, log.dailyTotal);
+        if (log.monthlyTotal) userActivity[log.userId].monthlyTotal = Math.max(userActivity[log.userId].monthlyTotal, log.monthlyTotal);
+      }
+    }
+    
+    // مصادر السجلات مع تفاصيل محسنة
+    const sourceDetails = {};
+    for (const log of activeUsers) {
+      if (!sourceDetails[log.source]) {
+        sourceDetails[log.source] = {
+          total: 0,
+          errors: 0,
+          warnings: 0,
+          info: 0,
+          debug: 0,
+          errorRate: 0,
+          lastActivity: log.timestamp
+        };
+      }
+      sourceDetails[log.source].total += 1;
+      sourceDetails[log.source][log.level] = (sourceDetails[log.source][log.level] || 0) + 1;
+      sourceDetails[log.source].lastActivity = log.timestamp;
+    }
+    
+    // حساب معدل الأخطاء لكل مصدر
+    Object.keys(sourceDetails).forEach(source => {
+      const details = sourceDetails[source];
+      details.errorRate = details.total > 0 ? (details.errors / details.total * 100) : 0;
+    });
+    
+    // إنشاء الاستجابة المحسنة
+    const enhancedStats = {
+      ...basicStats,
+      timeSeries: {
+        today: logsToday,
+        yesterday: logsYesterday,
+        lastWeek: logsLastWeek,
+        lastMonth: logsLastMonth
+      },
+      growthRates,
+      userMetrics: {
+        totalUniqueUsers: uniqueUsers.size,
+        activeUsersToday: Object.keys(userActivity).length,
+        topUsers: Object.values(userActivity)
+          .sort((a, b) => b.totalActions - a.totalActions)
+          .slice(0, 10)
+      },
+      sourceMetrics: {
+        totalSources: Object.keys(sourceDetails).length,
+        sourceDetails: Object.entries(sourceDetails)
+          .map(([source, details]) => ({ source, ...details }))
+          .sort((a, b) => b.total - a.total)
+          .slice(0, 10)
+      },
+      performanceMetrics: {
+        avgLogsPerDay: Math.round(basicStats.total / 30),
+        avgLogsPerHour: Math.round(logsToday / 24),
+        errorRate: basicStats.total > 0 ? (basicStats.levels.error || 0) / basicStats.total * 100 : 0,
+        warningRate: basicStats.total > 0 ? (basicStats.levels.warn || 0) / basicStats.total * 100 : 0
+      }
+    };
+    
+    res.json(enhancedStats);
+  } catch (error) {
+    console.error('Error fetching enhanced log stats:', error);
+    res.status(500).json({ error: 'فشل في جلب الإحصائيات المحسنة' });
+  }
+});
+
+// إحصائيات العدادات التراكمية للمستخدمين (للمشرفين فقط)
+router.get('/logs/user-counters', isAdmin, async (req, res) => {
+  try {
+    const { userId, actions, period = 'daily', limit = 100 } = req.query;
+    
+    // تحويل actions من string إلى array إذا لزم الأمر
+    const actionsList = actions ? (Array.isArray(actions) ? actions : actions.split(',')) : undefined;
+    
+    const counters = await storage.getCountersByPeriod({
+      userId: userId ? parseInt(userId as string) : undefined,
+      action: actionsList ? actionsList[0] : undefined, // استخدم أول action فقط للبساطة
+      period: period as 'daily' | 'monthly',
+      limit: parseInt(limit as string)
+    });
+    
+    // جلب ملخص العدادات للمستخدمين النشطين
+    const summaries = await Promise.all([
+      storage.getUserCountersSummary(null), // جميع المستخدمين
+      ...(userId ? [storage.getUserCountersSummary(parseInt(userId as string))] : [])
+    ]);
+    
+    res.json({
+      counters,
+      summaries: {
+        global: summaries[0],
+        user: summaries[1] || null
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching user counters:', error);
+    res.status(500).json({ error: 'فشل في جلب عدادات المستخدمين' });
+  }
+});
+
 // إنشاء سجل جديد (للمشرفين فقط)
 router.post('/logs', isAdmin, async (req, res) => {
   try {
