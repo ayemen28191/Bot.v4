@@ -2,7 +2,7 @@
 import session from "express-session";
 import path from "path";
 import fs from "fs";
-import sqlite3 from "sqlite3";
+import sqlite3, { Database as SQLiteDatabase } from "sqlite3";
 import { UAParser } from "ua-parser-js";
 // @ts-ignore - geoip-lite doesn't have TypeScript declarations
 import geoip from "geoip-lite";
@@ -156,7 +156,7 @@ export interface IStorage {
   deleteOldErrorReports(cutoffDate: string): Promise<number>;
 
   // Database access
-  getDatabase(): any;
+  getDatabase(): SQLiteDatabase;
 
   // Session store
   sessionStore: session.Store;
@@ -609,7 +609,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // إتاحة الوصول إلى قاعدة البيانات
-  getDatabase() {
+  getDatabase(): SQLiteDatabase {
     return sqliteDb;
   }
 
